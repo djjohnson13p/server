@@ -31,32 +31,19 @@ None. Project setup is not evidence that any gameplay system is correct or incor
 1. **`VZ-SYS-001` — Ballista: `MISSING`, `MAJOR`, `HIGH`.**
    - Packet structures exist, but scoreboard and scout constructors are explicitly unimplemented.
    - No functional qualification, schedule, registration, match controller, Petra, Gate Breach, Rook, scoring, or reward system was found.
-   - Disposition: AI/Codex implementation plus mandatory human retail and client validation.
 
 2. **`VZ-COMBAT-001` — Item additional effects: `INACCURATE`, `MAJOR`, `HIGH` for framework defects.**
    - The shared handler contains admitted wrong drain-selection behavior, omitted resistance paths, hardcoded assumptions, incomplete self-buff behavior, and an empty spikes stub.
-   - Exact item formulas remain an item-by-item evidence task rather than a universal inferred fix.
-   - Disposition: Codex-scale refactor and migration with assistant-led inventory/review and human retail datasets.
 
-3. **`VZ-ZONE-001` — Temple of Uggalepih Map 2 Granite Doors: `INACCURATE`, `MODERATE`, `MEDIUM`.**
-   - `_mf8.lua` and `_mf9.lua` both require a Prelate Key.
-   - Retail references distinguish an Uggalepih-Key Map 2 door from a separate northern Prelate-Key door.
-   - One in-game route check is required to map the correct entity before the bounded Lua correction.
-   - Disposition: assistant-direct after route/entity validation.
+3. **`VZ-ZONE-001` — Temple of Uggalepih Map 2 Granite Doors: `INACCURATE`, `MODERATE`.**
+   - Baseline `_mf8.lua` and `_mf9.lua` both require a Prelate Key even though retail distinguishes the western Uggalepih-Key door.
 
-### Leads rejected or deferred during this pass
+### Leads rejected or deferred
 
 - Gardening is implemented with stage, wilting, result, pot, day, moon, aura, packet, SQL, and test support; no defect was declared without retail comparison.
 - Chocobo digging and Expeditionary Forces have substantial implementations; neither was classified missing based on keyword searches.
 - Old “What Works” wiki claims were treated only as leads because the current project FAQ states that page is no longer maintained.
 - Open issues reported against non-`base` branches or contradicted by current source were not promoted automatically.
-
-### Next action
-
-- Complete the incompleteness inventory for era monster skills, mission/quest TODOs, battlefields, transport, conquest, crafting, fishing, and jobs.
-- Build the Vanilla/Zilart item-to-additional-effect-handler matrix.
-- Validate the Temple door entity mapping before creating a fix branch.
-- Continue with shared combat systems because content behavior depends on them.
 
 ## 2026-07-21 — Workflow simplified to AI-first execution
 
@@ -77,6 +64,46 @@ None. Project setup is not evidence that any gameplay system is correct or incor
 - Added `tools/retail_parity/run_codex_remainder.py` for autonomous multi-pass Codex execution.
 - Updated project and Codex guides so human validation is consolidated at the end.
 
-### New operating rule
+## 2026-07-21 — Static inventory and implementation pass 2
 
-Findings may remain marked pending final validation, but that does not pause the assistant or Codex from completing all independent audit, implementation, tests, and review work.
+### Direct correction completed
+
+**`VZ-ZONE-001` — Temple of Uggalepih western Map 2 door**
+
+- Retail route references place the Uggalepih-Key door west at I-10 and the Prelate-Key door east at J-10.
+- The server entities share the same north-south coordinate: `_mf9` at X `-60` is west of `_mf8` at X `-11`.
+- Created `retail-parity/fix-vz-zone-001`.
+- Commit `620d69d7c0315f70066c3484e110bb5d9baade3d` changes `_mf9` to require exactly one Uggalepih Key and display that key in the locked message.
+- `_mf8` remains the Prelate-Key door.
+- Final client route validation is deferred rather than interrupting the audit.
+
+### New confirmed findings
+
+4. **`VZ-JOB-001` — Summoner Elemental Spirits: `INACCURATE`, `MAJOR`, `HIGH` for framework defects.**
+   - Light Spirit Curaga choice is explicitly guessed.
+   - Avatar weapon damage is unverified.
+   - Spirit HP/MP/stat scaling is explicitly inaccurate.
+   - Spirits receive a universal `MPP +300` workaround admitted to be wrong.
+
+5. **`VZ-CORE-001` — Call for Help scope: `INACCURATE`, `MODERATE`, `HIGH` for the implementation difference.**
+   - Current code only examines `GetBattleTarget()`.
+   - The source TODO states retail applies Call for Help to all claimed enemies on which the player personally has enmity and does not require engagement.
+
+6. **`VZ-CORE-002` — Attack while fishing: `INACCURATE`, `MINOR`, `HIGH` for the intentional difference.**
+   - Attack validation blocks `BlockedState::Fishing`.
+   - The adjacent source comment states attacking while fishing is possible on retail and intentionally disabled in LandSandBoat.
+   - A safe fishing-to-combat state transition is required rather than a blind one-line removal.
+
+### Rejected stale lead
+
+- Upstream issue `#405` claimed nation-changing did not play the new-player nation cutscene or award the corresponding initialization flow.
+- Current immigration NPC source already tracks seen nations, sets the new-character cutscene flag, relocates the player to a valid opening location, and therefore supersedes the old report.
+- No finding was created.
+
+### Next action
+
+- Continue the original/Zilart job audit beyond Summoner.
+- Inspect explicit core enmity, claim, weaponskill, spell, and mob-skill approximations.
+- Audit national mission repeat paths and Zilart battlefields.
+- Inventory transport, conquest, crafting, fishing, and economy discrepancies.
+- Continue implementing bounded corrections without owner interruption.
