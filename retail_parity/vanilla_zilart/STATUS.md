@@ -9,8 +9,9 @@
 - **Codex work branch:** `retail-parity/codex-vanilla-zilart`
 - **Audit start date:** 2026-07-21
 - **Assistant source-accessible stage:** Complete
-- **Codex handoff:** Ready and attempted
-- **Current terminal state:** `FAILED_INFRASTRUCTURE`
+- **Codex handoff:** Ready
+- **Local Codex environment:** Validated
+- **Current project state:** `IMPLEMENTATION_READY`
 - **Upstream pull requests:** None; prohibited
 
 ## Baseline finding counts
@@ -42,13 +43,29 @@ These are baseline discrepancy counts, not resolution counts. The absence of add
 | `VZ-COMBAT-001` | Item additional effects | `INACCURATE` | Not implemented; inventory/framework work remains |
 | `VZ-ZONE-001` | Temple of Uggalepih door keys | `INACCURATE` | Corrected in audit/Codex lineage (`ed3bb6e`) |
 | `VZ-JOB-001` | Summoner Elemental Spirits | `INACCURATE` | Not implemented; data/formula work remains |
-| `VZ-CORE-001` | Call for Help scope | `INACCURATE` | Candidate correction at `de408e0`; tests/build pending |
+| `VZ-CORE-001` | Call for Help scope | `INACCURATE` | Candidate correction at `de408e0`; focused tests pending |
 | `VZ-CORE-002` | Attack while fishing | `INACCURATE` | Not implemented; safe state cleanup required |
 | `VZ-JOB-002` | Ranger Shadowbind | `INACCURATE` | Partial correction at `b0058b4`; coefficients/tests remain |
-| `VZ-ECON-001` | Fishing new-moon pattern | `INACCURATE` | Corrected at `556ad21`; unit/build validation pending |
-| `VZ-ECON-002` | Waders fishing bonus | `INACCURATE` | Corrected at `556ad21`; unit/build validation pending |
+| `VZ-ECON-001` | Fishing new-moon pattern | `INACCURATE` | Corrected at `556ad21`; focused test pending |
+| `VZ-ECON-002` | Waders fishing bonus | `INACCURATE` | Corrected at `556ad21`; focused test pending |
 | `VZ-BF-001` | Ark Angel zero-delay ready messages | `INACCURATE` | Not implemented; state/message refactor required |
-| `VZ-ECON-003` | Moghancement: Region bonus | `INACCURATE` | Corrected at `556ad21`; IPC/build validation pending |
+| `VZ-ECON-003` | Moghancement: Region bonus | `INACCURATE` | Corrected at `556ad21`; focused IPC/unit test pending |
+
+## Local environment validation
+
+Completed on the local Codex desktop project:
+
+- Correct repository, branch, clean worktree, and fork remote confirmed.
+- `origin` fetch connectivity passed.
+- Push to upstream was disabled locally while upstream fetch remained available.
+- Recursive submodule fetches were disabled for normal Git operations.
+- Both recorded top-level submodules were available at their pinned commits.
+- Visual Studio Build Tools 2022 and the x64 MSVC toolchain were found and initialized.
+- Fresh CMake/Ninja Debug configuration passed.
+- Full Windows MSVC/Ninja Debug build passed: `1049/1049` steps.
+- All disposable build outputs were removed and the worktree returned to clean status.
+
+The validated commands and tool versions are preserved in `LOCAL_CODEX_ENVIRONMENT.md`.
 
 ## Validation state
 
@@ -58,35 +75,35 @@ Completed:
 - Commit-diff review for the Temple door, Shadowbind, and Call for Help changes.
 - Exact-match source assertions and `git diff --check` for the three deterministic C++ corrections.
 - Restoration of the pre-existing `conquest_system.cpp` UTF-8 BOM at `0702a5b`.
-- Removal of all temporary implementation/build workflows.
+- Successful full local MSVC/Ninja Debug build of the current branch.
+- Removal of all temporary implementation/build workflows and local build outputs.
 
-Not completed because of infrastructure failure:
+Still required:
 
-- A successful native build of the current branch.
-- Compiler diagnostics for the failed GCC Debug build.
-- C++/Lua/SQL/unit/integration/startup checks for the current branch.
-- Local Codex filesystem audit and the remainder of the implementation backlog.
-- Client/live-retail validation.
+- Focused automated tests for the six implemented or partial corrections.
+- Lua, SQL, startup, integration, and gameplay-oriented checks appropriate to each future pass.
+- Completion of the remaining five known findings.
+- Continued exhaustive local-repository Vanilla/Zilart audit.
+- Final client/live-retail validation.
 
 ## Work stages
 
 - [x] Create clean fork and isolated branches
 - [x] Establish scope, evidence rules, finding format, and AI-first workflow
 - [x] Complete the source-accessible assistant audit
-- [x] Prepare and open the consolidated Codex handoff
-- [x] Attempt the autonomous Codex stage
+- [x] Prepare the consolidated Codex handoff
+- [x] Configure Codex desktop against the local clone
+- [x] Validate shell, GitHub fetch, repository instructions, MSVC, CMake, and Ninja
+- [x] Complete a full clean local MSVC/Ninja Debug build
 - [x] Apply six safe fork-only corrections or partial corrections
-- [x] Record the exact infrastructure failure and resume instructions
-- [ ] Restore a networked local Codex/build environment
-- [ ] Diagnose and fix the current native build
-- [ ] Add automated tests for implemented findings
+- [ ] Add focused automated tests for inherited corrections
 - [ ] Complete the remaining five known findings
 - [ ] Continue the exhaustive local-repository Vanilla/Zilart audit
 - [ ] Produce a final actionable human-only validation queue
 
-## Resume point
+## Next action
 
-Use the latest head of `retail-parity/codex-vanilla-zilart`. Read `CODEX_STATE.md`, `CODEX_BACKLOG.md`, `CODEX_COMPLETION_REPORT.md`, the worklog, and all findings before continuing. Start with a clean GCC Debug build and capture the first compiler error.
+Use the latest head of `retail-parity/codex-vanilla-zilart`. Fetch `origin`, read `CODEX_STATE.md`, `CODEX_BACKLOG.md`, `LOCAL_CODEX_ENVIRONMENT.md`, the worklog, completion report, and all finding files. Begin with focused automated tests for the six inherited corrections, then rerun the full MSVC/Ninja Debug build.
 
 ## Guardrails
 
