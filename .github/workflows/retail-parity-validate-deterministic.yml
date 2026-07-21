@@ -1,0 +1,65 @@
+name: Retail Parity Validate Deterministic Fixes
+
+on:
+  push:
+    branches:
+      - 'retail-parity/codex-vanilla-zilart'
+    paths:
+      - '.github/workflows/retail-parity-validate-deterministic.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    uses: ./.github/workflows/runner_build.yml
+    with:
+      runner: ubuntu-26.04
+      compiler: gcc
+      compiler_version: '15'
+      build_type: Debug
+      tracy: false
+      build_modules: false
+      save_cache: false
+      upload_artifact: false
+      clang_tidy: false
+
+  record-result:
+    if: always()
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out Codex work branch
+        uses: actions/checkout@v4
+        with:
+          ref: retail-parity/codex-vanilla-zilart
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Record validation result
+        shell: bash
+        env:
+          BUILD_RESULT: ${{ needs.build.result }}
+          VALIDATED_SHA: ${{ github.sha }}
+        run: |
+          cat > retail_parity/vanilla_zilart/CODEX_VALIDATION.md <<EOF
+          # Codex Branch Automated Validation
+
+          Status: ${BUILD_RESULT}
+
+          - Workflow: Retail Parity Validate Deterministic Fixes
+          - Validated branch: \`retail-parity/codex-vanilla-zilart\`
+          - Trigger commit: \`${VALIDATED_SHA}\`
+          - Validation: LandSandBoat reusable Ubuntu GCC 15 Debug build
+          - Deterministic source assertions and \`git diff --check\` were also run by commit \`556ad21ccda664e012003e5898fa7b4e2936c208\`.
+          EOF
+
+      - name: Commit result and remove one-time workflow
+        shell: bash
+        run: |
+          git config user.name 'retail-parity-automation'
+          git config user.email 'retail-parity-automation@users.noreply.github.com'
+          git rm .github/workflows/retail-parity-validate-deterministic.yml
+          git add retail_parity/vanilla_zilart/CODEX_VALIDATION.md
+          git commit -m 'test: record deterministic parity build result'
+          git push origin HEAD:retail-parity/codex-vanilla-zilart
