@@ -1,0 +1,82 @@
+name: Retail Parity Deterministic Bootstrap
+
+on:
+  push:
+    branches:
+      - 'retail-parity/codex-vanilla-zilart'
+    paths:
+      - '.github/workflows/retail-parity-deterministic-bootstrap.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  apply-deterministic-fixes:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out Codex work branch
+        uses: actions/checkout@v4
+        with:
+          ref: retail-parity/codex-vanilla-zilart
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Apply evidence-supported deterministic fixes
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          def replace_once(path: str, old: str, new: str) -> None:
+              file_path = Path(path)
+              text = file_path.read_text(encoding='utf-8-sig')
+              count = text.count(old)
+              if count != 1:
+                  raise SystemExit(f'{path}: expected exactly one match, found {count}')
+              file_path.write_text(text.replace(old, new, 1), encoding='utf-8')
+
+          replace_once(
+              'src/map/utils/fishingutils.cpp',
+              '''        case 5:\n            modifier = MOONPATTERN_4(moonPhase);\n            break;''',
+              '''        case 5:\n            modifier = MOONPATTERN_5(moonPhase);\n            break;''',
+          )
+
+          replace_once(
+              'src/map/utils/fishingutils.cpp',
+              '''    gear.feet            = (feet == FISHERMANS_BOOTS || feet == ANGLERS_BOOTS) ? feet : 0;''',
+              '''    gear.feet            = (feet == FISHERMANS_BOOTS || feet == ANGLERS_BOOTS || feet == WADERS) ? feet : 0;''',
+          )
+
+          replace_once(
+              'src/map/conquest_system.cpp',
+              '''    points += (uint32)(PChar->getMod(Mod::CONQUEST_REGION_BONUS) / 100.0);''',
+              '''    const int32 regionBonus = PChar->getMod(Mod::CONQUEST_REGION_BONUS);\n    if (regionBonus > 0)\n    {\n        points += static_cast<uint32>(points * regionBonus / 100.0f);\n    }''',
+          )
+          PY
+
+      - name: Verify deterministic corrections
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          fishing = Path('src/map/utils/fishingutils.cpp').read_text(encoding='utf-8')
+          conquest = Path('src/map/conquest_system.cpp').read_text(encoding='utf-8')
+
+          assert 'case 5:\n            modifier = MOONPATTERN_5(moonPhase);' in fishing
+          assert 'feet == FISHERMANS_BOOTS || feet == ANGLERS_BOOTS || feet == WADERS' in fishing
+          assert 'points * regionBonus / 100.0f' in conquest
+          assert '(uint32)(PChar->getMod(Mod::CONQUEST_REGION_BONUS) / 100.0)' not in conquest
+          PY
+          git diff --check
+
+      - name: Commit fork-only fixes and remove one-time workflow
+        shell: bash
+        run: |
+          git config user.name 'retail-parity-automation'
+          git config user.email 'retail-parity-automation@users.noreply.github.com'
+          git rm .github/workflows/retail-parity-deterministic-bootstrap.yml
+          git add src/map/utils/fishingutils.cpp src/map/conquest_system.cpp
+          git commit -m 'fix: apply deterministic Vanilla and Zilart parity corrections'
+          git push origin HEAD:retail-parity/codex-vanilla-zilart
