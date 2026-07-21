@@ -116,36 +116,71 @@ The success message is emitted once when at least one mob changes. Claim-transit
 
 All temporary implementation and diagnostic workflow files were removed from the Codex branch after use or suppression. No permanent fork automation was left behind.
 
-## 2026-07-21 — Validation attempts and infrastructure failure
+## 2026-07-21 — Isolated-container validation failure
 
-### Codex CLI
+The first autonomous attempt used the assistant's execution container rather than the owner's local Codex desktop environment.
 
-- Installed the official Codex CLI version available to the runtime.
-- Confirmed that the CLI already had authentication state.
-- The runtime could not resolve/reach the OpenAI responses endpoint or GitHub Git/raw endpoints.
-- A local clone could not be created, so the autonomous Codex runner could not operate on a local repository.
+- The Codex CLI had authentication state but the container could not reach GitHub Git/raw endpoints or the OpenAI responses endpoint.
+- A local clone could not be created in that container.
+- A GitHub Actions GCC Debug build reached configuration but failed during compilation, and its log tail was not retained.
+- Connector-authored diagnostic workflows were later suppressed with “No jobs were run.”
 
-### GitHub Actions build
+`CODEX_STATE.md` was temporarily set to `FAILED_INFRASTRUCTURE`. That state described the isolated container only and has since been superseded.
 
-- A fork GCC Debug build installed dependencies successfully.
-- GCC setup, Python setup, cache restoration, and fresh CMake configuration succeeded.
-- The build failed in the compilation step.
-- The first result reporter had a script error and failed to persist the compiler-log tail.
-- Later connector-authored workflow pushes were suppressed with “No jobs were run,” so a corrected diagnostic workflow could not execute.
-- No successful native build or complete automated test run is available for the current branch.
+## 2026-07-21 — Local Codex desktop environment validated
 
-### Terminal decision
+### Repository and Git safety
 
-`CODEX_STATE.md` was set to `FAILED_INFRASTRUCTURE` rather than inventing results or continuing large unbuildable changes.
+- Cloned `djjohnson13p/server` to `C:\GitHub\server`.
+- Checked out `retail-parity/codex-vanilla-zilart`.
+- Confirmed a clean worktree and successful `git fetch origin`.
+- Confirmed all required project/instruction files are readable from Codex.
+- Disabled recursive submodule behavior for normal Git fetches.
+- Preserved upstream fetch access while disabling upstream push locally.
+- Confirmed both top-level submodules were available at their recorded commits.
 
-No gameplay testing is assigned to the owner. The human-only queue remains nonfinal until a future networked Codex/local-build environment completes the remaining engineering and automated validation.
+### Codex desktop execution
 
-## Exact resume point
+- Added the repository root as the Codex project.
+- Confirmed Codex shell execution, repository access, branch access, instruction loading, and GitHub connectivity.
+- Codex reported no tracked changes after read-only validation.
 
-1. Clone `djjohnson13p/server` in a networked environment.
-2. Check out the latest `retail-parity/codex-vanilla-zilart` head.
-3. Run a clean GCC Debug build and capture the first compiler error.
-4. Repair build/test failures caused by fork changes.
-5. Add tests for the Temple door, fishing moon pattern, Waders, Moghancement: Region, Shadowbind, and Call for Help.
-6. Continue `CODEX_BACKLOG.md` with attack-while-fishing, Ark Angel messages, item additional effects, Elemental Spirits, Ballista, and the remaining exhaustive audit.
-7. Keep all changes fork-only and never open or suggest an upstream pull request.
+### Windows compiler/toolchain
+
+- Found Visual Studio Build Tools 2022 `17.14.35`.
+- Confirmed the x64/x86 C++ tool component.
+- Initialized the x64 MSVC environment through `VsDevCmd.bat`.
+- Confirmed MSVC `cl 19.44.35228`, linker `14.44.35228.0`, Windows SDK `10.0.26100.0`, CMake `4.3.3`, Ninja `1.13.2`, Python `3.14.6`, and Git `2.54.0.windows.1`.
+- Missing Clang was correctly treated as irrelevant to the supported Windows MSVC path.
+- MinGW GCC was not used as a substitute.
+
+### Full build result
+
+Using a disposable `build-codex-smoke` directory:
+
+- Fresh MSVC/Ninja Debug CMake configuration passed with exit code `0`.
+- Full build passed with all `1049/1049` Ninja steps.
+- `xi_connect`, `xi_map`, `xi_search`, `xi_world`, and `xi_test` linked successfully.
+- Build exit code was `0`.
+- The build directory, generated executables, and PDBs were removed.
+- Final Git status was clean on the required branch.
+
+The exact commands and tool versions are recorded in `LOCAL_CODEX_ENVIRONMENT.md`.
+
+### State transition
+
+- `FAILED_INFRASTRUCTURE` is superseded.
+- The current project state is `IMPLEMENTATION_READY`.
+- The next pass is focused automated regression coverage for the six inherited corrections, followed by the remaining implementation backlog.
+- No owner gameplay testing is requested.
+
+## Current resume point
+
+1. Fetch the latest `origin/retail-parity/codex-vanilla-zilart` documentation commits.
+2. Read `AGENTS.md`, `CODEX_MASTER_TASK.md`, `CODEX_BACKLOG.md`, `LOCAL_CODEX_ENVIRONMENT.md`, `CODEX_STATE.md`, `STATUS.md`, this worklog, the completion report, and all findings.
+3. Add focused automated tests for the Temple door, fishing moon pattern, Waders, Moghancement: Region, Shadowbind, and Call for Help.
+4. Run narrow tests and `xi_test` where relevant.
+5. Run the validated full MSVC/Ninja Debug build.
+6. Fix failures caused by fork changes without weakening unrelated assertions.
+7. Update all project records, commit logically, and push only to the fork branch when explicitly permitted.
+8. Continue attack-while-fishing, Ark Angel messages, item additional effects, Elemental Spirits, Ballista, and the exhaustive audit after inherited corrections are test-backed.
