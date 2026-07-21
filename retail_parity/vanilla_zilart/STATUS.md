@@ -17,7 +17,7 @@
 | Status | Count |
 |---|---:|
 | Retail equivalent | 0 |
-| Inaccurate | 8 |
+| Inaccurate | 10 |
 | Partial | 0 |
 | Missing | 1 |
 | Verify live | 0 |
@@ -38,6 +38,8 @@ Counts include only findings that passed the current evidence threshold. They do
 | `VZ-JOB-002` | Ranger Shadowbind resistance | `INACCURATE` | `MODERATE` | `HIGH` for implementation defect | Codex implementation; retail coefficients deferred |
 | `VZ-ECON-001` | Fishing new-moon catch pattern | `INACCURATE` | `MODERATE` | `HIGH` | One-line C++ correction and deterministic test |
 | `VZ-ECON-002` | Waders fishing bonus | `INACCURATE` | `MINOR` | `HIGH` | Bounded C++ correction and deterministic test |
+| `VZ-BF-001` | Ark Angel zero-delay ready messages | `INACCURATE` | `MODERATE` | `HIGH` | Mob-skill state/message refactor and tests |
+| `VZ-ECON-003` | Moghancement: Region influence bonus | `INACCURATE` | `MODERATE` | `HIGH` | Bounded conquest arithmetic correction and IPC tests |
 
 ## Assistant implementations
 
@@ -54,12 +56,12 @@ Counts include only findings that passed the current evidence threshold. They do
 - [x] Record exact upstream baseline commit
 - [x] Configure AI-first workflow, Codex master task, persistent state, reports, and autonomous runner
 - [ ] Complete existing tests/TODOs/stubs/known-failure inventory — in progress
-- [ ] Audit shared core systems — additional effects, Call for Help, and fishing/combat transition started
+- [ ] Audit shared core systems — additional effects, Call for Help, fishing/combat transition, death/raise, and mob-skill messaging reviewed
 - [ ] Audit original jobs — Ranger started
 - [ ] Audit Zilart jobs — Summoner started
 - [ ] Audit national missions and quests — stale nation-change issue reviewed and rejected
-- [ ] Audit Zilart missions, zones, battlefields, and NMs — Temple door finding corrected; mission tests reviewed
-- [ ] Audit economy, crafting, gathering, conquest, and transport — fishing started
+- [ ] Audit Zilart missions, zones, battlefields, and NMs — Temple door corrected; Ark Angel messaging recorded; mission tests reviewed
+- [ ] Audit economy, crafting, gathering, conquest, and transport — fishing, crafting, guilds, and conquest started
 - [ ] Implement all assistant-capable corrections — one completed
 - [ ] Produce prioritized remediation backlog
 - [ ] Mark consolidated Codex handoff `READY`
@@ -68,11 +70,11 @@ Counts include only findings that passed the current evidence threshold. They do
 
 ## Investigation order
 
-1. Continue repository-wide incompleteness inventory and classify leads by expansion relevance.
+1. Complete outpost travel, transport, gathering, and remaining conquest review.
 2. Continue shared combat review: enmity, claims, resistance, damage, ranged attacks, skillchains, and status effects.
 3. Continue original and Zilart jobs, including pets and era equipment interactions.
-4. Audit mission/quest state machines and battlefields.
-5. Audit crafting, guild progression, gathering, conquest, transport, and remaining economy systems.
+4. Audit mission/quest state machines, battlefields, and high-impact NMs.
+5. Complete crafting, guild progression, gathering, and remaining economy systems.
 6. Audit packet/client-visible differences and isolate items requiring final live validation.
 
 ## Guardrails
