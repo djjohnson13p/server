@@ -1,22 +1,21 @@
 # Human-Only Queue — Vanilla + Rise of the Zilart
 
-Status: NOT_FINAL_INFRASTRUCTURE_BLOCKED
+Status: NOT_FINAL_ENGINEERING_CONTINUES
 
 No gameplay, retail-capture, server-deployment, or manual test task is being assigned to the owner at this state.
 
-The assistant stage is complete, but the local autonomous Codex/build stage terminated as `FAILED_INFRASTRUCTURE`. The remaining engineering and automated tests are still AI-capable in a functioning networked Codex/local-build environment, so they do not belong in a final human-only queue yet.
+The local Codex desktop environment, GitHub connectivity, MSVC toolchain, CMake/Ninja configuration, and full Debug build are validated. The remaining engineering and automated tests are still AI-capable, so they do not belong in a final human-only queue yet.
 
-## Infrastructure resume requirement
+## Current AI stage
 
-A future execution environment must provide:
+Codex must first:
 
-- outbound access to GitHub for cloning/fetching the fork;
-- outbound access to the authenticated OpenAI Codex endpoint;
-- a local filesystem suitable for the LandSandBoat repository;
-- Linux/CMake/Ninja/compiler and repository test dependencies;
-- permission to push only to `djjohnson13p/server`.
-
-This is an execution-environment requirement, not a gameplay-validation request.
+- add focused automated tests for the six inherited corrections;
+- resolve any defects those tests expose;
+- complete the five remaining known implementation findings;
+- continue the exhaustive Vanilla/Zilart local-repository audit;
+- run the available C++, Lua, SQL, unit, integration, startup, and build checks;
+- update the findings and project reports.
 
 ## Provisional live-retail/client candidates
 
