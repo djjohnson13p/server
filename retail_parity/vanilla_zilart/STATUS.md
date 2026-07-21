@@ -6,9 +6,11 @@
 - **Fork:** `djjohnson13p/server`
 - **Audited baseline branch:** `base`
 - **Pinned upstream commit:** `242ab0d055dfb80396e7398b0dd7361b750c74e2`
-- **Audit branch:** `retail-parity/vanilla-zilart-audit`
+- **Assistant audit branch:** `retail-parity/vanilla-zilart-audit`
+- **Future Codex branch:** `retail-parity/codex-vanilla-zilart`
 - **Audit start date:** 2026-07-21
 - **Substantive code audit:** In progress
+- **Codex handoff:** Not ready; assistant stage remains active
 
 ## Current counts
 
@@ -34,18 +36,22 @@ Counts include only findings that passed the current evidence threshold. They do
 ## Work stages
 
 - [x] Create clean fork
-- [x] Create isolated audit branch
+- [x] Create isolated assistant audit branch
 - [x] Establish scope, evidence rules, statuses, and ownership categories
 - [x] Record exact upstream baseline commit
-- [ ] Inventory existing tests, TODOs, disabled scripts, stubs, and known-failure markers — in progress
+- [x] Configure AI-first workflow, Codex master task, persistent state, reports, and autonomous runner
+- [ ] Complete existing tests/TODOs/stubs/known-failure inventory — in progress
 - [ ] Audit shared core systems — started with item additional effects
 - [ ] Audit original jobs
 - [ ] Audit Zilart jobs
 - [ ] Audit national missions and quests
 - [ ] Audit Zilart missions, zones, battlefields, and NMs — started with Temple door mechanics
 - [ ] Audit economy, crafting, gathering, conquest, and transport
+- [ ] Implement all assistant-capable corrections
 - [ ] Produce prioritized remediation backlog
-- [ ] Begin fork-only implementation branches
+- [ ] Mark consolidated Codex handoff `READY`
+- [ ] Run autonomous Codex stage
+- [ ] Present one final human-only validation queue
 
 ## First-pass investigation order
 
@@ -54,11 +60,12 @@ Counts include only findings that passed the current evidence threshold. They do
 3. Audit original and Zilart jobs, including pets and era equipment interactions.
 4. Audit mission/quest state machines and battlefields.
 5. Audit zone mechanics, NMs, drops, economy, crafting, gathering, conquest, and transport.
-6. Audit packet/client-visible differences and isolate items requiring live retail validation.
+6. Audit packet/client-visible differences and isolate items requiring final live validation.
 
 ## Guardrails
 
 - No upstream pull requests.
 - No parity claim without explicit evidence and a reproducible validation path.
-- No implementation work mixed into this audit branch unless it is audit tooling or documentation.
-- Fixes will use separate fork-owned branches organized by finding ID or tightly related group.
+- No intermediate owner testing requests.
+- No implementation work mixed into the assistant audit branch unless it is audit tooling, documentation, or a bounded assistant-capable correction with review records.
+- Larger fixes use fork-owned implementation branches and are consolidated before the Codex handoff.
