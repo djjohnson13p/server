@@ -165,8 +165,31 @@ None. Project setup is not evidence that any gameplay system is correct or incor
 - `MOGHANCEMENT_EXPERIENCE` applies that modifier at value 5.
 - No finding was created for Moghancement: Experience.
 
-### Next action
+## 2026-07-21 — Assistant-stage closure pass 5
 
-- Complete outpost travel, remaining transport, gathering, and conquest review.
-- Continue active-base job, enmity, claim, battlefield, and NM mechanics.
-- Prepare the assistant-completion and prioritized Codex backlog once remaining source-accessible areas are exhausted.
+### Final source-accessible areas reviewed
+
+- Outpost supply-run eligibility, supply freshness, delivery rewards, teleport unlocks, city-to-outpost travel, outpost-to-city travel, fees, ownership, and alliance handling.
+- Expeditionary Force sign-up, validation, badge/key-item conversion, teleport, tally cleanup, and reward paths.
+- HELM gathering tools, tool breakage, weighted drops, point movement, inventory-full handling, and success hooks.
+- Remaining conquest vendor and overseer interactions available through direct source reads.
+
+### Outcome
+
+- No new high-confidence outpost, Expeditionary Force, transport, or HELM defect was promoted.
+- Existing implementation presence was not treated as proof of retail equivalence.
+- The connected GitHub-only audit had reached diminishing returns: deeper completeness work now requires local filesystem search, builds, generated data inspection, automated tests, and iterative multi-file engineering.
+
+### Consolidation completed
+
+- Applied `VZ-ZONE-001` directly to the consolidated audit branch in commit `ed3bb6e3e59dbe482ebc58d44587576e0b035ab9`.
+- Added `CODEX_BACKLOG.md` with ordered deterministic, bounded, framework, and missing-system work.
+- Added `ASSISTANT_COMPLETION_REPORT.md` with findings, rejected leads, inspected areas, and environment limitations.
+- Updated `STATUS.md` to mark the source-accessible assistant stage complete.
+
+### Handoff decision
+
+- All corrections safe through the connected GitHub workflow have been completed.
+- Remaining implementation and exhaustive audit work requires Codex's local repository/build/test environment.
+- `AI_HANDOFF.md` may now be changed to `READY`.
+- No owner action or intermediate manual testing is requested.
