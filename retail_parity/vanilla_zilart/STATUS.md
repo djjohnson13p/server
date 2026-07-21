@@ -7,10 +7,10 @@
 - **Audited baseline branch:** `base`
 - **Pinned upstream commit:** `242ab0d055dfb80396e7398b0dd7361b750c74e2`
 - **Assistant audit branch:** `retail-parity/vanilla-zilart-audit`
-- **Future Codex branch:** `retail-parity/codex-vanilla-zilart`
+- **Codex branch:** `retail-parity/codex-vanilla-zilart`
 - **Audit start date:** 2026-07-21
-- **Substantive code audit:** In progress
-- **Codex handoff:** Not ready; assistant stage remains active
+- **Assistant source-accessible stage:** Complete
+- **Codex handoff:** Prepared; `AI_HANDOFF.md` is the execution gate
 
 ## Current counts
 
@@ -23,7 +23,7 @@
 | Verify live | 0 |
 | Unknown | 0 |
 
-Counts include only findings that passed the current evidence threshold. They do not represent completion of the expansion audit.
+Counts include only findings that passed the assistant evidence threshold. They do not represent completion of the expansion audit; Codex must continue the full local-repository audit.
 
 ## Recorded findings
 
@@ -31,7 +31,7 @@ Counts include only findings that passed the current evidence threshold. They do
 |---|---|---|---|---|---|
 | `VZ-SYS-001` | Ballista | `MISSING` | `MAJOR` | `HIGH` | Codex-scale plus final retail validation |
 | `VZ-COMBAT-001` | Item additional effects | `INACCURATE` | `MAJOR` | `HIGH` for framework defects | Codex-scale plus measured retail data |
-| `VZ-ZONE-001` | Temple of Uggalepih door keys | `INACCURATE` at baseline | `MODERATE` | `HIGH` | Corrected on `retail-parity/fix-vz-zone-001` (`620d69d`) |
+| `VZ-ZONE-001` | Temple of Uggalepih door keys | `INACCURATE` at baseline | `MODERATE` | `HIGH` | Corrected in consolidated audit branch (`ed3bb6e`) |
 | `VZ-JOB-001` | Summoner Elemental Spirits | `INACCURATE` | `MAJOR` | `HIGH` for admitted defects | Codex-scale; final measured values deferred |
 | `VZ-CORE-001` | Call for Help scope | `INACCURATE` | `MODERATE` | `HIGH` for implementation difference | Codex-scale C++ and tests |
 | `VZ-CORE-002` | Attack while fishing | `INACCURATE` | `MINOR` | `HIGH` for intentional difference | Codex-scale state transition and tests |
@@ -41,12 +41,23 @@ Counts include only findings that passed the current evidence threshold. They do
 | `VZ-BF-001` | Ark Angel zero-delay ready messages | `INACCURATE` | `MODERATE` | `HIGH` | Mob-skill state/message refactor and tests |
 | `VZ-ECON-003` | Moghancement: Region influence bonus | `INACCURATE` | `MODERATE` | `HIGH` | Bounded conquest arithmetic correction and IPC tests |
 
-## Assistant implementations
+## Assistant implementation
 
 - `VZ-ZONE-001`: `_mf9` now requires and consumes an Uggalepih Key; `_mf8` remains the Prelate-Key door.
-- Implementation branch: `retail-parity/fix-vz-zone-001`
-- Implementation commit: `620d69d7c0315f70066c3484e110bb5d9baade3d`
+- Consolidated audit-branch commit: `ed3bb6e3e59dbe482ebc58d44587576e0b035ab9`
+- Separate implementation-branch commit: `620d69d7c0315f70066c3484e110bb5d9baade3d`
 - Final client route validation is deferred to the consolidated end-stage queue.
+
+## Assistant completion artifacts
+
+- `ASSISTANT_COMPLETION_REPORT.md`
+- `CODEX_BACKLOG.md`
+- `CODEX_MASTER_TASK.md`
+- `AI_HANDOFF.md`
+- `CODEX_STATE.md`
+- `CODEX_COMPLETION_REPORT.md`
+- `HUMAN_ONLY_QUEUE.md`
+- `tools/retail_parity/run_codex_remainder.py`
 
 ## Work stages
 
@@ -55,32 +66,27 @@ Counts include only findings that passed the current evidence threshold. They do
 - [x] Establish scope, evidence rules, statuses, and ownership categories
 - [x] Record exact upstream baseline commit
 - [x] Configure AI-first workflow, Codex master task, persistent state, reports, and autonomous runner
-- [ ] Complete existing tests/TODOs/stubs/known-failure inventory — in progress
-- [ ] Audit shared core systems — additional effects, Call for Help, fishing/combat transition, death/raise, and mob-skill messaging reviewed
-- [ ] Audit original jobs — Ranger started
-- [ ] Audit Zilart jobs — Summoner started
-- [ ] Audit national missions and quests — stale nation-change issue reviewed and rejected
-- [ ] Audit Zilart missions, zones, battlefields, and NMs — Temple door corrected; Ark Angel messaging recorded; mission tests reviewed
-- [ ] Audit economy, crafting, gathering, conquest, and transport — fishing, crafting, guilds, and conquest started
-- [ ] Implement all assistant-capable corrections — one completed
-- [ ] Produce prioritized remediation backlog
+- [x] Complete the source-accessible assistant inventory of tests/TODOs/stubs/issues across representative scoped systems
+- [x] Audit source-accessible shared-core, job, mission, battlefield, economy, crafting, gathering, conquest, and transport paths
+- [x] Implement all safely bounded assistant-capable corrections available through the connected GitHub workflow
+- [x] Produce prioritized Codex remediation and audit-continuation backlog
 - [ ] Mark consolidated Codex handoff `READY`
 - [ ] Run autonomous Codex stage
 - [ ] Present one final human-only validation queue
 
-## Investigation order
+## Codex continuation requirements
 
-1. Complete outpost travel, transport, gathering, and remaining conquest review.
-2. Continue shared combat review: enmity, claims, resistance, damage, ranged attacks, skillchains, and status effects.
-3. Continue original and Zilart jobs, including pets and era equipment interactions.
-4. Audit mission/quest state machines, battlefields, and high-impact NMs.
-5. Complete crafting, guild progression, gathering, and remaining economy systems.
-6. Audit packet/client-visible differences and isolate items requiring final live validation.
+1. Verify all inherited findings and the assistant door correction.
+2. Implement the prioritized backlog from deterministic fixes through Ballista.
+3. Perform a full local filesystem/search/build/test audit for all Vanilla + Zilart systems.
+4. Add findings not discoverable through the assistant's connected GitHub-only environment.
+5. Maintain `STATUS.md`, `WORKLOG.md`, `CODEX_STATE.md`, completion report, and human-only queue.
+6. Never open or suggest an upstream pull request.
+7. Do not ask the owner for intermediate testing or routine decisions.
 
 ## Guardrails
 
 - No upstream pull requests.
 - No parity claim without explicit evidence and a reproducible validation path.
 - No intermediate owner testing requests.
-- No implementation work mixed into the assistant audit branch unless it is audit tooling or documentation.
-- Bounded fixes use separate fork-owned implementation branches and are consolidated before the Codex handoff.
+- Codex must distinguish confirmed defects, unresolved retail coefficients, and unavailable live-client evidence.
