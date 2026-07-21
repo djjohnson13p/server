@@ -1,0 +1,96 @@
+name: Retail Parity Diagnostic Build
+
+on:
+  push:
+    branches:
+      - 'retail-parity/codex-vanilla-zilart'
+    paths:
+      - '.github/workflows/retail-parity-diagnostic-build.yml'
+
+permissions:
+  actions: read
+  contents: write
+
+jobs:
+  build:
+    uses: ./.github/workflows/runner_build.yml
+    with:
+      runner: ubuntu-latest
+      compiler: gcc
+      build_type: Debug
+      tracy: false
+      build_modules: false
+      save_cache: false
+      upload_artifact: false
+      clang_tidy: false
+
+  record-diagnostics:
+    if: always()
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out Codex work branch
+        uses: actions/checkout@v4
+        with:
+          ref: retail-parity/codex-vanilla-zilart
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Capture build result and failed-log tail
+        shell: bash
+        env:
+          BUILD_RESULT: ${{ needs.build.result }}
+          GH_TOKEN: ${{ github.token }}
+          RUN_ID: ${{ github.run_id }}
+          TRIGGER_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          report='retail_parity/vanilla_zilart/CODEX_VALIDATION.md'
+          log_tail='retail_parity/vanilla_zilart/CODEX_BUILD_LOG_TAIL.txt'
+
+          cat > "$report" <<EOF
+          # Codex Branch Automated Validation
+
+          Status: ${BUILD_RESULT}
+
+          - Workflow: Retail Parity Diagnostic Build
+          - Validated branch: \`retail-parity/codex-vanilla-zilart\`
+          - Trigger commit: \`${TRIGGER_SHA}\`
+          - Validation: LandSandBoat reusable \`ubuntu-latest\` GCC Debug build
+          EOF
+
+          rm -f "$log_tail"
+          if [[ "$BUILD_RESULT" != 'success' ]]; then
+            jobs_json="$(curl --fail-with-body --silent --show-error \
+              -H "Authorization: Bearer ${GH_TOKEN}" \
+              -H 'Accept: application/vnd.github+json' \
+              "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/runs/${RUN_ID}/jobs?filter=latest&per_page=100")"
+            job_id="$(printf '%s' "$jobs_json" | jq -r '.jobs[] | select(.conclusion == "failure") | .id' | head -n 1)"
+
+            if [[ -n "$job_id" && "$job_id" != 'null' ]]; then
+              curl --fail-with-body --silent --show-error --location \
+                -H "Authorization: Bearer ${GH_TOKEN}" \
+                -H 'Accept: application/vnd.github+json' \
+                "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/jobs/${job_id}/logs" \
+                -o full-build.log
+              tail -n 250 full-build.log > "$log_tail"
+              printf '\n- Failed build job ID: `%s`\n- Compiler log tail: `CODEX_BUILD_LOG_TAIL.txt`\n' "$job_id" >> "$report"
+            else
+              printf '\n- No failed build-job ID was available from the run API.\n' >> "$report"
+            fi
+          fi
+
+      - name: Commit diagnostics and remove one-time workflow
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'retail-parity-automation'
+          git config user.email 'retail-parity-automation@users.noreply.github.com'
+          git rm .github/workflows/retail-parity-diagnostic-build.yml
+          git add retail_parity/vanilla_zilart/CODEX_VALIDATION.md
+          if [[ -f retail_parity/vanilla_zilart/CODEX_BUILD_LOG_TAIL.txt ]]; then
+            git add retail_parity/vanilla_zilart/CODEX_BUILD_LOG_TAIL.txt
+          fi
+          git commit -m 'test: record Codex branch diagnostic build'
+          git pull --rebase origin retail-parity/codex-vanilla-zilart
+          git push origin HEAD:retail-parity/codex-vanilla-zilart
