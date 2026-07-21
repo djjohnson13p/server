@@ -1,18 +1,19 @@
 # Vanilla + Rise of the Zilart Audit Status
 
-## Baseline
+## Baseline and branches
 
 - **Upstream repository:** `LandSandBoat/server`
 - **Fork:** `djjohnson13p/server`
-- **Audited baseline branch:** `base`
-- **Pinned upstream commit:** `242ab0d055dfb80396e7398b0dd7361b750c74e2`
+- **Pinned upstream baseline:** `242ab0d055dfb80396e7398b0dd7361b750c74e2`
 - **Assistant audit branch:** `retail-parity/vanilla-zilart-audit`
-- **Codex branch:** `retail-parity/codex-vanilla-zilart`
+- **Codex work branch:** `retail-parity/codex-vanilla-zilart`
 - **Audit start date:** 2026-07-21
 - **Assistant source-accessible stage:** Complete
-- **Codex handoff:** Prepared; `AI_HANDOFF.md` is the execution gate
+- **Codex handoff:** Ready and attempted
+- **Current terminal state:** `FAILED_INFRASTRUCTURE`
+- **Upstream pull requests:** None; prohibited
 
-## Current counts
+## Baseline finding counts
 
 | Status | Count |
 |---|---:|
@@ -23,70 +24,74 @@
 | Verify live | 0 |
 | Unknown | 0 |
 
-Counts include only findings that passed the assistant evidence threshold. They do not represent completion of the expansion audit; Codex must continue the full local-repository audit.
+These are baseline discrepancy counts, not resolution counts. The absence of additional findings is not proof that unreviewed systems are retail-equivalent.
 
-## Recorded findings
+## Implementation progress
 
-| ID | Area | Status | Severity | Confidence | Disposition / implementation |
-|---|---|---|---|---|---|
-| `VZ-SYS-001` | Ballista | `MISSING` | `MAJOR` | `HIGH` | Codex-scale plus final retail validation |
-| `VZ-COMBAT-001` | Item additional effects | `INACCURATE` | `MAJOR` | `HIGH` for framework defects | Codex-scale plus measured retail data |
-| `VZ-ZONE-001` | Temple of Uggalepih door keys | `INACCURATE` at baseline | `MODERATE` | `HIGH` | Corrected in consolidated audit branch (`ed3bb6e`) |
-| `VZ-JOB-001` | Summoner Elemental Spirits | `INACCURATE` | `MAJOR` | `HIGH` for admitted defects | Codex-scale; final measured values deferred |
-| `VZ-CORE-001` | Call for Help scope | `INACCURATE` | `MODERATE` | `HIGH` for implementation difference | Codex-scale C++ and tests |
-| `VZ-CORE-002` | Attack while fishing | `INACCURATE` | `MINOR` | `HIGH` for intentional difference | Codex-scale state transition and tests |
-| `VZ-JOB-002` | Ranger Shadowbind resistance | `INACCURATE` | `MODERATE` | `HIGH` for implementation defect | Codex implementation; retail coefficients deferred |
-| `VZ-ECON-001` | Fishing new-moon catch pattern | `INACCURATE` | `MODERATE` | `HIGH` | One-line C++ correction and deterministic test |
-| `VZ-ECON-002` | Waders fishing bonus | `INACCURATE` | `MINOR` | `HIGH` | Bounded C++ correction and deterministic test |
-| `VZ-BF-001` | Ark Angel zero-delay ready messages | `INACCURATE` | `MODERATE` | `HIGH` | Mob-skill state/message refactor and tests |
-| `VZ-ECON-003` | Moghancement: Region influence bonus | `INACCURATE` | `MODERATE` | `HIGH` | Bounded conquest arithmetic correction and IPC tests |
+| Implementation state | Count |
+|---|---:|
+| Corrected or candidate-corrected on fork | 5 |
+| Partially corrected on fork | 1 |
+| Not yet implemented | 5 |
 
-## Assistant implementation
+## Findings and implementation state
 
-- `VZ-ZONE-001`: `_mf9` now requires and consumes an Uggalepih Key; `_mf8` remains the Prelate-Key door.
-- Consolidated audit-branch commit: `ed3bb6e3e59dbe482ebc58d44587576e0b035ab9`
-- Separate implementation-branch commit: `620d69d7c0315f70066c3484e110bb5d9baade3d`
-- Final client route validation is deferred to the consolidated end-stage queue.
+| ID | Area | Baseline status | Current fork state |
+|---|---|---|---|
+| `VZ-SYS-001` | Ballista | `MISSING` | Not implemented; largest remaining system |
+| `VZ-COMBAT-001` | Item additional effects | `INACCURATE` | Not implemented; inventory/framework work remains |
+| `VZ-ZONE-001` | Temple of Uggalepih door keys | `INACCURATE` | Corrected in audit/Codex lineage (`ed3bb6e`) |
+| `VZ-JOB-001` | Summoner Elemental Spirits | `INACCURATE` | Not implemented; data/formula work remains |
+| `VZ-CORE-001` | Call for Help scope | `INACCURATE` | Candidate correction at `de408e0`; tests/build pending |
+| `VZ-CORE-002` | Attack while fishing | `INACCURATE` | Not implemented; safe state cleanup required |
+| `VZ-JOB-002` | Ranger Shadowbind | `INACCURATE` | Partial correction at `b0058b4`; coefficients/tests remain |
+| `VZ-ECON-001` | Fishing new-moon pattern | `INACCURATE` | Corrected at `556ad21`; unit/build validation pending |
+| `VZ-ECON-002` | Waders fishing bonus | `INACCURATE` | Corrected at `556ad21`; unit/build validation pending |
+| `VZ-BF-001` | Ark Angel zero-delay ready messages | `INACCURATE` | Not implemented; state/message refactor required |
+| `VZ-ECON-003` | Moghancement: Region bonus | `INACCURATE` | Corrected at `556ad21`; IPC/build validation pending |
 
-## Assistant completion artifacts
+## Validation state
 
-- `ASSISTANT_COMPLETION_REPORT.md`
-- `CODEX_BACKLOG.md`
-- `CODEX_MASTER_TASK.md`
-- `AI_HANDOFF.md`
-- `CODEX_STATE.md`
-- `CODEX_COMPLETION_REPORT.md`
-- `HUMAN_ONLY_QUEUE.md`
-- `tools/retail_parity/run_codex_remainder.py`
+Completed:
+
+- Exact source inspection and evidence records for all eleven findings.
+- Commit-diff review for the Temple door, Shadowbind, and Call for Help changes.
+- Exact-match source assertions and `git diff --check` for the three deterministic C++ corrections.
+- Restoration of the pre-existing `conquest_system.cpp` UTF-8 BOM at `0702a5b`.
+- Removal of all temporary implementation/build workflows.
+
+Not completed because of infrastructure failure:
+
+- A successful native build of the current branch.
+- Compiler diagnostics for the failed GCC Debug build.
+- C++/Lua/SQL/unit/integration/startup checks for the current branch.
+- Local Codex filesystem audit and the remainder of the implementation backlog.
+- Client/live-retail validation.
 
 ## Work stages
 
-- [x] Create clean fork
-- [x] Create isolated assistant audit branch
-- [x] Establish scope, evidence rules, statuses, and ownership categories
-- [x] Record exact upstream baseline commit
-- [x] Configure AI-first workflow, Codex master task, persistent state, reports, and autonomous runner
-- [x] Complete the source-accessible assistant inventory of tests/TODOs/stubs/issues across representative scoped systems
-- [x] Audit source-accessible shared-core, job, mission, battlefield, economy, crafting, gathering, conquest, and transport paths
-- [x] Implement all safely bounded assistant-capable corrections available through the connected GitHub workflow
-- [x] Produce prioritized Codex remediation and audit-continuation backlog
-- [ ] Mark consolidated Codex handoff `READY`
-- [ ] Run autonomous Codex stage
-- [ ] Present one final human-only validation queue
+- [x] Create clean fork and isolated branches
+- [x] Establish scope, evidence rules, finding format, and AI-first workflow
+- [x] Complete the source-accessible assistant audit
+- [x] Prepare and open the consolidated Codex handoff
+- [x] Attempt the autonomous Codex stage
+- [x] Apply six safe fork-only corrections or partial corrections
+- [x] Record the exact infrastructure failure and resume instructions
+- [ ] Restore a networked local Codex/build environment
+- [ ] Diagnose and fix the current native build
+- [ ] Add automated tests for implemented findings
+- [ ] Complete the remaining five known findings
+- [ ] Continue the exhaustive local-repository Vanilla/Zilart audit
+- [ ] Produce a final actionable human-only validation queue
 
-## Codex continuation requirements
+## Resume point
 
-1. Verify all inherited findings and the assistant door correction.
-2. Implement the prioritized backlog from deterministic fixes through Ballista.
-3. Perform a full local filesystem/search/build/test audit for all Vanilla + Zilart systems.
-4. Add findings not discoverable through the assistant's connected GitHub-only environment.
-5. Maintain `STATUS.md`, `WORKLOG.md`, `CODEX_STATE.md`, completion report, and human-only queue.
-6. Never open or suggest an upstream pull request.
-7. Do not ask the owner for intermediate testing or routine decisions.
+Use the latest head of `retail-parity/codex-vanilla-zilart`. Read `CODEX_STATE.md`, `CODEX_BACKLOG.md`, `CODEX_COMPLETION_REPORT.md`, the worklog, and all findings before continuing. Start with a clean GCC Debug build and capture the first compiler error.
 
 ## Guardrails
 
-- No upstream pull requests.
-- No parity claim without explicit evidence and a reproducible validation path.
-- No intermediate owner testing requests.
-- Codex must distinguish confirmed defects, unresolved retail coefficients, and unavailable live-client evidence.
+- Never modify `base` directly.
+- Never open, prepare, or suggest an upstream pull request.
+- Do not ask the owner for intermediate gameplay testing.
+- Do not label a system retail-equivalent merely because it compiles or lacks an open issue.
+- Preserve unresolved retail coefficients rather than inventing them.
