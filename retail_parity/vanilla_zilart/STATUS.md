@@ -17,7 +17,7 @@
 | Status | Count |
 |---|---:|
 | Retail equivalent | 0 |
-| Inaccurate | 2 |
+| Inaccurate | 5 |
 | Partial | 0 |
 | Missing | 1 |
 | Verify live | 0 |
@@ -27,11 +27,21 @@ Counts include only findings that passed the current evidence threshold. They do
 
 ## Recorded findings
 
-| ID | Area | Status | Severity | Confidence | Disposition |
+| ID | Area | Status | Severity | Confidence | Disposition / implementation |
 |---|---|---|---|---|---|
-| `VZ-SYS-001` | Ballista | `MISSING` | `MAJOR` | `HIGH` | `AI_PLUS_HUMAN_TESTING` |
-| `VZ-COMBAT-001` | Item additional effects | `INACCURATE` | `MAJOR` | `HIGH` for framework defects | `AI_PLUS_HUMAN_TESTING` |
-| `VZ-ZONE-001` | Temple of Uggalepih door keys | `INACCURATE` | `MODERATE` | `MEDIUM` | `ASSISTANT_DIRECT` |
+| `VZ-SYS-001` | Ballista | `MISSING` | `MAJOR` | `HIGH` | Codex-scale plus final retail validation |
+| `VZ-COMBAT-001` | Item additional effects | `INACCURATE` | `MAJOR` | `HIGH` for framework defects | Codex-scale plus measured retail data |
+| `VZ-ZONE-001` | Temple of Uggalepih door keys | `INACCURATE` at baseline | `MODERATE` | `HIGH` | Corrected on `retail-parity/fix-vz-zone-001` (`620d69d`) |
+| `VZ-JOB-001` | Summoner Elemental Spirits | `INACCURATE` | `MAJOR` | `HIGH` for admitted defects | Codex-scale; final measured values deferred |
+| `VZ-CORE-001` | Call for Help scope | `INACCURATE` | `MODERATE` | `HIGH` for implementation difference | Codex-scale C++ and tests |
+| `VZ-CORE-002` | Attack while fishing | `INACCURATE` | `MINOR` | `HIGH` for intentional difference | Codex-scale state transition and tests |
+
+## Assistant implementations
+
+- `VZ-ZONE-001`: `_mf9` now requires and consumes an Uggalepih Key; `_mf8` remains the Prelate-Key door.
+- Implementation branch: `retail-parity/fix-vz-zone-001`
+- Implementation commit: `620d69d7c0315f70066c3484e110bb5d9baade3d`
+- Final client route validation is deferred to the consolidated end-stage queue.
 
 ## Work stages
 
@@ -41,23 +51,23 @@ Counts include only findings that passed the current evidence threshold. They do
 - [x] Record exact upstream baseline commit
 - [x] Configure AI-first workflow, Codex master task, persistent state, reports, and autonomous runner
 - [ ] Complete existing tests/TODOs/stubs/known-failure inventory — in progress
-- [ ] Audit shared core systems — started with item additional effects
+- [ ] Audit shared core systems — additional effects, Call for Help, and fishing/combat transition started
 - [ ] Audit original jobs
-- [ ] Audit Zilart jobs
-- [ ] Audit national missions and quests
-- [ ] Audit Zilart missions, zones, battlefields, and NMs — started with Temple door mechanics
+- [ ] Audit Zilart jobs — Summoner started
+- [ ] Audit national missions and quests — stale nation-change issue reviewed and rejected
+- [ ] Audit Zilart missions, zones, battlefields, and NMs — Temple door finding corrected
 - [ ] Audit economy, crafting, gathering, conquest, and transport
-- [ ] Implement all assistant-capable corrections
+- [ ] Implement all assistant-capable corrections — one completed
 - [ ] Produce prioritized remediation backlog
 - [ ] Mark consolidated Codex handoff `READY`
 - [ ] Run autonomous Codex stage
 - [ ] Present one final human-only validation queue
 
-## First-pass investigation order
+## Investigation order
 
-1. Complete repository-wide incompleteness inventory and classify leads by expansion relevance.
-2. Continue shared combat review: enmity, resistance, additional effects, damage, ranged attacks, and skillchains.
-3. Audit original and Zilart jobs, including pets and era equipment interactions.
+1. Continue repository-wide incompleteness inventory and classify leads by expansion relevance.
+2. Continue shared combat review: enmity, claims, resistance, damage, ranged attacks, skillchains, and status effects.
+3. Continue original and Zilart jobs, including pets and era equipment interactions.
 4. Audit mission/quest state machines and battlefields.
 5. Audit zone mechanics, NMs, drops, economy, crafting, gathering, conquest, and transport.
 6. Audit packet/client-visible differences and isolate items requiring final live validation.
@@ -67,5 +77,5 @@ Counts include only findings that passed the current evidence threshold. They do
 - No upstream pull requests.
 - No parity claim without explicit evidence and a reproducible validation path.
 - No intermediate owner testing requests.
-- No implementation work mixed into the assistant audit branch unless it is audit tooling, documentation, or a bounded assistant-capable correction with review records.
-- Larger fixes use fork-owned implementation branches and are consolidated before the Codex handoff.
+- No implementation work mixed into the assistant audit branch unless it is audit tooling or documentation.
+- Bounded fixes use separate fork-owned implementation branches and are consolidated before the Codex handoff.
