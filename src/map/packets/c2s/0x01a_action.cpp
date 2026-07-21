@@ -320,15 +320,25 @@ void GP_CLI_COMMAND_ACTION::process(MapSession* PSession, CCharEntity* PChar) co
         break;
         case GP_CLI_COMMAND_ACTION_ACTIONID::Help:
         {
-            // TODO: C4H applies to ALL claimed enemies on which you (personally) have enmity. This does NOT require you to be engaged.
-            if (auto* PMob = dynamic_cast<CMobEntity*>(PChar->GetBattleTarget()))
-            {
-                if (!PMob->GetCallForHelpFlag() && PMob->PEnmityContainer->HasID(PChar->id) && !PMob->m_CallForHelpBlocked)
+            bool callForHelpSucceeded = false;
+
+            PChar->loc.zone->ForEachMobInstance(
+                PChar,
+                [PChar, &callForHelpSucceeded](CMobEntity* PMob)
                 {
-                    PMob->SetCallForHelpFlag(true);
-                    PChar->loc.zone->PushPacket(PChar, CHAR_INRANGE_SELF, std::make_unique<GP_SERV_COMMAND_BATTLE_MESSAGE>(PChar, PChar, 0, 0, MsgBasic::CallForHelp));
-                    return;
-                }
+                    if (!PMob->GetCallForHelpFlag() &&
+                        PMob->PEnmityContainer->HasID(PChar->id) &&
+                        !PMob->m_CallForHelpBlocked)
+                    {
+                        PMob->SetCallForHelpFlag(true);
+                        callForHelpSucceeded = true;
+                    }
+                });
+
+            if (callForHelpSucceeded)
+            {
+                PChar->loc.zone->PushPacket(PChar, CHAR_INRANGE_SELF, std::make_unique<GP_SERV_COMMAND_BATTLE_MESSAGE>(PChar, PChar, 0, 0, MsgBasic::CallForHelp));
+                return;
             }
 
             PChar->pushPacket<GP_SERV_COMMAND_BATTLE_MESSAGE>(PChar, PChar, 0, 0, MsgBasic::CannotCallForHelp);
