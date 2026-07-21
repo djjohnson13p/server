@@ -97,13 +97,50 @@ None. Project setup is not evidence that any gameplay system is correct or incor
 ### Rejected stale lead
 
 - Upstream issue `#405` claimed nation-changing did not play the new-player nation cutscene or award the corresponding initialization flow.
-- Current immigration NPC source already tracks seen nations, sets the new-character cutscene flag, relocates the player to a valid opening location, and therefore supersedes the old report.
+- Current immigration NPC source already tracks seen nations, sets the new-character cutscene flag, and relocates the player to a valid opening location, superseding the old report.
 - No finding was created.
+
+## 2026-07-21 — Job, mission, transport, and fishing pass 3
+
+### New confirmed findings
+
+7. **`VZ-JOB-002` — Ranger Shadowbind: `INACCURATE`, `MODERATE`, `HIGH` for the implementation defect.**
+   - Shadowbind uses a direct random comparison against `BIND_MEVA`.
+   - It bypasses the shared target-immunity, resistance-trait, effect-nullification, and resist-rate helpers.
+   - The active source explicitly notes missing `/RNG` accuracy and target-level behavior.
+   - Exact retail coefficients remain a final evidence task rather than an excuse to retain the simplified model.
+
+8. **`VZ-ECON-001` — Fishing new-moon pattern: `INACCURATE`, `MODERATE`, `HIGH`.**
+   - Fishing pattern 4 is defined as full-moon preference and pattern 5 as new-moon preference.
+   - The formulas are distinct and phase-opposed.
+   - `GetMoonModifier` incorrectly dispatches both cases 4 and 5 to `MOONPATTERN_4`.
+   - Active fish data uses pattern 5, so the bug changes catch weighting and economy availability.
+
+9. **`VZ-ECON-002` — Waders fishing bonus: `INACCURATE`, `MINOR`, `HIGH`.**
+   - The fishing system defines Waders as recognized fishing equipment and contains a Waders-specific lucky-timing bonus.
+   - `GetFishingGear` filters Waders out, making the later bonus branch unreachable.
+
+### Mission and battlefield review
+
+- The Rise of the Zilart automated mission suite covers progression from ZM1 through ZM17, including major battlefields, headstones, pedestals, Ark Angels/Divine Might, and Celestial Nexus phases.
+- This coverage is evidence that the core mission sequence exists; it is not proof that every cutscene parameter, NPC dialogue, battle mechanic, or reward is retail-equivalent.
+- No broad “RotZ missions missing” finding was created.
+
+### Leads rejected or deferred
+
+- The Selbina transport script notes duplicate normal/pirate arrival events, but it also guards players already in an event. Without a reproducible player-visible defect, it remains a lead rather than a finding.
+- The open Bastok Mission 6-2 report was reviewed. Current source triggers the relevant cutscene by speaking directly with Gilgamesh, matching retail captures cited in the upstream discussion; no mission-script correction was justified.
+- Historical `modules/era` TODOs for older Ninja, Samurai, and Dragoon behavior were kept separate from the current-retail audit target.
+- Later-expansion Ranger, Bard, and merit/job-point TODOs were not added to the Vanilla/Zilart backlog solely because they share an original job.
+
+### Implementation limitation recorded
+
+- `VZ-ECON-001` and `VZ-ECON-002` are both bounded C++ fixes, but the connected GitHub update action requires complete replacement content for the 3,290-line `fishingutils.cpp` file.
+- Reconstructing a large source file through partial connector reads would be less safe than assigning the one-line corrections and tests to Codex's local repository environment.
 
 ### Next action
 
-- Continue the original/Zilart job audit beyond Summoner.
-- Inspect explicit core enmity, claim, weaponskill, spell, and mob-skill approximations.
-- Audit national mission repeat paths and Zilart battlefields.
-- Inventory transport, conquest, crafting, fishing, and economy discrepancies.
-- Continue implementing bounded corrections without owner interruption.
+- Continue crafting, guild progression, gathering, conquest, and battlefield mechanic inspection.
+- Continue active-base original and Zilart job behavior rather than optional historical-era reverts.
+- Add further bounded fixes when safe through the connected GitHub tools.
+- Keep the consolidated Codex handoff blocked until the assistant stage is exhausted.
