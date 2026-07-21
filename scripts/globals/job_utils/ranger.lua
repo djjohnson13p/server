@@ -251,13 +251,16 @@ xi.job_utils.ranger.useShadowbind = function(player, target, ability, action)
         action:setAnimation(target:getID(), action:getAnimation(target:getID()) + 1)
     end
 
-    local duration      = 30 + player:getMod(xi.mod.SHADOW_BIND_EXT) + player:getJobPointLevel(xi.jp.SHADOWBIND_DURATION)
+    local duration = 30 + player:getMod(xi.mod.SHADOW_BIND_EXT) + player:getJobPointLevel(xi.jp.SHADOWBIND_DURATION)
+    local bindSucceeded =
+        not target:hasStatusEffect(xi.effect.BIND) and
+        not xi.data.statusEffect.isTargetImmune(target, xi.effect.BIND, xi.element.ICE) and
+        not xi.data.statusEffect.isTargetResistant(player, target, xi.effect.BIND) and
+        not xi.data.statusEffect.isEffectNullified(target, xi.effect.BIND, 0) and
+        math.randomInt(0, 99) >= target:getMod(xi.mod.BIND_MEVA)
 
     -- TODO: Acc penalty for /RNG, acc vs. mob level?
-    if
-        math.randomInt(0, 99) >= target:getMod(xi.mod.BIND_MEVA) and
-        not target:hasStatusEffect(xi.effect.BIND)
-    then
+    if bindSucceeded then
         target:addStatusEffect(xi.effect.BIND, { duration = duration, origin = player })
         ability:setMsg(xi.msg.basic.IS_EFFECT) -- Target is bound.
     else
