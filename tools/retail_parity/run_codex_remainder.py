@@ -205,6 +205,12 @@ def main() -> int:
     ensure_expected_repository(root)
     ensure_clean_worktree(root)
 
+    # Fetch the assistant audit branch and move to the dedicated Codex branch before
+    # reading repository-controlled handoff files. This avoids false MISSING results
+    # when the script is launched while another branch is checked out.
+    prepare_work_branch(root)
+    ensure_clean_worktree(root)
+
     handoff_status = read_status(HANDOFF_PATH, root)
     if handoff_status != "READY":
         raise RunnerError(
@@ -221,9 +227,6 @@ def main() -> int:
         raise RunnerError("CODEX_MAX_PASSES must be a positive integer.") from exc
     if max_passes < 1:
         raise RunnerError("CODEX_MAX_PASSES must be at least 1.")
-
-    prepare_work_branch(root)
-    ensure_clean_worktree(root)
 
     for pass_number in range(1, max_passes + 1):
         return_code = run_codex_pass(root, pass_number, max_passes)
