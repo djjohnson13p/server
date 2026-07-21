@@ -313,7 +313,7 @@ float GetMoonModifier(fish_t* fish) // 0.25 to 1.25
             modifier = MOONPATTERN_4(moonPhase);
             break;
         case 5:
-            modifier = MOONPATTERN_4(moonPhase);
+            modifier = MOONPATTERN_5(moonPhase);
             break;
     }
 
@@ -1043,7 +1043,7 @@ fishing_gear_t GetFishingGear(CCharEntity* PChar)
     gear.hands           = (hands == FISHERMANS_GLOVES || hands == ANGLERS_GLOVES) ? hands : 0;
     gear.waist           = (waist == FISHERS_ROPE) ? waist : 0;
     gear.legs            = (legs == FISHERMANS_HOSE || legs == ANGLERS_HOSE) ? legs : 0;
-    gear.feet            = (feet == FISHERMANS_BOOTS || feet == ANGLERS_BOOTS) ? feet : 0;
+    gear.feet            = (feet == FISHERMANS_BOOTS || feet == ANGLERS_BOOTS || feet == WADERS) ? feet : 0;
     gear.ring1           = 0;
     gear.ring2           = 0;
     gear.ranged          = 0;

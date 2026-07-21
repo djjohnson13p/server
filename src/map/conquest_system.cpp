@@ -1,4 +1,4 @@
-﻿/*
+/*
 ===========================================================================
 
   Copyright (c) 2010-2015 Darkstar Dev Teams
@@ -112,7 +112,11 @@ void AddInfluencePoints(int points, unsigned int nation, REGION_TYPE region)
 
 void GainInfluencePoints(CCharEntity* PChar, uint32 points)
 {
-    points += (uint32)(PChar->getMod(Mod::CONQUEST_REGION_BONUS) / 100.0);
+    const int32 regionBonus = PChar->getMod(Mod::CONQUEST_REGION_BONUS);
+    if (regionBonus > 0)
+    {
+        points += static_cast<uint32>(points * regionBonus / 100.0f);
+    }
     conquest::AddInfluencePoints(points, PChar->profile.nation, PChar->loc.zone->GetRegionID());
 }
 
