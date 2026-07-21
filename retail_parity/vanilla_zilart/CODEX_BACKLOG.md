@@ -2,134 +2,133 @@
 
 ## Purpose
 
-This is the prioritized implementation and continuation backlog after the assistant-stage source audit. Codex must re-check every finding and may correct or reject assistant conclusions when the repository evidence requires it.
+This is the resume backlog for the next networked Codex/local-build run. It reflects the partial implementation already present on `retail-parity/codex-vanilla-zilart` and must be read together with `CODEX_STATE.md`, `STATUS.md`, `WORKLOG.md`, all finding files, and `CODEX_COMPLETION_REPORT.md`.
 
-The backlog is ordered to deliver deterministic, low-risk corrections first, then bounded behavioral fixes, then broad framework work, and finally the largest missing system.
-
-## Branch and repository rules
+## Repository rules
 
 - Repository: `djjohnson13p/server`
 - Work branch: `retail-parity/codex-vanilla-zilart`
 - Never modify `base` directly.
-- Never open, prepare, or recommend an upstream pull request.
-- The assistant's consolidated audit branch already contains the `VZ-ZONE-001` door correction.
-- Keep logical commits tied to finding IDs.
+- Never open, prepare, or suggest an upstream pull request.
+- Do not ask the owner for intermediate gameplay testing.
+- Preserve unresolved retail coefficients rather than inventing them.
 
-## Priority 0 — Verify inherited assistant correction
+## Priority 0 — Restore build and test capability
 
-### `VZ-ZONE-001` — Temple of Uggalepih western Granite Door
+1. Clone the fork in a networked environment and check out the latest Codex branch.
+2. Run a clean Ubuntu/GCC Debug build.
+3. Capture and repair the first compiler error before beginning another gameplay system.
+4. Run repository formatting, Lua, SQL, startup, and available unit/integration checks.
+5. Record exact commands and results in `CODEX_STATE.md` and `CODEX_COMPLETION_REPORT.md`.
 
-- Review commit `ed3bb6e3e59dbe482ebc58d44587576e0b035ab9` on the audit branch.
-- Verify `_mf9` is the western I-10 Uggalepih-Key door and `_mf8` remains the eastern J-10 Prelate-Key door.
-- Add an interaction test if the current harness can model the locked side, accepted key, rejected key, key consumption, and door opening.
-- Do not revert merely because upstream still differs; this is a fork-only correction supported by route topology and independent references.
+The previous GitHub Actions attempt completed dependencies and CMake configuration but failed in the Build step; the compiler-log tail was not recoverable from that run.
 
-## Priority 1 — Deterministic, bounded corrections
+## Priority 1 — Test and validate inherited corrections
 
-These findings have internally provable defects and should be implemented before formula research.
+### `VZ-ZONE-001` — Temple of Uggalepih door
 
-### `VZ-ECON-001` — Fishing new-moon pattern dispatch
+- Implementation present at `ed3bb6e3e59dbe482ebc58d44587576e0b035ab9`.
+- Add an interaction test for correct/incorrect key, key consumption, locked-side message, and door opening.
+- Preserve `_mf9` as the Uggalepih-Key door and `_mf8` as the Prelate-Key door unless stronger topology/client evidence disproves the mapping.
 
-- In `GetMoonModifier`, change case 5 to use `MOONPATTERN_5` rather than `MOONPATTERN_4`.
-- Add deterministic tests for all phase indices and at least patterns 4 and 5.
-- Confirm active pattern-5 fish now receive the new-moon curve.
+### `VZ-ECON-001` — Fishing new-moon dispatch
 
-### `VZ-ECON-002` — Waders bonus unreachable
+- Implementation present at `556ad21ccda664e012003e5898fa7b4e2936c208`.
+- Add deterministic coverage proving pattern 4 and pattern 5 call their independent curves across moon phases.
 
-- Include `WADERS` in the feet items retained by `GetFishingGear`.
-- Add a test that proves the Waders branch in `CalculateLuckyTiming` is reachable.
-- Preserve Fisherman's Boots and Angler's Boots behavior.
+### `VZ-ECON-002` — Waders fishing bonus
 
-### `VZ-ECON-003` — Moghancement: Region influence bonus
+- Implementation present at `556ad21ccda664e012003e5898fa7b4e2936c208`.
+- Add a test proving `GetFishingGear` retains Waders and the existing lucky-timing branch executes.
 
-- Apply `CONQUEST_REGION_BONUS` as a percentage of the base influence award before integer conversion.
-- Decide and document rounding behavior.
-- Add IPC-payload or conquest-unit tests for 0%, 10%, 100%, and small awards.
+### `VZ-ECON-003` — Moghancement: Region
 
-## Priority 2 — Bounded core and job behavior
+- Implementation present at `556ad21ccda664e012003e5898fa7b4e2936c208`.
+- Original source encoding was restored at `0702a5be6421efd52be6ed17a4fa36347f1c69cf`.
+- Add conquest/IPC tests for 0%, 10%, 100%, small awards, and explicit rounding behavior.
 
-### `VZ-JOB-002` — Ranger Shadowbind resistance
+### `VZ-JOB-002` — Ranger Shadowbind
 
-- Replace the raw `BIND_MEVA` roll with an explicit status-immunity/resistance path.
-- Preserve ranged weapon/ammunition validation and consumption.
-- Add tests for immunity, resistance traits, existing Bind, main-job Ranger, `/RNG`, relative target level, messaging, and ammunition use.
-- Do not invent an undocumented universal magic formula. Implement established factors and leave unresolved coefficients clearly marked.
+- Partial correction present at `b0058b40ef4b71dfd7af2d24dbae7fcf8edfd7f4`.
+- Shared Bind immunity, resistance-trait, and nullification guards are implemented.
+- Add tests for those guards, existing Bind, success/failure messages, and ammunition consumption.
+- Research and implement only evidence-supported main-job versus `/RNG`, relative-level, exact accuracy, duration, and Recycle behavior.
+- Do not replace the remaining roll with an invented spell formula.
 
-### `VZ-CORE-001` — Call for Help scope
+### `VZ-CORE-001` — Call for Help
 
-- Trace every claimed mob on which the requesting player personally has enmity, not only `GetBattleTarget()`.
-- Do not require the player to be actively engaged.
-- Respect per-mob Call for Help blocks, claim type, battlefield/confrontation boundaries, and zone scope.
-- Define atomic behavior when some eligible mobs can accept Call for Help and others cannot.
-- Add multi-mob, unengaged, party/alliance, pet-enmity, blocked, and cross-boundary tests.
+- Candidate correction present at `de408e05de4c8c44250f9db493492817bbe8db65`.
+- Add tests for one/multiple eligible mobs, no active target, personal versus party/pet enmity, already-enabled and blocked mobs, battlefields/confrontations, instance isolation, and enmity retained after claim transitions.
+- Determine from tests/source whether an explicit current-claim check is required in addition to personal enmity membership.
+- Validate reward suppression, outside-player access, claim color, radar/client updates, and message behavior.
+
+## Priority 2 — Remaining known implementation findings
 
 ### `VZ-CORE-002` — Attack while fishing
 
-- Model the retail fishing-to-combat transition before removing the Fishing validation block.
-- Cancel the fishing minigame safely, invalidate tokens/state, clean client fishing state, and prevent stale catch/reward processing.
-- Add tests for attack during cast, hook, active minigame, successful catch resolution, and repeated crafted packets.
-
-## Priority 3 — Shared combat and battlefield frameworks
+- Model and implement a safe fishing-to-combat transition.
+- Cancel the fishing minigame, invalidate tokens/state, clean client fishing state, and prevent stale catch/reward processing before engaging.
+- Add tests for cast, hook, active minigame, catch-resolution, cancellation, and crafted/repeated packets.
+- Do not merely remove `BlockedState::Fishing`.
 
 ### `VZ-BF-001` — Ark Angel zero-delay ready-message spam
 
-- Trace mob-skill state, delay, ready-message, and use-message architecture.
-- Move message emission out of repeatedly invoked skill-check callbacks.
-- Add explicit per-skill message behavior capable of standard ready, alternate ready, no ready, and instant-use semantics.
+- Move ready-message emission out of repeatedly invoked skill-check callbacks.
+- Implement explicit per-skill message behavior for standard ready, alternate ready, no ready, and instant use.
 - Migrate Ark Angel/humanoid weapon skills using manual `READIES_WS` calls.
 - Reproduce upstream issue `#3611` in an automated state test.
 - Do not change zero-delay skills to one-second skills as a workaround.
 
 ### `VZ-COMBAT-001` — Item additional-effect framework
 
-- First generate an inventory of every Vanilla/Zilart item using `ITEM_ADDEFFECT_*` data and map each item to the active handler.
+- Inventory every Vanilla/Zilart item using `ITEM_ADDEFFECT_*` data and map it to the active handler.
 - Separate proc chance, accuracy/resistance, potency, duration, element, damage type, immunity, and messaging.
-- Correct confirmed framework defects: omitted resistance paths, known-wrong combined-drain selection, incomplete self-buff handling, and dead spikes support where evidence permits.
-- Use data-driven item/effect profiles and broad regression tests.
-- Do not generalize Sleep Bolt/Acid Bolt evidence to every item family without support.
+- Correct confirmed omitted resistance paths, known-wrong combined-drain selection, incomplete self-buffs, and dead spikes support where evidence permits.
+- Use data-driven profiles and broad regression tests.
+- Do not generalize one ammunition dataset to unrelated item families without evidence.
 
 ### `VZ-JOB-001` — Summoner Elemental Spirits
 
-- Inventory Spirit HP, MP, stat, weapon-damage, spell-selection, and timing behavior.
-- Replace the admitted universal `MPP +300` workaround with level/type data or a clearly isolated temporary profile when evidence exists.
-- Separate Light Spirit healing, Curaga choice, buffs, and offensive behavior into testable decisions.
-- Add deterministic tests around spell pools, level gates, cooldowns, weather/day adjustments, and low/over-cap Summoning Magic.
-- Mark numeric retail values unresolved when they lack evidence rather than inventing them.
-
-## Priority 4 — Missing system
+- Inventory Spirit HP, MP, stats, weapon damage, spell selection, and timing.
+- Replace the admitted universal `MPP +300` workaround only with supported level/type data or a clearly isolated provisional profile.
+- Separate Light Spirit healing, Curaga choice, buffs, and offensive decisions into deterministic tests.
+- Test cooldowns, level gates, weather/day changes, and under/over-cap Summoning Magic.
+- Record unsupported numeric values as unresolved rather than guessing.
 
 ### `VZ-SYS-001` — Ballista
 
-This is the largest task and should begin only after the smaller framework corrections are stable.
+Begin only after smaller core/framework corrections are stable.
 
-- Build a dedicated state-machine design for qualification/license progression, schedules, Herald registration, team assignment, match phases, PvP restrictions, Petra digging, Gate Breach, Rooks, scoring, timer, results, rewards, and persistence.
-- Implement packet `0x0E6` scoreboard/scout behavior from available protocol documentation and captures.
-- Integrate Quarry, Sprint, Scout, death/raise, status effects, parties/alliances, disconnect/rejoin, and match cleanup.
-- Keep rules data-driven so current-retail behavior and historical differences can be represented without duplicating the engine.
-- Automated state-machine and serialization tests are mandatory.
-- Packet fields and client-visible behavior that cannot be established without retail captures must be placed in the final human-only queue.
+- Design and implement qualification/license progression, schedules, Herald registration, teams, match phases, PvP rules, Petra digging, Gate Breach, Rooks, scoring, timer, results, rewards, persistence, disconnect/rejoin, and cleanup.
+- Implement packet `0x0E6` scoreboard/scout behavior from available protocol evidence and captures.
+- Integrate Quarry, Sprint, Scout, death/raise, statuses, parties/alliances, and reward suppression.
+- Keep rules data-driven for current-retail and documented historical differences.
+- Add state-machine, persistence, integration, and packet-serialization tests.
+- Defer only genuinely unavailable client/retail packet fields to the final human-only queue.
 
-## Audit continuation required from Codex
+## Priority 3 — Continue the full expansion audit
 
-The eleven findings above are confirmed assistant-stage results, not the complete expansion audit. Codex must continue repository-wide inspection and create additional findings where evidence supports them, including:
+The eleven findings are not the complete Vanilla/Zilart audit. Perform local filesystem and test-driven review of:
 
-- Core attack rounds, pDIF, accuracy/evasion, criticals, ranged distance, skillchains, magic bursts, resistance, enmity, claims, aggro/linking, death/raise, experience, and status effects.
-- All original and Zilart jobs, pets, job quests, abilities, traits, equipment effects, and latents.
-- National missions/quests and all Rise of the Zilart missions, zones, battlefields, NMs/HNMs, sky, Tu'Lia, Norg, and Kazham.
-- BCNM/KSNM content in scope, battlefield rules, rewards, drops, timers, and records.
-- Conquest, outposts, Expeditionary Forces, transport, airships, ferries, chocobos, auction house, delivery, bazaars, shops, guilds, crafting, fishing, gardening, HELM, treasure, and economy.
-- Client-visible packet behavior required by scoped systems.
-- TODO/FIXME markers, disabled data, empty handlers, open issues, stale issue rejection, test exclusions, and SQL/script mismatches.
+- attack rounds, pDIF, accuracy/evasion, criticals, ranged distance, TP, skillchains, magic bursts, resistance, enmity, claims, aggro/linking, death/raise, experience, and statuses;
+- all original and Zilart jobs, pets, abilities, traits, job quests, equipment effects, and latents;
+- national missions/quests and all Zilart missions, zones, battlefields, NMs/HNMs, sky, Tu'Lia, Norg, and Kazham;
+- BCNM/KSNM rules, timers, records, rewards, drops, and special mechanics;
+- conquest, outposts, Expeditionary Forces, transport, airships, ferries, chocobos, auction house, delivery, bazaars, shops, guilds, crafting, fishing, gardening, HELM, treasure, and economy;
+- required client-visible packet behavior;
+- TODO/FIXME markers, disabled data, empty handlers, open/stale issues, test exclusions, and SQL/script mismatches.
 
-## Required final reports
+For each lead, trace the active path, distinguish missing behavior from missing tests, apply the evidence standard, and implement every supported AI-capable correction.
 
-Codex must update:
+## Required final artifacts
+
+Maintain and finish:
 
 - `STATUS.md`
 - `WORKLOG.md`
-- all finding files
+- every relevant finding
 - `CODEX_STATE.md`
 - `CODEX_COMPLETION_REPORT.md`
 - `HUMAN_ONLY_QUEUE.md`
 
-The final human-only queue must contain only work impossible without live retail/client access, unavailable credentials/hardware, proprietary data, or an owner policy decision.
+The final human-only queue may contain only work impossible without live retail/client access, unavailable credentials/hardware, proprietary data, or an owner policy decision.
