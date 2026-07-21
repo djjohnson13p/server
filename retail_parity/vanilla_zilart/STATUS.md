@@ -17,7 +17,7 @@
 | Status | Count |
 |---|---:|
 | Retail equivalent | 0 |
-| Inaccurate | 5 |
+| Inaccurate | 8 |
 | Partial | 0 |
 | Missing | 1 |
 | Verify live | 0 |
@@ -35,6 +35,9 @@ Counts include only findings that passed the current evidence threshold. They do
 | `VZ-JOB-001` | Summoner Elemental Spirits | `INACCURATE` | `MAJOR` | `HIGH` for admitted defects | Codex-scale; final measured values deferred |
 | `VZ-CORE-001` | Call for Help scope | `INACCURATE` | `MODERATE` | `HIGH` for implementation difference | Codex-scale C++ and tests |
 | `VZ-CORE-002` | Attack while fishing | `INACCURATE` | `MINOR` | `HIGH` for intentional difference | Codex-scale state transition and tests |
+| `VZ-JOB-002` | Ranger Shadowbind resistance | `INACCURATE` | `MODERATE` | `HIGH` for implementation defect | Codex implementation; retail coefficients deferred |
+| `VZ-ECON-001` | Fishing new-moon catch pattern | `INACCURATE` | `MODERATE` | `HIGH` | One-line C++ correction and deterministic test |
+| `VZ-ECON-002` | Waders fishing bonus | `INACCURATE` | `MINOR` | `HIGH` | Bounded C++ correction and deterministic test |
 
 ## Assistant implementations
 
@@ -52,11 +55,11 @@ Counts include only findings that passed the current evidence threshold. They do
 - [x] Configure AI-first workflow, Codex master task, persistent state, reports, and autonomous runner
 - [ ] Complete existing tests/TODOs/stubs/known-failure inventory — in progress
 - [ ] Audit shared core systems — additional effects, Call for Help, and fishing/combat transition started
-- [ ] Audit original jobs
+- [ ] Audit original jobs — Ranger started
 - [ ] Audit Zilart jobs — Summoner started
 - [ ] Audit national missions and quests — stale nation-change issue reviewed and rejected
-- [ ] Audit Zilart missions, zones, battlefields, and NMs — Temple door finding corrected
-- [ ] Audit economy, crafting, gathering, conquest, and transport
+- [ ] Audit Zilart missions, zones, battlefields, and NMs — Temple door finding corrected; mission tests reviewed
+- [ ] Audit economy, crafting, gathering, conquest, and transport — fishing started
 - [ ] Implement all assistant-capable corrections — one completed
 - [ ] Produce prioritized remediation backlog
 - [ ] Mark consolidated Codex handoff `READY`
@@ -69,7 +72,7 @@ Counts include only findings that passed the current evidence threshold. They do
 2. Continue shared combat review: enmity, claims, resistance, damage, ranged attacks, skillchains, and status effects.
 3. Continue original and Zilart jobs, including pets and era equipment interactions.
 4. Audit mission/quest state machines and battlefields.
-5. Audit zone mechanics, NMs, drops, economy, crafting, gathering, conquest, and transport.
+5. Audit crafting, guild progression, gathering, conquest, transport, and remaining economy systems.
 6. Audit packet/client-visible differences and isolate items requiring final live validation.
 
 ## Guardrails
