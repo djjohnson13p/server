@@ -2,194 +2,150 @@
 
 ## 2026-07-21 — Project initialization
 
-### Completed
-
 - Deleted the prior no-value fork and created a clean fork from `LandSandBoat/server`.
-- Confirmed full administrative and push permissions on `djjohnson13p/server`.
-- Created `retail-parity/vanilla-zilart-audit` from the fork's `base` branch.
-- Pinned baseline commit `242ab0d055dfb80396e7398b0dd7361b750c74e2`.
-- Added audit methodology, evidence ranking, status taxonomy, severity, confidence, and implementation ownership categories.
-- Added a comprehensive Vanilla + Rise of the Zilart investigation checklist.
-- Added standardized finding and Codex task requirements.
+- Confirmed administrative and push permissions on `djjohnson13p/server`.
+- Pinned upstream baseline `242ab0d055dfb80396e7398b0dd7361b750c74e2`.
+- Created `retail-parity/vanilla-zilart-audit`.
+- Added the retail-parity method, evidence ranking, finding format, status taxonomy, implementation ownership, worklog, dashboard, and Vanilla/Zilart scope checklist.
+- Established the rule that no upstream pull request may be opened or suggested.
 
-### Conclusions recorded
+## 2026-07-21 — Assistant audit passes
 
-None. Project setup is not evidence that any gameplay system is correct or incorrect.
+The assistant inspected pinned C++, Lua, SQL, tests, configuration, official/public retail documentation, and current upstream issues through connected GitHub access.
 
-## 2026-07-21 — Static inventory pass 1
+### Confirmed baseline findings
 
-### Sources inspected
+1. `VZ-SYS-001` — Ballista gameplay system missing.
+2. `VZ-COMBAT-001` — item additional-effect framework inaccurate and incomplete.
+3. `VZ-ZONE-001` — western Temple of Uggalepih Map 2 door used the wrong key.
+4. `VZ-JOB-001` — Summoner Elemental Spirit behavior/scaling contains guessed and admitted-wrong logic.
+5. `VZ-CORE-001` — Call for Help inspected only the current battle target.
+6. `VZ-CORE-002` — attacking while fishing is intentionally blocked despite retail allowing it.
+7. `VZ-JOB-002` — Shadowbind bypassed shared immunity/resistance handling and omitted level/subjob behavior.
+8. `VZ-ECON-001` — fishing new-moon pattern dispatched to the full-moon formula.
+9. `VZ-ECON-002` — Waders were filtered out before their fishing bonus could execute.
+10. `VZ-BF-001` — Ark Angel zero-delay weapon skills can emit repeated/incorrect ready messages.
+11. `VZ-ECON-003` — Moghancement: Region's configured 10% bonus truncated to zero.
 
-- Pinned LandSandBoat source through GitHub code search and direct file reads.
-- Explicit `TODO: Unimplemented`, TODO, admitted-approximation, and empty-handler markers.
-- Open upstream issues relevant to pre-CoP-origin content.
-- Square Enix official Ballista documentation.
-- Independent Temple of Uggalepih key and mission references.
+### Assistant correction
 
-### Confirmed findings
+- `VZ-ZONE-001` was corrected on the audit branch in commit `ed3bb6e3e59dbe482ebc58d44587576e0b035ab9`.
+- `_mf9` now requires and consumes an Uggalepih Key; `_mf8` remains the Prelate-Key door.
 
-1. **`VZ-SYS-001` — Ballista: `MISSING`, `MAJOR`, `HIGH`.**
-   - Packet structures exist, but scoreboard and scout constructors are explicitly unimplemented.
-   - No functional qualification, schedule, registration, match controller, Petra, Gate Breach, Rook, scoring, or reward system was found.
+### Areas inspected without a promoted finding
 
-2. **`VZ-COMBAT-001` — Item additional effects: `INACCURATE`, `MAJOR`, `HIGH` for framework defects.**
-   - The shared handler contains admitted wrong drain-selection behavior, omitted resistance paths, hardcoded assumptions, incomplete self-buff behavior, and an empty spikes stub.
+- Gardening lifecycle/data/tests.
+- Chocobo digging.
+- Expeditionary Forces.
+- Outpost supply/warp rules and fees.
+- HELM gathering logic/data.
+- Guild rank-up, guild points, renouncement, and crafting purchases.
+- Core synthesis, HQ, desynthesis, skill-up, and material-loss paths.
+- Rise of the Zilart mission-sequence test coverage through ZM17.
+- Selbina/Mhaura arrival TODOs without a reproduced player-visible failure.
 
-3. **`VZ-ZONE-001` — Temple of Uggalepih Map 2 Granite Doors: `INACCURATE`, `MODERATE`.**
-   - Baseline `_mf8.lua` and `_mf9.lua` both require a Prelate Key even though retail distinguishes the western Uggalepih-Key door.
+These areas were not certified retail-equivalent; they simply lacked a sufficiently supported finding in the connected-source pass.
 
-### Leads rejected or deferred
+### Rejected stale or misleading leads
 
-- Gardening is implemented with stage, wilting, result, pot, day, moon, aura, packet, SQL, and test support; no defect was declared without retail comparison.
-- Chocobo digging and Expeditionary Forces have substantial implementations; neither was classified missing based on keyword searches.
-- Old “What Works” wiki claims were treated only as leads because the current project FAQ states that page is no longer maintained.
-- Open issues reported against non-`base` branches or contradicted by current source were not promoted automatically.
+- Nation-change opening-cutscene issue: current immigration logic already handles seen nations and initial cutscene relocation.
+- Moghancement: Experience Raise TODO: death-loss calculation already applies `EXPERIENCE_RETAINED`.
+- Bastok Mission 6-2 Oaken Door workaround proposal: current Gilgamesh interaction matches cited retail captures.
+- Optional historical `modules/era` TODOs were not mixed into the current-retail target unless active base behavior was also affected.
+- Later-expansion merit/job-point TODOs were not assigned to Vanilla/Zilart solely because the job originated earlier.
 
-## 2026-07-21 — Workflow simplified to AI-first execution
+## 2026-07-21 — AI-first workflow and handoff
 
-### Owner directive
+At the owner's direction, the project was simplified to:
 
-- Do not interrupt the audit for per-finding manual tests or repeated decisions.
-- The assistant audits and implements everything possible first.
-- Codex then receives one consolidated script/task and performs all remaining AI-capable work.
-- The owner steps in only after both AI stages are exhausted.
+1. assistant audit and bounded implementation first;
+2. one consolidated autonomous Codex run second;
+3. one final human-only queue only after AI work is exhausted.
 
-### Repository changes
+Repository additions included:
 
-- Added root `AGENTS.md` as the Codex navigation and guardrail file.
-- Added `retail_parity/AI_FIRST_WORKFLOW.md`.
-- Replaced the per-finding Codex model with `retail_parity/CODEX_MASTER_TASK.md`.
-- Added gated handoff file `retail_parity/vanilla_zilart/AI_HANDOFF.md` with initial status `NOT_READY`.
-- Added persistent `retail_parity/vanilla_zilart/CODEX_STATE.md`.
-- Added `tools/retail_parity/run_codex_remainder.py` for autonomous multi-pass Codex execution.
-- Updated project and Codex guides so human validation is consolidated at the end.
+- root `AGENTS.md`;
+- `AI_FIRST_WORKFLOW.md`;
+- `CODEX_MASTER_TASK.md`;
+- `CODEX_BACKLOG.md`;
+- `ASSISTANT_COMPLETION_REPORT.md`;
+- gated `AI_HANDOFF.md`;
+- persistent `CODEX_STATE.md`;
+- completion and human-only reports;
+- `tools/retail_parity/run_codex_remainder.py`.
 
-## 2026-07-21 — Static inventory and implementation pass 2
+`AI_HANDOFF.md` was marked `READY`, and `retail-parity/codex-vanilla-zilart` was created from the completed audit branch.
 
-### Direct correction completed
+## 2026-07-21 — Partial Codex-stage implementation
 
-**`VZ-ZONE-001` — Temple of Uggalepih western Map 2 door**
+### Deterministic corrections
 
-- Retail route references place the Uggalepih-Key door west at I-10 and the Prelate-Key door east at J-10.
-- The server entities share the same north-south coordinate: `_mf9` at X `-60` is west of `_mf8` at X `-11`.
-- Created `retail-parity/fix-vz-zone-001`.
-- Commit `620d69d7c0315f70066c3484e110bb5d9baade3d` changes `_mf9` to require exactly one Uggalepih Key and display that key in the locked message.
-- `_mf8` remains the Prelate-Key door.
-- Final client route validation is deferred rather than interrupting the audit.
+Commit `556ad21ccda664e012003e5898fa7b4e2936c208` implemented:
 
-### New confirmed findings
+- `VZ-ECON-001`: case 5 now calls `MOONPATTERN_5`.
+- `VZ-ECON-002`: Waders are retained by `GetFishingGear`.
+- `VZ-ECON-003`: positive `CONQUEST_REGION_BONUS` values are applied as a percentage of base influence.
 
-4. **`VZ-JOB-001` — Summoner Elemental Spirits: `INACCURATE`, `MAJOR`, `HIGH` for framework defects.**
-   - Light Spirit Curaga choice is explicitly guessed.
-   - Avatar weapon damage is unverified.
-   - Spirit HP/MP/stat scaling is explicitly inaccurate.
-   - Spirits receive a universal `MPP +300` workaround admitted to be wrong.
+The one-time implementation workflow used exact baseline-expression counts, static post-edit assertions, and `git diff --check`, then removed itself.
 
-5. **`VZ-CORE-001` — Call for Help scope: `INACCURATE`, `MODERATE`, `HIGH` for the implementation difference.**
-   - Current code only examines `GetBattleTarget()`.
-   - The source TODO states retail applies Call for Help to all claimed enemies on which the player personally has enmity and does not require engagement.
+Commit `0702a5be6421efd52be6ed17a4fa36347f1c69cf` restored the pre-existing UTF-8 BOM on `conquest_system.cpp` so no unrelated encoding change remained.
 
-6. **`VZ-CORE-002` — Attack while fishing: `INACCURATE`, `MINOR`, `HIGH` for the intentional difference.**
-   - Attack validation blocks `BlockedState::Fishing`.
-   - The adjacent source comment states attacking while fishing is possible on retail and intentionally disabled in LandSandBoat.
-   - A safe fishing-to-combat state transition is required rather than a blind one-line removal.
+### Shadowbind partial correction
 
-### Rejected stale lead
+Commit `b0058b40ef4b71dfd7af2d24dbae7fcf8edfd7f4` added shared Bind:
 
-- Upstream issue `#405` claimed nation-changing did not play the new-player nation cutscene or award the corresponding initialization flow.
-- Current immigration NPC source already tracks seen nations, sets the new-character cutscene flag, and relocates the player to a valid opening location, superseding the old report.
-- No finding was created.
+- immunity checking;
+- resistance-trait checking;
+- effect-nullification checking.
 
-## 2026-07-21 — Job, mission, transport, and fishing pass 3
+The existing unresolved `BIND_MEVA` roll, duration, messaging, and ammunition behavior were intentionally preserved. Main/subjob, relative-level, exact accuracy, duration, and tests remain open.
 
-### New confirmed findings
+### Call for Help candidate correction
 
-7. **`VZ-JOB-002` — Ranger Shadowbind: `INACCURATE`, `MODERATE`, `HIGH` for the implementation defect.**
-   - Shadowbind uses a direct random comparison against `BIND_MEVA`.
-   - It bypasses the shared target-immunity, resistance-trait, effect-nullification, and resist-rate helpers.
-   - The active source explicitly notes missing `/RNG` accuracy and target-level behavior.
-   - Exact retail coefficients remain a final evidence task rather than an excuse to retain the simplified model.
+Commit `de408e05de4c8c44250f9db493492817bbe8db65` replaced single-target `GetBattleTarget()` handling with current-instance mob iteration.
 
-8. **`VZ-ECON-001` — Fishing new-moon pattern: `INACCURATE`, `MODERATE`, `HIGH`.**
-   - Fishing pattern 4 is defined as full-moon preference and pattern 5 as new-moon preference.
-   - The formulas are distinct and phase-opposed.
-   - `GetMoonModifier` incorrectly dispatches both cases 4 and 5 to `MOONPATTERN_4`.
-   - Active fish data uses pattern 5, so the bug changes catch weighting and economy availability.
+Every mob is changed only when:
 
-9. **`VZ-ECON-002` — Waders fishing bonus: `INACCURATE`, `MINOR`, `HIGH`.**
-   - The fishing system defines Waders as recognized fishing equipment and contains a Waders-specific lucky-timing bonus.
-   - `GetFishingGear` filters Waders out, making the later bonus branch unreachable.
+- it is not already help-enabled;
+- the requesting player's ID exists in its enmity container;
+- the mob has not blocked Call for Help.
 
-### Mission and battlefield review
+The success message is emitted once when at least one mob changes. Claim-transition, party/pet, reward, client-update, and battlefield edge cases still require automated tests and validation.
 
-- The Rise of the Zilart automated mission suite covers progression from ZM1 through ZM17, including major battlefields, headstones, pedestals, Ark Angels/Divine Might, and Celestial Nexus phases.
-- This coverage is evidence that the core mission sequence exists; it is not proof that every cutscene parameter, NPC dialogue, battle mechanic, or reward is retail-equivalent.
-- No broad “RotZ missions missing” finding was created.
+### Temporary automation cleanup
 
-### Leads rejected or deferred
+All temporary implementation and diagnostic workflow files were removed from the Codex branch after use or suppression. No permanent fork automation was left behind.
 
-- The Selbina transport script notes duplicate normal/pirate arrival events, but it also guards players already in an event. Without a reproducible player-visible defect, it remains a lead rather than a finding.
-- The open Bastok Mission 6-2 report was reviewed. Current source triggers the relevant cutscene by speaking directly with Gilgamesh, matching retail captures cited in the upstream discussion; no mission-script correction was justified.
-- Historical `modules/era` TODOs for older Ninja, Samurai, and Dragoon behavior were kept separate from the current-retail audit target.
-- Later-expansion Ranger, Bard, and merit/job-point TODOs were not added to the Vanilla/Zilart backlog solely because they share an original job.
+## 2026-07-21 — Validation attempts and infrastructure failure
 
-### Implementation limitation recorded
+### Codex CLI
 
-- `VZ-ECON-001` and `VZ-ECON-002` are both bounded C++ fixes, but the connected GitHub update action requires complete replacement content for the 3,290-line `fishingutils.cpp` file.
-- Reconstructing a large source file through partial connector reads would be less safe than assigning the one-line corrections and tests to Codex's local repository environment.
+- Installed the official Codex CLI version available to the runtime.
+- Confirmed that the CLI already had authentication state.
+- The runtime could not resolve/reach the OpenAI responses endpoint or GitHub Git/raw endpoints.
+- A local clone could not be created, so the autonomous Codex runner could not operate on a local repository.
 
-## 2026-07-21 — Crafting, battlefield messaging, and conquest pass 4
+### GitHub Actions build
 
-### New confirmed findings
+- A fork GCC Debug build installed dependencies successfully.
+- GCC setup, Python setup, cache restoration, and fresh CMake configuration succeeded.
+- The build failed in the compilation step.
+- The first result reporter had a script error and failed to persist the compiler-log tail.
+- Later connector-authored workflow pushes were suppressed with “No jobs were run,” so a corrected diagnostic workflow could not execute.
+- No successful native build or complete automated test run is available for the current branch.
 
-10. **`VZ-BF-001` — Ark Angel zero-delay ready messages: `INACCURATE`, `MODERATE`, `HIGH`.**
-   - Upstream issue `#3611` reproduces repeated “readies” spam during Divine Might when a zero-delay Ark Angel weapon skill is repeatedly checked while out of range.
-   - Maintainer analysis identifies manual message emission in skill-check callbacks as the architectural cause and rejects changing delay to one as a proper fix.
-   - The pinned `spirits_within.lua` still emits `READIES_WS` inside `onMobSkillCheck`, and the same pattern exists across multiple humanoid weapon-skill scripts.
+### Terminal decision
 
-11. **`VZ-ECON-003` — Moghancement: Region: `INACCURATE`, `MODERATE`, `HIGH`.**
-   - The Mog House enhancement applies `CONQUEST_REGION_BONUS = 10`.
-   - `GainInfluencePoints` divides the modifier by 100, converts it to an integer, and adds the truncated result as a flat amount.
-   - The configured value therefore becomes zero and awards no regional influence bonus.
+`CODEX_STATE.md` was set to `FAILED_INFRASTRUCTURE` rather than inventing results or continuing large unbuildable changes.
 
-### Crafting and guild review
+No gameplay testing is assigned to the owner. The human-only queue remains nonfinal until a future networked Codex/local-build environment completes the remaining engineering and automated validation.
 
-- Guild rank-up, expert-quest, renouncement, guild-point purchase, synthesis success, HQ, desynthesis, and material-loss paths were inspected.
-- Open crafting TODOs mainly concern event parameters, refactoring, future Escutcheon behavior, and formula research rather than a proven Vanilla/Zilart failure.
-- No broad crafting-system finding was created from TODO comments alone.
+## Exact resume point
 
-### Death, Raise, and Moghancement review
-
-- The `OnRaise` comment claiming Moghancement: Experience still needs integration is stale.
-- Death-loss calculation already combines the server retain setting with `Mod::EXPERIENCE_RETAINED`.
-- `MOGHANCEMENT_EXPERIENCE` applies that modifier at value 5.
-- No finding was created for Moghancement: Experience.
-
-## 2026-07-21 — Assistant-stage closure pass 5
-
-### Final source-accessible areas reviewed
-
-- Outpost supply-run eligibility, supply freshness, delivery rewards, teleport unlocks, city-to-outpost travel, outpost-to-city travel, fees, ownership, and alliance handling.
-- Expeditionary Force sign-up, validation, badge/key-item conversion, teleport, tally cleanup, and reward paths.
-- HELM gathering tools, tool breakage, weighted drops, point movement, inventory-full handling, and success hooks.
-- Remaining conquest vendor and overseer interactions available through direct source reads.
-
-### Outcome
-
-- No new high-confidence outpost, Expeditionary Force, transport, or HELM defect was promoted.
-- Existing implementation presence was not treated as proof of retail equivalence.
-- The connected GitHub-only audit had reached diminishing returns: deeper completeness work now requires local filesystem search, builds, generated data inspection, automated tests, and iterative multi-file engineering.
-
-### Consolidation completed
-
-- Applied `VZ-ZONE-001` directly to the consolidated audit branch in commit `ed3bb6e3e59dbe482ebc58d44587576e0b035ab9`.
-- Added `CODEX_BACKLOG.md` with ordered deterministic, bounded, framework, and missing-system work.
-- Added `ASSISTANT_COMPLETION_REPORT.md` with findings, rejected leads, inspected areas, and environment limitations.
-- Updated `STATUS.md` to mark the source-accessible assistant stage complete.
-
-### Handoff decision
-
-- All corrections safe through the connected GitHub workflow have been completed.
-- Remaining implementation and exhaustive audit work requires Codex's local repository/build/test environment.
-- `AI_HANDOFF.md` may now be changed to `READY`.
-- No owner action or intermediate manual testing is requested.
+1. Clone `djjohnson13p/server` in a networked environment.
+2. Check out the latest `retail-parity/codex-vanilla-zilart` head.
+3. Run a clean GCC Debug build and capture the first compiler error.
+4. Repair build/test failures caused by fork changes.
+5. Add tests for the Temple door, fishing moon pattern, Waders, Moghancement: Region, Shadowbind, and Call for Help.
+6. Continue `CODEX_BACKLOG.md` with attack-while-fishing, Ark Angel messages, item additional effects, Elemental Spirits, Ballista, and the remaining exhaustive audit.
+7. Keep all changes fork-only and never open or suggest an upstream pull request.
