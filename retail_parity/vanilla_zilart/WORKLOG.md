@@ -138,9 +138,35 @@ None. Project setup is not evidence that any gameplay system is correct or incor
 - `VZ-ECON-001` and `VZ-ECON-002` are both bounded C++ fixes, but the connected GitHub update action requires complete replacement content for the 3,290-line `fishingutils.cpp` file.
 - Reconstructing a large source file through partial connector reads would be less safe than assigning the one-line corrections and tests to Codex's local repository environment.
 
+## 2026-07-21 — Crafting, battlefield messaging, and conquest pass 4
+
+### New confirmed findings
+
+10. **`VZ-BF-001` — Ark Angel zero-delay ready messages: `INACCURATE`, `MODERATE`, `HIGH`.**
+   - Upstream issue `#3611` reproduces repeated “readies” spam during Divine Might when a zero-delay Ark Angel weapon skill is repeatedly checked while out of range.
+   - Maintainer analysis identifies manual message emission in skill-check callbacks as the architectural cause and rejects changing delay to one as a proper fix.
+   - The pinned `spirits_within.lua` still emits `READIES_WS` inside `onMobSkillCheck`, and the same pattern exists across multiple humanoid weapon-skill scripts.
+
+11. **`VZ-ECON-003` — Moghancement: Region: `INACCURATE`, `MODERATE`, `HIGH`.**
+   - The Mog House enhancement applies `CONQUEST_REGION_BONUS = 10`.
+   - `GainInfluencePoints` divides the modifier by 100, converts it to an integer, and adds the truncated result as a flat amount.
+   - The configured value therefore becomes zero and awards no regional influence bonus.
+
+### Crafting and guild review
+
+- Guild rank-up, expert-quest, renouncement, guild-point purchase, synthesis success, HQ, desynthesis, and material-loss paths were inspected.
+- Open crafting TODOs mainly concern event parameters, refactoring, future Escutcheon behavior, and formula research rather than a proven Vanilla/Zilart failure.
+- No broad crafting-system finding was created from TODO comments alone.
+
+### Death, Raise, and Moghancement review
+
+- The `OnRaise` comment claiming Moghancement: Experience still needs integration is stale.
+- Death-loss calculation already combines the server retain setting with `Mod::EXPERIENCE_RETAINED`.
+- `MOGHANCEMENT_EXPERIENCE` applies that modifier at value 5.
+- No finding was created for Moghancement: Experience.
+
 ### Next action
 
-- Continue crafting, guild progression, gathering, conquest, and battlefield mechanic inspection.
-- Continue active-base original and Zilart job behavior rather than optional historical-era reverts.
-- Add further bounded fixes when safe through the connected GitHub tools.
-- Keep the consolidated Codex handoff blocked until the assistant stage is exhausted.
+- Complete outpost travel, remaining transport, gathering, and conquest review.
+- Continue active-base job, enmity, claim, battlefield, and NM mechanics.
+- Prepare the assistant-completion and prioritized Codex backlog once remaining source-accessible areas are exhausted.
