@@ -3,37 +3,47 @@
 ## Identification
 
 - **ID:** `VZ-ZONE-001`
-- **Title:** Two Map 2 Granite Doors are configured for the Prelate Key even though retail distinguishes an Uggalepih-Key door
+- **Title:** Western Map 2 Granite Door incorrectly requires a Prelate Key
 - **Expansion scope:** Rise of the Zilart
 - **Area:** Temple of Uggalepih / doors / mission and quest navigation
-- **Status:** `INACCURATE`
+- **Baseline status:** `INACCURATE`
+- **Implementation state:** Corrected on `retail-parity/fix-vz-zone-001` at commit `620d69d7c0315f70066c3484e110bb5d9baade3d`
 - **Severity:** `MODERATE`
-- **Confidence:** `MEDIUM`
+- **Confidence:** `HIGH`
 - **Disposition:** `ASSISTANT_DIRECT`
 
 ## Expected retail behavior
 
-Retail documentation distinguishes at least two locked Granite Doors in the relevant Temple of Uggalepih Map 2 route:
+Retail distinguishes two adjacent locked Granite Doors on Temple of Uggalepih Map 2:
 
-- An Uggalepih Key opens a Granite Door on Map 2 at E-8 and is consumed.
-- A separate northern Granite Door on Map 2 uses a Prelate Key and consumes that key.
+- The western door, documented around I-10/E-8 depending on map presentation, consumes an Uggalepih Key and leads to the Ancient Verse of Uggalepih route used by Windurst Mission 9-2.
+- The door immediately east, documented around J-10, consumes a Prelate Key and is used by the San d'Oria Mission 8-2 route.
 
-These doors participate in routes used by nation missions and other Temple content. The exact LandSandBoat entity corresponding to each mapped door must be confirmed in-game before editing.
+A used key is consumed. The door can be opened from the interior side without another key.
 
-## Current LandSandBoat behavior
+## Baseline LandSandBoat behavior
 
 At pinned baseline `242ab0d055dfb80396e7398b0dd7361b750c74e2`:
 
-- `scripts/zones/Temple_of_Uggalepih/npcs/_mf8.lua` identifies a Granite Door at `!pos -11 -8 -99 159` and accepts only `xi.item.PRELATE_KEY`.
-- `scripts/zones/Temple_of_Uggalepih/npcs/_mf9.lua` identifies a Granite Door at `!pos -60 -8 -99 159` and also accepts only `xi.item.PRELATE_KEY`.
-- A different door, `_mf6.lua` at `!pos -208 -1.89 -20`, correctly accepts `xi.item.UGGALEPIH_KEY`, but its location does not resolve the apparent duplicate Prelate-Key configuration for the two adjacent Map 2 doors.
-- Upstream issue `#864` reports that the first of the two relevant doors should require an Uggalepih Key and the second should require a Prelate Key.
+- `_mf8.lua` is at `!pos -11 -8 -99 159` and consumes a Prelate Key.
+- `_mf9.lua` is at `!pos -60 -8 -99 159` and also consumes a Prelate Key.
+- The doors share the same north-south coordinate; `_mf9` is west of `_mf8` because its X coordinate is lower.
 
-## Difference
+This makes the western door request the wrong key.
 
-At least one of `_mf8` and `_mf9` appears to have the wrong required key. Both currently consume a Prelate Key, while independent retail references distinguish an Uggalepih-Key Map 2 door from a Prelate-Key Map 2 door.
+## Entity mapping
 
-The discrepancy is supported, but assigning the Uggalepih Key to `_mf8` or `_mf9` solely from filenames/coordinates would be premature. One route walk or map/entity check is required.
+Independent route documentation places:
+
+- the Uggalepih-Key door west at I-10; and
+- the Prelate-Key door east at J-10.
+
+The source coordinates independently reproduce that west/east relationship:
+
+- `_mf9`: X `-60` — western door — Uggalepih Key
+- `_mf8`: X `-11` — eastern door — Prelate Key
+
+This resolves the earlier ambiguity without an intermediate owner test.
 
 ## Evidence
 
@@ -44,53 +54,51 @@ The discrepancy is supported, but assigning the Uggalepih Key to `_mf8` or `_mf9
 - **Upstream tracking:** https://github.com/LandSandBoat/server/issues/864
 - **Independent corroboration:**
   - https://www.bg-wiki.com/ffxi/Windurst_Mission_9-2
+  - https://www.bg-wiki.com/ffxi/San_d%27Oria_Mission_8-2
   - https://ffxiclopedia.fandom.com/wiki/Uggalepih_Key
   - https://ffxiclopedia.fandom.com/wiki/Prelate_Key
-- **Retail observation/test:** Required to map `_mf8` and `_mf9` to the first/southern versus northern retail doors and verify opening direction/timing.
-- **Contradictory evidence or uncertainty:** Community pages use map-grid descriptions rather than server entity IDs, and the term “first door” depends on route direction.
+  - https://ffxiclopedia.fandom.com/wiki/Moon_Reading
 
-## Reproduction
+## Implemented correction
 
-### Fork/server test
+Branch: `retail-parity/fix-vz-zone-001`
 
-1. Place a character on both sides of `_mf8` and `_mf9` and record map position and route order.
-2. Approach each locked side with no key and record the requested item message.
-3. Trade an Uggalepih Key and Prelate Key separately to each door.
-4. Confirm which door leads to the area documented for the Uggalepih Key and which is the northern Prelate-Key door.
-5. Record key consumption, opening duration, and opening from the unlocked side.
+Commit: `620d69d7c0315f70066c3484e110bb5d9baade3d`
 
-### Retail comparison
+Changes to `_mf9.lua`:
 
-1. Traverse the same Map 2 route on retail.
-2. Record coordinates/map grid, door order, required key, consumption, message, and open timing.
-3. Match each door to the LandSandBoat entity by position and route topology.
+- Replaced `PRELATE_KEY` with `UGGALEPIH_KEY` for the trade requirement.
+- Replaced the locked-door message parameter with `UGGALEPIH_KEY`.
+- Updated the script header.
+- Tightened the trade check to `npcUtil.tradeHasExactly` so unrelated extra items are not accepted with the key.
+
+`_mf8.lua` remains the Prelate-Key door.
+
+## Validation plan
+
+Automated test infrastructure for this specific positional door interaction was not located through the connected repository index. Final client/server validation is deferred to the consolidated human-only stage rather than interrupting the audit.
+
+Final validation should confirm:
+
+1. `_mf9` rejects a Prelate Key and accepts exactly one Uggalepih Key.
+2. The Uggalepih Key is consumed and the door opens for the existing timed interval.
+3. `_mf8` continues to accept a Prelate Key.
+4. Each door opens from its interior side without a key.
+5. Windurst 9-2 and San d'Oria 8-2 routes remain traversable.
 
 ## Dependencies and regression risk
 
-- Windurst Mission 9-2 and other mission/quest paths using Temple Map 2.
-- Prelate Key and Uggalepih Key drop/use expectations.
-- Door-side coordinate checks and open duration.
-- Players opening a door for a party from either side.
+- Windurst Mission 9-2.
+- San d'Oria Mission 8-2.
+- Uggalepih Key and Prelate Key acquisition/use expectations.
+- Door-side coordinate checks and opening duration.
 
-The code change is low risk once the entity mapping is confirmed; changing the wrong entity would create a new progression defect.
-
-## Proposed correction
-
-After an in-game route check identifies the retail Uggalepih-Key door, change only that entity's trade and locked-message item from `PRELATE_KEY` to `UGGALEPIH_KEY`. Preserve the other door as Prelate-Key controlled. Retain one-use key consumption and verify retail opening timing.
-
-## Implementation plan
-
-- **Assistant-direct work:** Perform the entity mapping from available zone data/test results, edit the single Lua door script, and add a focused interaction test if the door test harness supports it.
-- **Codex work:** Not required for the bounded correction; Codex may add an automated zone-door fixture if broader test infrastructure changes are needed.
-- **Files likely affected:** One of `_mf8.lua` or `_mf9.lua`; optionally a focused test file.
-- **Tests to add or extend:** Correct key accepted, incorrect key rejected, key consumed, locked-side message, unlocked-side opening, and open duration.
-- **Human validation required:** One fork route test and preferably one retail comparison.
-- **Rollback or configuration considerations:** None expected.
+The correction is isolated to one NPC script and has low regression risk.
 
 ## Completion criteria
 
-- The correct Map 2 door consumes an Uggalepih Key.
-- The distinct Prelate-Key door still consumes a Prelate Key.
-- Both reject the incorrect key and show the correct locked message.
-- Opening direction and duration match retail observation.
-- Mission/quest traversal through the affected route succeeds.
+- The western Map 2 door consumes an Uggalepih Key.
+- The eastern Map 2 door consumes a Prelate Key.
+- Both show the correct locked message and reject the incorrect key.
+- Key consumption and door timing remain correct.
+- Final route validation passes.
