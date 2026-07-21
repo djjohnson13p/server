@@ -16,16 +16,44 @@
 
 None. Project setup is not evidence that any gameplay system is correct or incorrect.
 
+## 2026-07-21 — Static inventory pass 1
+
+### Sources inspected
+
+- Pinned LandSandBoat source through GitHub code search and direct file reads.
+- Explicit `TODO: Unimplemented`, TODO, admitted-approximation, and empty-handler markers.
+- Open upstream issues relevant to pre-CoP-origin content.
+- Square Enix official Ballista documentation.
+- Independent Temple of Uggalepih key and mission references.
+
+### Confirmed findings
+
+1. **`VZ-SYS-001` — Ballista: `MISSING`, `MAJOR`, `HIGH`.**
+   - Packet structures exist, but scoreboard and scout constructors are explicitly unimplemented.
+   - No functional qualification, schedule, registration, match controller, Petra, Gate Breach, Rook, scoring, or reward system was found.
+   - Disposition: AI/Codex implementation plus mandatory human retail and client validation.
+
+2. **`VZ-COMBAT-001` — Item additional effects: `INACCURATE`, `MAJOR`, `HIGH` for framework defects.**
+   - The shared handler contains admitted wrong drain-selection behavior, omitted resistance paths, hardcoded assumptions, incomplete self-buff behavior, and an empty spikes stub.
+   - Exact item formulas remain an item-by-item evidence task rather than a universal inferred fix.
+   - Disposition: Codex-scale refactor and migration with assistant-led inventory/review and human retail datasets.
+
+3. **`VZ-ZONE-001` — Temple of Uggalepih Map 2 Granite Doors: `INACCURATE`, `MODERATE`, `MEDIUM`.**
+   - `_mf8.lua` and `_mf9.lua` both require a Prelate Key.
+   - Retail references distinguish an Uggalepih-Key Map 2 door from a separate northern Prelate-Key door.
+   - One in-game route check is required to map the correct entity before the bounded Lua correction.
+   - Disposition: assistant-direct after route/entity validation.
+
+### Leads rejected or deferred during this pass
+
+- Gardening is implemented with stage, wilting, result, pot, day, moon, aura, packet, SQL, and test support; no defect was declared without retail comparison.
+- Chocobo digging and Expeditionary Forces have substantial implementations; neither was classified missing based on keyword searches.
+- Old “What Works” wiki claims were treated only as leads because the current project FAQ states that page is no longer maintained.
+- Open issues reported against non-`base` branches or contradicted by current source were not promoted automatically.
+
 ### Next action
 
-Begin repository-wide static inventory of:
-
-- TODO/FIXME/placeholder and intentionally disabled code
-- unimplemented or stubbed Lua hooks
-- missing mission/quest/battlefield scripts
-- comments admitting approximated retail behavior
-- test exclusions and known failing coverage
-- configuration defaults that materially alter retail behavior
-- open and recently closed upstream issues/PRs relevant to Vanilla and Rise of the Zilart
-
-Results from this inventory will be treated as leads. Each lead must still pass the comparison and evidence process before becoming a confirmed finding.
+- Complete the incompleteness inventory for era monster skills, mission/quest TODOs, battlefields, transport, conquest, crafting, fishing, and jobs.
+- Build the Vanilla/Zilart item-to-additional-effect-handler matrix.
+- Validate the Temple door entity mapping before creating a fix branch.
+- Continue with shared combat systems because content behavior depends on them.
