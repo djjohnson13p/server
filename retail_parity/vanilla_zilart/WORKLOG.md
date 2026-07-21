@@ -57,3 +57,26 @@ None. Project setup is not evidence that any gameplay system is correct or incor
 - Build the Vanilla/Zilart item-to-additional-effect-handler matrix.
 - Validate the Temple door entity mapping before creating a fix branch.
 - Continue with shared combat systems because content behavior depends on them.
+
+## 2026-07-21 — Workflow simplified to AI-first execution
+
+### Owner directive
+
+- Do not interrupt the audit for per-finding manual tests or repeated decisions.
+- The assistant audits and implements everything possible first.
+- Codex then receives one consolidated script/task and performs all remaining AI-capable work.
+- The owner steps in only after both AI stages are exhausted.
+
+### Repository changes
+
+- Added root `AGENTS.md` as the Codex navigation and guardrail file.
+- Added `retail_parity/AI_FIRST_WORKFLOW.md`.
+- Replaced the per-finding Codex model with `retail_parity/CODEX_MASTER_TASK.md`.
+- Added gated handoff file `retail_parity/vanilla_zilart/AI_HANDOFF.md` with initial status `NOT_READY`.
+- Added persistent `retail_parity/vanilla_zilart/CODEX_STATE.md`.
+- Added `tools/retail_parity/run_codex_remainder.py` for autonomous multi-pass Codex execution.
+- Updated project and Codex guides so human validation is consolidated at the end.
+
+### New operating rule
+
+Findings may remain marked pending final validation, but that does not pause the assistant or Codex from completing all independent audit, implementation, tests, and review work.
