@@ -1,15 +1,31 @@
 # Codex Completion Report — Vanilla + Rise of the Zilart
 
-Status: FAILED_INFRASTRUCTURE
+Status: IN_PROGRESS
 
 ## Branch and source state
 
 - Repository: `djjohnson13p/server`
 - Work branch: `retail-parity/codex-vanilla-zilart`
 - Pinned upstream baseline: `242ab0d055dfb80396e7398b0dd7361b750c74e2`
-- Latest gameplay/source implementation commit in this attempt: `de408e05de4c8c44250f9db493492817bbe8db65`
-- Later commits update findings, status, state, reports, and worklog only.
+- Local Codex validation commit: `2ecefb7fadc15d7a849ff25809d9ad0fad165552`
+- Latest gameplay/source implementation commit before environment validation: `de408e05de4c8c44250f9db493492817bbe8db65`
 - Upstream pull requests: none; prohibited.
+
+## Current execution state
+
+The Codex desktop app is connected to the local clone at `C:\GitHub\server` and can:
+
+- read repository instructions and project files;
+- execute shell commands;
+- fetch the fork from GitHub;
+- initialize Visual Studio Build Tools/MSVC;
+- configure with CMake/Ninja;
+- complete a full clean Debug build;
+- remove generated artifacts and restore a clean worktree.
+
+The prior `FAILED_INFRASTRUCTURE` state applied only to the assistant's isolated container and is superseded. The project is now `IMPLEMENTATION_READY`.
+
+Exact environment details and commands are recorded in `LOCAL_CODEX_ENVIRONMENT.md`.
 
 ## Audit coverage completed
 
@@ -28,7 +44,7 @@ Eleven baseline findings met the evidence threshold:
 - `MISSING`: 1
 - `INACCURATE`: 10
 
-This is not a complete local-filesystem expansion audit. The network/local-repository Codex stage could not run, so additional discrepancies may remain undiscovered.
+This is not yet a complete local-filesystem expansion audit; Codex must continue it after inherited corrections receive automated test coverage.
 
 ## Findings confirmed, rejected, or revised
 
@@ -85,57 +101,52 @@ This is not a complete local-filesystem expansion audit. The network/local-repos
 
 ## Automated validation
 
-Completed:
+Completed before local Codex setup:
 
 - Exact baseline-expression matching before the three deterministic C++ edits.
 - Static post-edit source assertions.
 - `git diff --check` for the deterministic correction commit.
 - Restoration of original `conquest_system.cpp` source encoding.
-- Commit-diff review proving the Shadowbind change is confined to `useShadowbind`.
-- Commit-diff review proving the Call for Help change is confined to the `Help` action block.
-- Source-API review of the instance iteration and status-effect helper signatures.
+- Commit-diff isolation review for Shadowbind and Call for Help.
+- Source-API review of instance iteration and status-effect helper signatures.
 
-Attempted but not completed:
+Completed in the local Codex environment:
 
-- A GitHub Actions Ubuntu GCC Debug build completed dependency setup and CMake configuration, then failed during compilation.
-- The result reporter failed before persisting the compiler-log tail.
-- Later connector-authored diagnostic workflows were suppressed with “No jobs were run.”
-- No successful native build, unit-test run, integration-test run, startup check, Lua check, or SQL check was obtained for the final branch.
+- Correct branch, clean worktree, correct fork remote, and successful `git fetch origin`.
+- Repository instruction-file loading.
+- MSVC developer-environment initialization through `VsDevCmd.bat`.
+- Fresh MSVC/Ninja Debug CMake configuration with exit code `0`.
+- Full MSVC/Ninja Debug build with all `1049/1049` steps and exit code `0`.
+- Successful linking of `xi_connect`, `xi_map`, `xi_search`, `xi_world`, and `xi_test`.
+- Removal of the disposable build directory and generated root executables/PDBs.
+- Final clean worktree restoration.
 
-## Infrastructure failure
+Not yet completed:
 
-- The official Codex CLI was installed and had authentication state.
-- The runtime could not reach the OpenAI responses endpoint or GitHub Git/raw endpoints.
-- A local repository clone could not be created.
-- The GitHub connector allowed source inspection and complete-file writes but could not provide an iterative local compilation/test loop.
-
-The terminal state is therefore `FAILED_INFRASTRUCTURE`, not `COMPLETE` or `BLOCKED_HUMAN_ONLY`.
+- Focused automated regression tests for the six inherited corrections.
+- Lua, SQL, startup, integration, and gameplay-oriented checks appropriate to those findings.
+- Completion and validation of the remaining five known findings.
+- Exhaustive local-filesystem Vanilla/Zilart audit.
 
 ## Known limitations and regression risk
 
-- The current branch has not passed native compilation.
 - Call for Help may require an explicit claim-state check for rare enmity-after-unclaim transitions; tests must decide this.
 - Shadowbind still uses the existing `BIND_MEVA` roll and has unresolved main/subjob and relative-level behavior.
 - Fishing and conquest corrections need deterministic unit/IPC tests and explicit rounding validation.
-- The Temple door fix needs client route/side/timing validation.
+- The Temple door fix needs an interaction test and eventual client route/side/timing validation.
 - The remaining five known findings include broad cross-cutting or missing systems.
-- The exhaustive local-repository Vanilla/Zilart audit remains incomplete.
+- A successful build proves compile/link integrity, not retail parity.
 
-## Remaining unverified behavior
+## Next implementation pass
 
-Engineering and automated validation still required:
+1. Fetch the latest `origin/retail-parity/codex-vanilla-zilart` documentation commits.
+2. Add the strongest practical automated regression coverage for the six inherited corrections.
+3. Run narrow tests first.
+4. Run the complete validated MSVC/Ninja Debug build.
+5. Fix failures caused by the fork changes without weakening unrelated assertions.
+6. Update findings, state, status, worklog, and this report.
+7. Commit logically and push only to the fork branch when explicitly permitted.
 
-1. Diagnose and fix the current build.
-2. Add tests for all six implemented findings.
-3. Complete attack-while-fishing cleanup.
-4. Complete Ark Angel/mob-skill message architecture.
-5. Complete item additional-effect inventory/refactor.
-6. Complete Elemental Spirit data/behavior work.
-7. Implement Ballista.
-8. Continue the full local-filesystem audit and test discovery.
+After inherited corrections are test-backed, continue with attack-while-fishing, Ark Angel ready-message architecture, item additional effects, Elemental Spirits, Ballista, and the remaining full expansion audit.
 
-Live-retail/client validation candidates are listed provisionally in `HUMAN_ONLY_QUEUE.md`, but none is assigned to the owner while the engineering stage remains incomplete.
-
-## Resume instructions
-
-Use a networked machine with GitHub and OpenAI Codex access, clone the fork, check out the latest Codex branch, run a clean GCC Debug build, capture the first compiler error, repair build/test failures, and continue `CODEX_BACKLOG.md` in priority order. Keep all work fork-only and never create or suggest an upstream pull request.
+Live-retail/client validation candidates remain provisional in `HUMAN_ONLY_QUEUE.md`; none is assigned to the owner while the engineering stage continues.
