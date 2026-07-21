@@ -2,7 +2,7 @@
 
 ## Purpose
 
-This is the resume backlog for the next networked Codex/local-build run. It reflects the partial implementation already present on `retail-parity/codex-vanilla-zilart` and must be read together with `CODEX_STATE.md`, `STATUS.md`, `WORKLOG.md`, all finding files, and `CODEX_COMPLETION_REPORT.md`.
+This is the resume backlog for the validated local Codex environment. It reflects the partial implementation already present on `retail-parity/codex-vanilla-zilart` and must be read together with `CODEX_STATE.md`, `STATUS.md`, `WORKLOG.md`, `LOCAL_CODEX_ENVIRONMENT.md`, all finding files, and `CODEX_COMPLETION_REPORT.md`.
 
 ## Repository rules
 
@@ -12,34 +12,30 @@ This is the resume backlog for the next networked Codex/local-build run. It refl
 - Never open, prepare, or suggest an upstream pull request.
 - Do not ask the owner for intermediate gameplay testing.
 - Preserve unresolved retail coefficients rather than inventing them.
+- Use the validated Windows MSVC/Ninja build path in `LOCAL_CODEX_ENVIRONMENT.md`.
+- Keep the worktree clean and remove disposable build artifacts before committing.
 
-## Priority 0 — Restore build and test capability
+## Priority 0 — Test inherited corrections
 
-1. Clone the fork in a networked environment and check out the latest Codex branch.
-2. Run a clean Ubuntu/GCC Debug build.
-3. Capture and repair the first compiler error before beginning another gameplay system.
-4. Run repository formatting, Lua, SQL, startup, and available unit/integration checks.
-5. Record exact commands and results in `CODEX_STATE.md` and `CODEX_COMPLETION_REPORT.md`.
-
-The previous GitHub Actions attempt completed dependencies and CMake configuration but failed in the Build step; the compiler-log tail was not recoverable from that run.
-
-## Priority 1 — Test and validate inherited corrections
+The local project, GitHub connectivity, MSVC initialization, CMake configuration, and full Debug build are validated. Build-environment repair is no longer a prerequisite.
 
 ### `VZ-ZONE-001` — Temple of Uggalepih door
 
 - Implementation present at `ed3bb6e3e59dbe482ebc58d44587576e0b035ab9`.
-- Add an interaction test for correct/incorrect key, key consumption, locked-side message, and door opening.
+- Add an interaction test for correct/incorrect key, key consumption, locked-side message, and door opening when the existing harness supports it.
 - Preserve `_mf9` as the Uggalepih-Key door and `_mf8` as the Prelate-Key door unless stronger topology/client evidence disproves the mapping.
 
 ### `VZ-ECON-001` — Fishing new-moon dispatch
 
 - Implementation present at `556ad21ccda664e012003e5898fa7b4e2936c208`.
 - Add deterministic coverage proving pattern 4 and pattern 5 call their independent curves across moon phases.
+- Prefer a direct C++ unit test or the narrowest existing fishing-test seam.
 
 ### `VZ-ECON-002` — Waders fishing bonus
 
 - Implementation present at `556ad21ccda664e012003e5898fa7b4e2936c208`.
 - Add a test proving `GetFishingGear` retains Waders and the existing lucky-timing branch executes.
+- Preserve Fisherman's Boots and Angler's Boots behavior.
 
 ### `VZ-ECON-003` — Moghancement: Region
 
@@ -60,9 +56,17 @@ The previous GitHub Actions attempt completed dependencies and CMake configurati
 - Candidate correction present at `de408e05de4c8c44250f9db493492817bbe8db65`.
 - Add tests for one/multiple eligible mobs, no active target, personal versus party/pet enmity, already-enabled and blocked mobs, battlefields/confrontations, instance isolation, and enmity retained after claim transitions.
 - Determine from tests/source whether an explicit current-claim check is required in addition to personal enmity membership.
-- Validate reward suppression, outside-player access, claim color, radar/client updates, and message behavior.
+- Validate reward suppression, outside-player access, claim color, radar/client updates, and message behavior where automated seams exist.
 
-## Priority 2 — Remaining known implementation findings
+### Required validation for Priority 0
+
+- Run narrow tests after each logical change.
+- Initialize MSVC through `VsDevCmd.bat`.
+- Run the full clean MSVC/Ninja Debug build before closing the pass.
+- Run `xi_test` and any relevant Lua/spec checks discovered during test implementation.
+- Do not weaken unrelated assertions or mark a finding resolved merely because the project builds.
+
+## Priority 1 — Remaining known implementation findings
 
 ### `VZ-CORE-002` — Attack while fishing
 
@@ -106,7 +110,7 @@ Begin only after smaller core/framework corrections are stable.
 - Add state-machine, persistence, integration, and packet-serialization tests.
 - Defer only genuinely unavailable client/retail packet fields to the final human-only queue.
 
-## Priority 3 — Continue the full expansion audit
+## Priority 2 — Continue the full expansion audit
 
 The eleven findings are not the complete Vanilla/Zilart audit. Perform local filesystem and test-driven review of:
 
