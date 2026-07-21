@@ -1,0 +1,48 @@
+name: Retail Parity Restore Existing Encoding
+
+on:
+  push:
+    branches:
+      - 'retail-parity/codex-vanilla-zilart'
+    paths:
+      - '.github/workflows/retail-parity-restore-bom.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  restore-bom:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out Codex work branch
+        uses: actions/checkout@v4
+        with:
+          ref: retail-parity/codex-vanilla-zilart
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Restore the pre-existing UTF-8 BOM
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          path = Path('src/map/conquest_system.cpp')
+          data = path.read_bytes()
+          bom = b'\xef\xbb\xbf'
+          if not data.startswith(bom):
+              path.write_bytes(bom + data)
+          assert path.read_bytes().startswith(bom)
+          PY
+          git diff --check
+
+      - name: Commit encoding-only correction and remove one-time workflow
+        shell: bash
+        run: |
+          git config user.name 'retail-parity-automation'
+          git config user.email 'retail-parity-automation@users.noreply.github.com'
+          git rm .github/workflows/retail-parity-restore-bom.yml
+          git add src/map/conquest_system.cpp
+          git commit -m 'chore: preserve conquest source encoding'
+          git push origin HEAD:retail-parity/codex-vanilla-zilart
