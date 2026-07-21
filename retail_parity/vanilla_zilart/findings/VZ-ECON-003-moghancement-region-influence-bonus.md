@@ -3,87 +3,49 @@
 ## Identification
 
 - **ID:** `VZ-ECON-003`
-- **Title:** The configured 10% Moghancement: Region bonus is truncated to zero before influence is awarded
 - **Expansion scope:** Vanilla shared system
 - **Area:** Conquest / Mog House / regional influence
-- **Status:** `INACCURATE`
+- **Baseline status:** `INACCURATE`
 - **Severity:** `MODERATE`
 - **Confidence:** `HIGH`
-- **Disposition:** `CODEX` for the bounded C++ correction and tests
+- **Implementation state:** Implemented on `retail-parity/codex-vanilla-zilart`
+- **Implementation commit:** `556ad21ccda664e012003e5898fa7b4e2936c208`
 
-## Expected retail behavior
+## Expected behavior
 
-Moghancement: Region should increase the influence points awarded to the player's nation when conquest points generate regional influence. The server already represents the enhancement as a value of `10`, consistent with a 10% bonus.
+Moghancement: Region is represented by `CONQUEST_REGION_BONUS = 10` and must increase the base regional influence award as a percentage.
 
-## Current LandSandBoat behavior
+## Baseline behavior
 
-At pinned baseline `242ab0d055dfb80396e7398b0dd7361b750c74e2`:
+`GainInfluencePoints` divided the modifier by 100, converted the result to an integer, and added it as a flat amount. The configured value 10 became 0.1 and truncated to zero; even value 100 added only one point instead of scaling the award.
 
-- `CCharEntity::changeMoghancement` handles `MOGHANCEMENT_REGION` by adding `10` to `Mod::CONQUEST_REGION_BONUS`.
-- `modifier.h` describes `CONQUEST_REGION_BONUS` as increasing influence points awarded to the player's nation when receiving conquest points.
-- `conquest::GainInfluencePoints` currently executes:
+## Correction
 
-  `points += (uint32)(PChar->getMod(Mod::CONQUEST_REGION_BONUS) / 100.0);`
+`GainInfluencePoints` now reads the modifier, applies positive values to the base point award, and converts the calculated percentage contribution after multiplication.
 
-- With the configured modifier value `10`, `10 / 100.0` equals `0.1`, which is converted to `uint32` and truncated to `0` before being added.
-- Even a value of `100` would add only one flat influence point rather than scaling the original award.
+Files changed:
 
-## Difference
+- `src/map/conquest_system.cpp`
 
-The enhancement is present in Mog House selection and modifier state but has no effect at its configured value. Regional influence earned while Moghancement: Region is active is identical to influence earned without it.
+The pre-existing UTF-8 byte-order marker was restored in follow-up commit `0702a5be6421efd52be6ed17a4fa36347f1c69cf`; no unrelated encoding change remains.
 
-## Evidence
+## Validation completed
 
-- **Current source:**
-  - `src/map/entities/char_entity.cpp` — `MOGHANCEMENT_REGION` adds modifier value `10`.
-  - `src/map/modifier.h` — describes the modifier's purpose.
-  - `src/map/conquest_system.cpp` — truncates `modifier / 100.0` and adds it as a flat integer.
-- **Internal consistency evidence:** The encoded value, division by 100, and modifier description establish a percentage-style bonus; applying the division before multiplying by base points makes the encoded value ineffective.
-- **Retail observation/test:** Useful to validate rounding behavior and confirm the exact 10% value, but not required to prove the current implementation awards zero.
+- The one-time fork workflow required exactly one matching baseline arithmetic expression before editing.
+- Static post-edit assertions confirmed percentage multiplication is present and the broken expression is absent.
+- `git diff --check` passed.
+- Both temporary workflows removed themselves after committing.
+- A native Ubuntu GCC Debug build was launched separately and is recorded in `CODEX_VALIDATION.md` when complete.
 
-## Reproduction
+## Remaining validation
 
-### Deterministic unit test
-
-1. Create a character with no regional bonus and award a known influence amount, such as 50 or 100 points.
-2. Create the same state with `CONQUEST_REGION_BONUS = 10`.
-3. Intercept or inspect the `ConquestAddInfluencePoints` IPC payload.
-4. Confirm the baseline sends the same point amount in both cases.
-5. After correction, confirm the bonus case sends the base amount plus the expected percentage contribution.
-
-### Integration test
-
-1. Activate Moghancement: Region through furniture.
-2. Earn conquest points that invoke `GainInfluencePoints`.
-3. Compare the nation influence payload or resulting regional influence against a control character without the Moghancement.
-
-## Dependencies and regression risk
-
-- Conquest influence IPC messages and world-server aggregation.
-- Mog House enhancement selection and modifier application.
-- Integer rounding for small influence awards.
-- Any custom modules that set `CONQUEST_REGION_BONUS` to values other than 10.
-
-Regression risk is low because the correction is isolated to bonus arithmetic.
-
-## Proposed correction
-
-Apply the percentage to the base award before integer conversion, for example:
-
-`points += static_cast<uint32>(points * PChar->getMod(Mod::CONQUEST_REGION_BONUS) / 100.0f);`
-
-Choose floor/round behavior deliberately and cover it with tests. Clamp or validate negative custom modifier values if needed.
-
-## Implementation plan
-
-- **Assistant work completed:** Traced modifier creation, documented semantics, and influence arithmetic.
-- **Codex work:** Correct `GainInfluencePoints`, add deterministic IPC-payload tests for 0%, 10%, 100%, small awards, and custom negative/large values as appropriate, then run conquest and C++ checks.
-- **Human validation required:** None for proving the zero-bonus bug; optional retail observation for rounding at small influence values.
+Add a deterministic conquest/IPC test for zero, 10%, 100%, and small point awards. The implemented conversion floors fractional bonus points; retail observation may still refine rounding behavior.
 
 ## Completion criteria
 
-- A modifier value of 10 produces a nonzero percentage increase for ordinary influence awards.
-- Zero modifier preserves baseline awards.
-- Rounding behavior is explicit and tested.
-- IPC/world conquest behavior remains unchanged apart from the intended bonus.
-- Relevant automated checks pass.
+- [x] A modifier value of 10 is applied as a percentage of the base award.
+- [x] Zero/nonpositive values do not add a bonus.
+- [x] Source assertion and diff validation pass.
+- [x] Original source encoding is preserved.
+- [ ] Native build passes.
+- [ ] Conquest/IPC regression tests are added.
