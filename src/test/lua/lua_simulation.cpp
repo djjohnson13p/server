@@ -38,6 +38,7 @@
 #include "map/map_networking.h"
 #include "map/spawn_slot.h"
 #include "map/time_server.h"
+#include "map/utils/charutils.h"
 #include "map/utils/zoneutils.h"
 #include "map/zone.h"
 #include "map/zone_entities.h"
@@ -490,6 +491,8 @@ auto CLuaSimulation::spawnPlayer(sol::optional<sol::table> params) -> CLuaClient
     uint16               zoneId = ZONE_GM_HOME;
     sol::optional<uint8> job;
     sol::optional<uint8> level;
+    sol::optional<uint8> sjob;
+    sol::optional<uint8> slevel;
     bool                 isNewPlayer = false;
 
     if (params.has_value())
@@ -499,6 +502,8 @@ auto CLuaSimulation::spawnPlayer(sol::optional<sol::table> params) -> CLuaClient
         zoneId      = paramTable.get_or("zone", ZONE_GM_HOME);
         job         = paramTable.get<sol::optional<uint8>>("job");
         level       = paramTable.get<sol::optional<uint8>>("level");
+        sjob        = paramTable.get<sol::optional<uint8>>("sjob");
+        slevel      = paramTable.get<sol::optional<uint8>>("slevel");
         isNewPlayer = paramTable.get_or("new", false);
     }
 
@@ -563,6 +568,21 @@ auto CLuaSimulation::spawnPlayer(sol::optional<sol::table> params) -> CLuaClient
     if (level.has_value())
     {
         player->setLevel(level.value());
+    }
+
+    if (sjob.has_value())
+    {
+        auto* PChar = player->testChar()->entity();
+        PChar->jobs.unlocked |= (1 << sjob.value());
+        PChar->SetSJob(sjob.value());
+
+        if (slevel.has_value())
+        {
+            PChar->jobs.job[sjob.value()] = slevel.value();
+        }
+
+        PChar->SetSLevel(PChar->jobs.job[sjob.value()]);
+        charutils::UpdateSubJob(PChar);
     }
 
     return player;
