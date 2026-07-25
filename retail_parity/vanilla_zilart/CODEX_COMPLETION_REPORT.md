@@ -1,152 +1,261 @@
 # Codex Completion Report — Vanilla + Rise of the Zilart
 
-Status: IN_PROGRESS
+Status: BOUNDED_PASS_COMPLETE_PROJECT_IN_PROGRESS
 
 ## Branch and source state
 
 - Repository: `djjohnson13p/server`
 - Work branch: `retail-parity/codex-vanilla-zilart`
+- Starting commit: `9461b8d918135f97738710bb0dad8e8371f7d984`
 - Pinned upstream baseline: `242ab0d055dfb80396e7398b0dd7361b750c74e2`
-- Local Codex validation commit: `2ecefb7fadc15d7a849ff25809d9ad0fad165552`
-- Latest gameplay/source implementation commit before environment validation: `de408e05de4c8c44250f9db493492817bbe8db65`
-- Upstream pull requests: none; prohibited.
+- Upstream pull requests: none; prohibited
+- Upstream push: disabled/prohibited
 
-## Current execution state
+The inherited-correction validation pass is complete. Five corrections are
+implemented and test-backed. Shadowbind is a test-backed partial correction
+because its exact accuracy, relative-level, duration/resist, and Recycle
+coefficients remain unsupported by sufficient evidence.
 
-The Codex desktop app is connected to the local clone at `C:\GitHub\server` and can:
+## Commits created
 
-- read repository instructions and project files;
-- execute shell commands;
-- fetch the fork from GitHub;
-- initialize Visual Studio Build Tools/MSVC;
-- configure with CMake/Ninja;
-- complete a full clean Debug build;
-- remove generated artifacts and restore a clean worktree.
+- `58c30fd5ecaa6eb1b1c85f76c55c5b384fe21a27` —
+  `test(retail-parity): validate fishing and conquest fixes`
+- `9e989c2c97395bcfef7828e339a80c49c91161dd` —
+  `fix(retail-parity): harden call for help eligibility`
+- `3ef3475a9acb453fdb2ec54d68ced757ae5ded21` —
+  `test(retail-parity): validate Shadowbind behavior`
+- `01bb2d6556df17fcb4e26851b9b9202adb445bdf` —
+  `test(retail-parity): validate Uggalepih door keys`
 
-The prior `FAILED_INFRASTRUCTURE` state applied only to the assistant's isolated container and is superseded. The project is now `IMPLEMENTATION_READY`.
+The documentation/state commit follows these source/test commits.
 
-Exact environment details and commands are recorded in `LOCAL_CODEX_ENVIRONMENT.md`.
-
-## Audit coverage completed
-
-The assistant-stage audit inspected representative active source and data across:
-
-- shared combat/action/status behavior;
-- original and Zilart jobs and pets;
-- national and Rise of the Zilart missions;
-- Ark Angel/Divine Might battle behavior;
-- Ballista protocol/content support;
-- fishing, gardening, HELM, crafting, guilds, conquest, outposts, Expeditionary Forces, and transport;
-- tests, TODO/FIXME markers, disabled handlers, active upstream issues, and stale issue rejection.
-
-Eleven baseline findings met the evidence threshold:
-
-- `MISSING`: 1
-- `INACCURATE`: 10
-
-This is not yet a complete local-filesystem expansion audit; Codex must continue it after inherited corrections receive automated test coverage.
-
-## Findings confirmed, rejected, or revised
-
-### Confirmed and implemented or partially implemented
-
-- `VZ-ZONE-001` — Temple of Uggalepih door key.
-- `VZ-ECON-001` — fishing new-moon pattern dispatch.
-- `VZ-ECON-002` — Waders fishing bonus reachability.
-- `VZ-ECON-003` — Moghancement: Region influence arithmetic.
-- `VZ-JOB-002` — Shadowbind shared status guards; numeric accuracy remains unresolved.
-- `VZ-CORE-001` — Call for Help current-instance personal-enmity scope; edge-case tests remain unresolved.
-
-### Confirmed and not implemented
-
-- `VZ-SYS-001` — Ballista.
-- `VZ-COMBAT-001` — item additional-effect framework.
-- `VZ-JOB-001` — Elemental Spirit behavior/scaling.
-- `VZ-CORE-002` — safe attack-while-fishing transition.
-- `VZ-BF-001` — Ark Angel/mob-skill ready-message architecture.
-
-### Rejected or superseded leads
-
-- Old nation-change opening-cutscene issue: current immigration logic supersedes it.
-- Moghancement: Experience Raise TODO: the modifier is already applied during death-loss calculation.
-- Bastok Mission 6-2 Oaken Door workaround: current direct Gilgamesh interaction matches cited retail captures.
-- Selbina/Mhaura duplicate-arrival TODO: not promoted without a player-visible reproduction.
-- Optional historical-era-module and later-expansion job TODOs were not misclassified as active Vanilla/Zilart current-retail defects.
-
-## Implementations completed
+## Tests added by finding
 
 ### `VZ-ZONE-001`
 
-- Consolidated audit commit: `ed3bb6e3e59dbe482ebc58d44587576e0b035ab9`
-- `_mf9` uses and consumes an Uggalepih Key; `_mf8` remains the Prelate-Key door.
+`scripts/tests/zones/temple_of_uggalepih_doors.lua` adds five interaction
+cases for:
 
-### `VZ-ECON-001`, `VZ-ECON-002`, `VZ-ECON-003`
+- exact Uggalepih Key acceptance, consumption, key-break message, and opening;
+- wrong and non-exact trade rejection without consumption;
+- `_mf9` locked-side Uggalepih Key message;
+- unchanged `_mf8` Prelate Key consumption/opening/messages;
+- both existing unlocked-side coordinate checks.
 
-- Implementation commit: `556ad21ccda664e012003e5898fa7b4e2936c208`
-- Encoding-preservation follow-up: `0702a5be6421efd52be6ed17a4fa36347f1c69cf`
-- Corrected moon-pattern case 5, Waders gear recognition, and regional-influence percentage arithmetic.
+### `VZ-ECON-001`
+
+`src/test/tests/fishingutils_tests.cpp` calls the production moon-dispatch
+seam for patterns 4 and 5 across all eight defined moon phases and proves the
+curves remain independent.
+
+### `VZ-ECON-002`
+
+The same Catch2 file proves Waders, Fisherman's Boots, and Angler's Boots
+survive the production feet filter, reach their configured lucky-timing
+branches, and unrelated feet remain filtered.
+
+### `VZ-ECON-003`
+
+`src/test/tests/conquest_system_tests.cpp` covers 0%, 10%, 100%, small and zero
+awards, a negative modifier, and explicit fractional truncation. Production
+still passes only the adjusted point value into the unchanged
+nation/region/IPC aggregation path.
 
 ### `VZ-JOB-002`
 
-- Implementation commit: `b0058b40ef4b71dfd7af2d24dbae7fcf8edfd7f4`
-- Added Bind immunity, resistance-trait, and effect-nullification guards.
-- Preserved unresolved main/subjob, level, exact accuracy, duration, and ammunition questions.
+`scripts/tests/jobs/rng/abilities/shadowbind.lua` adds nine action-path cases
+for:
+
+- success and `IS_EFFECT`;
+- controlled failure and `JA_MISS`;
+- existing Bind;
+- immunity, resistance-trait, and nullification guards;
+- ammo consumption on success/failure;
+- Unlimited Shot ammo preservation and effect consumption;
+- Ranger level-39 rejection;
+- Ranger subjob level-40 availability.
+
+The Lua simulation player factory now accepts optional `sjob`/`slevel`
+parameters for the subjob action test.
 
 ### `VZ-CORE-001`
 
-- Implementation commit: `de408e05de4c8c44250f9db493492817bbe8db65`
-- Replaced single-target handling with current-instance mob iteration.
-- Preserved existing personal-enmity, already-enabled, and blocked-mob checks.
-- Emits one success/failure result per request.
+`scripts/tests/systems/combat/call_for_help.lua` adds nine real Help-action
+cases for:
 
-## Automated validation
+- one eligible mob with no active target;
+- multiple eligible mobs and one success message;
+- retained enmity after unclaim;
+- party claim without/with requester CE or VE;
+- pet claim without/with master CE or VE;
+- already-enabled and explicitly blocked mobs with one failure message;
+- battle-ID and confrontation boundaries.
 
-Completed before local Codex setup:
+`src/test/tests/battleutils_tests.cpp` directly covers the production instance
+identity seam for non-instanced, same-instance, and different-instance
+entities.
 
-- Exact baseline-expression matching before the three deterministic C++ edits.
-- Static post-edit source assertions.
-- `git diff --check` for the deterministic correction commit.
-- Restoration of original `conquest_system.cpp` source encoding.
-- Commit-diff isolation review for Shadowbind and Call for Help.
-- Source-API review of instance iteration and status-effect helper signatures.
+## Defect discovered and corrected
 
-Completed in the local Codex environment:
+The inherited Call-for-Help implementation accepted requester ID membership
+in an enmity container. A focused claim-transition case demonstrated that
+stale personal enmity could remain after a mob became unclaimed. The action
+could therefore mark an unclaimed mob.
 
-- Correct branch, clean worktree, correct fork remote, and successful `git fetch origin`.
-- Repository instruction-file loading.
-- MSVC developer-environment initialization through `VsDevCmd.bat`.
-- Fresh MSVC/Ninja Debug CMake configuration with exit code `0`.
-- Full MSVC/Ninja Debug build with all `1049/1049` steps and exit code `0`.
-- Successful linking of `xi_connect`, `xi_map`, `xi_search`, `xi_world`, and `xi_test`.
-- Removal of the disposable build directory and generated root executables/PDBs.
-- Final clean worktree restoration.
+Eligibility now requires:
 
-Not yet completed:
+- a live mob not already help-enabled or blocked;
+- matching confrontation, battlefield, instance, and battle ID;
+- a current requester/party/alliance claim through `HasClaim`;
+- positive requester CE or VE.
 
-- Focused automated regression tests for the six inherited corrections.
-- Lua, SQL, startup, integration, and gameplay-oriented checks appropriate to those findings.
-- Completion and validation of the remaining five known findings.
-- Exhaustive local-filesystem Vanilla/Zilart audit.
+The action still iterates through `ForEachMobInstance`, changes every eligible
+mob, and sends exactly one success or failure message.
 
-## Known limitations and regression risk
+## Exact validation commands and results
 
-- Call for Help may require an explicit claim-state check for rare enmity-after-unclaim transitions; tests must decide this.
-- Shadowbind still uses the existing `BIND_MEVA` roll and has unresolved main/subjob and relative-level behavior.
-- Fishing and conquest corrections need deterministic unit/IPC tests and explicit rounding validation.
-- The Temple door fix needs an interaction test and eventual client route/side/timing validation.
-- The remaining five known findings include broad cross-cutting or missing systems.
-- A successful build proves compile/link integrity, not retail parity.
+### Fresh configure
 
-## Next implementation pass
+```text
+call "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\Common7\Tools\VsDevCmd.bat" -no_logo -arch=x64 -host_arch=x64 && cmake -G Ninja -S . -B build-codex-validation --fresh -DCMAKE_BUILD_TYPE=Debug -DENABLE_CLANG_TIDY=OFF -DTRACY_ENABLE=OFF -DPCH_ENABLE=OFF -DCACHE_OPTION=sccache
+```
 
-1. Fetch the latest `origin/retail-parity/codex-vanilla-zilart` documentation commits.
-2. Add the strongest practical automated regression coverage for the six inherited corrections.
-3. Run narrow tests first.
-4. Run the complete validated MSVC/Ninja Debug build.
-5. Fix failures caused by the fork changes without weakening unrelated assertions.
-6. Update findings, state, status, worklog, and this report.
-7. Commit logically and push only to the fork branch when explicitly permitted.
+Result: exit `0`; CMake `4.3.3`, Ninja generator, MSVC
+`19.44.35228.0`, x64 Debug.
 
-After inherited corrections are test-backed, continue with attack-while-fishing, Ark Angel ready-message architecture, item additional effects, Elemental Spirits, Ballista, and the remaining full expansion audit.
+### Test executable build
 
-Live-retail/client validation candidates remain provisional in `HUMAN_ONLY_QUEUE.md`; none is assigned to the owner while the engineering stage continues.
+```text
+call "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\Common7\Tools\VsDevCmd.bat" -no_logo -arch=x64 -host_arch=x64 && cmake --build build-codex-validation --target xi_test
+```
+
+Result: exit `0`. The final post-format rebuild completed `26/26` steps and
+linked `xi_test.exe`.
+
+### Isolated current-schema test database
+
+The installed local `xidb` was not modified because it lacked the current
+`mob_resistances.stun_res_rank` column. A uniquely named disposable database
+was created and populated with current repository SQL:
+
+```text
+python tools\dbtool.py update
+```
+
+The command ran with `XI_NETWORK_SQL_*` pointing to
+`xidb_codex_validation_20260725_1435` and the existing local `xi` account.
+Result: exit `0`; all SQL files imported and no migrations remained.
+Credentials were never printed or stored in repository files.
+
+### Focused Catch2 and Lua run
+
+```text
+.\xi_test.exe --keep-going --file shadowbind --file call_for_help --file temple_of_uggalepih_doors
+```
+
+Result: exit `0`.
+
+- Catch2: 16/16 test cases, 9,007,070 assertions passed.
+- Lua: 23/23 tests in six suites passed.
+- Final Lua duration: 19.239 seconds.
+
+### Lua style
+
+```text
+python tools\ci\sanity_checks\lua_stylecheck.py scripts\tests\jobs\rng\abilities\shadowbind.lua scripts\tests\systems\combat\call_for_help.lua scripts\tests\zones\temple_of_uggalepih_doors.lua
+```
+
+Result: exit `0`.
+
+### C++ formatting
+
+Modified/new C++ and header files were formatted with:
+
+```text
+C:\Program Files\LLVM\bin\clang-format.exe -i --style=file <modified C++ files>
+```
+
+Version: `clang-format 22.1.8`.
+
+### Complete Debug build
+
+```text
+call "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\Common7\Tools\VsDevCmd.bat" -no_logo -arch=x64 -host_arch=x64 && cmake --build build-codex-validation
+```
+
+Result: exit `0`. The complete all-target pass finished `148/148` remaining
+steps after the focused test target and linked `xi_connect`, `xi_world`,
+`xi_search`, and `xi_map`. The final post-format all-target check also exited
+`0` and relinked the affected world/map executables.
+
+### Diff validation
+
+```text
+git diff --check
+```
+
+Result: exit `0`. Git emitted only expected line-ending notices for files
+whose checkout normalization is configured by the repository.
+
+### Cleanup
+
+- `build-codex-validation`: removed.
+- Generated root `xi_*.exe`/`xi_*.pdb`: removed.
+- `xidb_codex_validation_20260725_1435`: dropped and confirmed absent.
+- Working local `xidb`: not modified.
+
+## Intermediate failures resolved
+
+- The first test compile found missing `fishingutils::` qualifiers in the new
+  Catch2 translation unit. The test was corrected; the next build passed.
+- The first local Lua attempt could not authenticate with the default
+  `root/root` settings. The repository's existing local `xi` credentials were
+  used without disclosure.
+- The working local `xidb` was schema-stale. It was left untouched and replaced
+  for testing by the disposable current-schema database.
+- Initial Lua fixtures exposed out-of-range Shadowbind targeting, wrong
+  locked-door-side positioning, and unsafe repeated Help actions in one
+  party/pet fixture. The fixtures were corrected to model the real action
+  paths.
+- A manufactured cross-instance live-enmity fixture proved unsafe and was
+  removed. Instance identity is covered through the production C++ boundary
+  seam; the action itself remains scoped by `ForEachMobInstance`.
+
+## Findings now fully test-backed
+
+- `VZ-ZONE-001` — server-side Uggalepih/Prelate door behavior.
+- `VZ-ECON-001` — moon-pattern dispatch.
+- `VZ-ECON-002` — Waders branch reachability.
+- `VZ-ECON-003` — conquest region-bonus arithmetic and truncation.
+- `VZ-CORE-001` — server eligibility, scope, claim/enmity distinctions,
+  boundaries, and message cardinality, subject to the client limits below.
+
+## Finding still partial
+
+`VZ-JOB-002` remains partial only where evidence is insufficient:
+
+- `/RNG` accuracy penalty, if any;
+- relative target-level correction;
+- ranged-accuracy contribution;
+- whether `BIND_MEVA` is the correct terminal roll;
+- duration/partial-resist rules;
+- Recycle behavior beyond the tested Unlimited Shot path.
+
+No spell-skill, dSTAT, ranged-accuracy, subjob, or level formula was invented.
+
+## Client/live-retail-only candidates
+
+- Temple door rendered timing and complete mission-route traversal.
+- Fishing curve coefficients and exact Waders magnitude.
+- Conquest fractional rounding if retail differs from current truncation.
+- Call-for-Help reward suppression, outside-player attackability, claim
+  color/radar, and rendered client update. Source tracing supports these paths,
+  but this pass does not label them end-to-end validated.
+- Shadowbind numeric accuracy/level/duration/resist/Recycle behavior.
+
+## Recommended next pass
+
+Begin `VZ-CORE-002` attack while fishing with a safe cancellation/state
+transition and focused action/state tests. Then continue `VZ-BF-001`,
+`VZ-COMBAT-001`, `VZ-JOB-001`, `VZ-SYS-001`, and the exhaustive
+Vanilla/Zilart audit in bounded passes.

@@ -11,7 +11,7 @@
 - **Assistant source-accessible stage:** Complete
 - **Codex handoff:** Ready
 - **Local Codex environment:** Validated
-- **Current project state:** `IMPLEMENTATION_READY`
+- **Current project state:** `INHERITED_CORRECTIONS_VALIDATED`
 - **Upstream pull requests:** None; prohibited
 
 ## Baseline finding counts
@@ -35,21 +35,25 @@ These are baseline discrepancy counts, not resolution counts. The absence of add
 | Partially corrected on fork | 1 |
 | Not yet implemented | 5 |
 
+Of the six inherited corrections, five are now implemented and test-backed.
+Shadowbind remains a test-backed partial correction because unsupported
+accuracy/level coefficients were deliberately not invented.
+
 ## Findings and implementation state
 
 | ID | Area | Baseline status | Current fork state |
 |---|---|---|---|
 | `VZ-SYS-001` | Ballista | `MISSING` | Not implemented; largest remaining system |
 | `VZ-COMBAT-001` | Item additional effects | `INACCURATE` | Not implemented; inventory/framework work remains |
-| `VZ-ZONE-001` | Temple of Uggalepih door keys | `INACCURATE` | Corrected in audit/Codex lineage (`ed3bb6e`) |
+| `VZ-ZONE-001` | Temple of Uggalepih door keys | `INACCURATE` | Implemented and interaction-test-backed |
 | `VZ-JOB-001` | Summoner Elemental Spirits | `INACCURATE` | Not implemented; data/formula work remains |
-| `VZ-CORE-001` | Call for Help scope | `INACCURATE` | Candidate correction at `de408e0`; focused tests pending |
+| `VZ-CORE-001` | Call for Help scope | `INACCURATE` | Hardened claim/CE/VE/boundary rules; Lua and C++ tests pass |
 | `VZ-CORE-002` | Attack while fishing | `INACCURATE` | Not implemented; safe state cleanup required |
-| `VZ-JOB-002` | Ranger Shadowbind | `INACCURATE` | Partial correction at `b0058b4`; coefficients/tests remain |
-| `VZ-ECON-001` | Fishing new-moon pattern | `INACCURATE` | Corrected at `556ad21`; focused test pending |
-| `VZ-ECON-002` | Waders fishing bonus | `INACCURATE` | Corrected at `556ad21`; focused test pending |
+| `VZ-JOB-002` | Ranger Shadowbind | `INACCURATE` | Partial correction is guard/ammo/availability-test-backed; accuracy coefficients remain |
+| `VZ-ECON-001` | Fishing new-moon pattern | `INACCURATE` | Implemented and unit-test-backed across every moon phase |
+| `VZ-ECON-002` | Waders fishing bonus | `INACCURATE` | Implemented and unit-test-backed |
 | `VZ-BF-001` | Ark Angel zero-delay ready messages | `INACCURATE` | Not implemented; state/message refactor required |
-| `VZ-ECON-003` | Moghancement: Region bonus | `INACCURATE` | Corrected at `556ad21`; focused IPC/unit test pending |
+| `VZ-ECON-003` | Moghancement: Region bonus | `INACCURATE` | Implemented and unit-test-backed with explicit truncation |
 
 ## Local environment validation
 
@@ -72,19 +76,24 @@ The validated commands and tool versions are preserved in `LOCAL_CODEX_ENVIRONME
 Completed:
 
 - Exact source inspection and evidence records for all eleven findings.
-- Commit-diff review for the Temple door, Shadowbind, and Call for Help changes.
-- Exact-match source assertions and `git diff --check` for the three deterministic C++ corrections.
-- Restoration of the pre-existing `conquest_system.cpp` UTF-8 BOM at `0702a5b`.
-- Successful full local MSVC/Ninja Debug build of the current branch.
-- Removal of all temporary implementation/build workflows and local build outputs.
+- Behavioral Lua interaction tests for the Temple doors, Shadowbind, and Call
+  for Help: 23/23 passed.
+- Catch2 coverage for fishing moon dispatch, Waders reachability, conquest
+  arithmetic, and Call-for-Help instance identity: 16/16 test cases and
+  9,007,070 assertions passed.
+- Call for Help now rejects unclaimed/stale enmity and enforces current claim,
+  positive requester CE/VE, confrontation, battlefield, instance, and battle
+  boundaries.
+- Lua style checks and `git diff --check` passed.
+- Fresh-directory MSVC/Ninja Debug configuration and all-target build passed.
+- Disposable build outputs and isolated test database were removed without
+  modifying the working local `xidb`.
 
 Still required:
 
-- Focused automated tests for the six implemented or partial corrections.
-- Lua, SQL, startup, integration, and gameplay-oriented checks appropriate to each future pass.
 - Completion of the remaining five known findings.
 - Continued exhaustive local-repository Vanilla/Zilart audit.
-- Final client/live-retail validation.
+- Final client/live-retail validation for behavior without an automated seam.
 
 ## Work stages
 
@@ -96,14 +105,18 @@ Still required:
 - [x] Validate shell, GitHub fetch, repository instructions, MSVC, CMake, and Ninja
 - [x] Complete a full clean local MSVC/Ninja Debug build
 - [x] Apply six safe fork-only corrections or partial corrections
-- [ ] Add focused automated tests for inherited corrections
+- [x] Add focused automated tests for inherited corrections
 - [ ] Complete the remaining five known findings
 - [ ] Continue the exhaustive local-repository Vanilla/Zilart audit
 - [ ] Produce a final actionable human-only validation queue
 
 ## Next action
 
-Use the latest head of `retail-parity/codex-vanilla-zilart`. Fetch `origin`, read `CODEX_STATE.md`, `CODEX_BACKLOG.md`, `LOCAL_CODEX_ENVIRONMENT.md`, the worklog, completion report, and all finding files. Begin with focused automated tests for the six inherited corrections, then rerun the full MSVC/Ninja Debug build.
+Use the latest head of `retail-parity/codex-vanilla-zilart`. Fetch `origin`,
+read `CODEX_STATE.md`, `CODEX_BACKLOG.md`, `LOCAL_CODEX_ENVIRONMENT.md`, the
+worklog, completion report, and all finding files. Begin the next bounded
+implementation pass with `VZ-CORE-002` (attack while fishing), then continue
+the remaining known findings and exhaustive audit.
 
 ## Guardrails
 

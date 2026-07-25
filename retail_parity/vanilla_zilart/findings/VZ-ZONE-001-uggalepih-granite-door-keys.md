@@ -7,7 +7,9 @@
 - **Expansion scope:** Rise of the Zilart
 - **Area:** Temple of Uggalepih / doors / mission and quest navigation
 - **Baseline status:** `INACCURATE`
-- **Implementation state:** Corrected on `retail-parity/fix-vz-zone-001` at commit `620d69d7c0315f70066c3484e110bb5d9baade3d`
+- **Implementation state:** `IMPLEMENTED_AND_TEST_BACKED`
+- **Implementation commit:** `620d69d7c0315f70066c3484e110bb5d9baade3d`
+- **Validation commit:** `01bb2d6556df17fcb4e26851b9b9202adb445bdf`
 - **Severity:** `MODERATE`
 - **Confidence:** `HIGH`
 - **Disposition:** `ASSISTANT_DIRECT`
@@ -74,17 +76,30 @@ Changes to `_mf9.lua`:
 
 `_mf8.lua` remains the Prelate-Key door.
 
-## Validation plan
+## Automated validation completed
 
-Automated test infrastructure for this specific positional door interaction was not located through the connected repository index. Final client/server validation is deferred to the consolidated human-only stage rather than interrupting the audit.
+`scripts/tests/zones/temple_of_uggalepih_doors.lua` exercises the real NPC
+trade and trigger handlers through the Lua simulation harness. It proves:
 
-Final validation should confirm:
+1. `_mf9` accepts exactly one Uggalepih Key, consumes it, emits the
+   key-break message with the Uggalepih Key parameter, and opens.
+2. `_mf9` rejects a Prelate Key and rejects an Uggalepih Key accompanied by
+   an extra item without consuming either item or opening.
+3. `_mf9`'s locked-side message names the Uggalepih Key.
+4. `_mf8` still accepts and consumes a Prelate Key, opens, and uses the
+   Prelate Key in both break and locked messages.
+5. Both doors open from their existing unlocked-side coordinate checks.
 
-1. `_mf9` rejects a Prelate Key and accepts exactly one Uggalepih Key.
-2. The Uggalepih Key is consumed and the door opens for the existing timed interval.
-3. `_mf8` continues to accept a Prelate Key.
-4. Each door opens from its interior side without a key.
-5. Windurst 9-2 and San d'Oria 8-2 routes remain traversable.
+All five cases passed in the focused `xi_test` run. The full MSVC/Ninja Debug
+build also passed.
+
+## Remaining validation
+
+The harness validates server-side animation state and message parameters, not
+the client's rendered door timing or complete mission-route traversal. The
+existing 6.5/11-second timing and Windurst 9-2/San d'Oria 8-2 route
+presentation therefore remain client/live-retail-only candidates; no
+intermediate owner test is requested.
 
 ## Dependencies and regression risk
 
@@ -97,8 +112,10 @@ The correction is isolated to one NPC script and has low regression risk.
 
 ## Completion criteria
 
-- The western Map 2 door consumes an Uggalepih Key.
-- The eastern Map 2 door consumes a Prelate Key.
-- Both show the correct locked message and reject the incorrect key.
-- Key consumption and door timing remain correct.
-- Final route validation passes.
+- [x] The western Map 2 door consumes an Uggalepih Key.
+- [x] The eastern Map 2 door consumes a Prelate Key.
+- [x] Both server handlers use the correct locked-message key parameter.
+- [x] Incorrect/non-exact `_mf9` trades are rejected.
+- [x] Server-side key consumption and opening behavior are automated.
+- [ ] Client-rendered timing and full mission-route traversal are observed on
+  live/client infrastructure.

@@ -174,13 +174,78 @@ The exact commands and tool versions are recorded in `LOCAL_CODEX_ENVIRONMENT.md
 - The next pass is focused automated regression coverage for the six inherited corrections, followed by the remaining implementation backlog.
 - No owner gameplay testing is requested.
 
+## 2026-07-25 — Inherited correction validation and hardening
+
+### Deterministic C++ coverage
+
+- Added a production moon-pattern/phase seam and Catch2 coverage for fishing
+  patterns 4 and 5 across all eight phases.
+- Added production seams around fishing feet filtering and gear-only lucky
+  timing. Tests prove Fisherman's Boots, Angler's Boots, Waders, and unrelated
+  feet retain their intended behavior.
+- Added a production conquest arithmetic seam. Tests lock down 0%, 10%, 100%,
+  small and zero awards, negative modifiers, and truncation of fractional
+  bonuses.
+- Added a Call-for-Help instance identity seam for direct same/different
+  instance boundary coverage.
+
+### Lua interaction coverage
+
+- Added five Temple of Uggalepih door tests against the real `_mf9` and `_mf8`
+  NPC handlers.
+- Added nine Shadowbind tests against the real job-ability action path,
+  including guards, messages, ammo, Unlimited Shot, and Ranger main/subjob
+  availability. The test-player factory now supports optional subjob and
+  subjob-level setup.
+- Added a Help-action packet helper and nine Call-for-Help interaction tests.
+
+### Defect discovered and corrected
+
+The inherited Call-for-Help candidate accepted any requester ID retained in an
+enmity container. Focused claim-transition tests proved this could touch an
+unclaimed mob. Eligibility now requires:
+
+- a current claim through `HasClaim`;
+- positive requester CE or VE;
+- matching confrontation, battlefield, instance, and battle ID;
+- a live, non-blocked, not-already-enabled mob.
+
+This preserves multi-mob/no-active-target behavior while excluding stale,
+unclaimed, or cross-boundary entries.
+
+### Test infrastructure and database isolation
+
+The installed local `xidb` was one schema revision behind the current source
+(`mob_resistances.stun_res_rank` was absent). It was not modified. A disposable
+database, `xidb_codex_validation_20260725_1435`, was created, populated through
+`tools/dbtool.py update`, used for `xi_test`, and removed with the other
+disposable validation artifacts. The working local `xidb` remained unchanged.
+
+An attempted live cross-instance enmity fixture was discarded after proving
+unsafe in the harness. Instance identity is instead tested through the
+production boundary seam, while the action continues to enumerate with
+`ForEachMobInstance`.
+
+### Validation result
+
+- Lua style check: passed.
+- Catch2: 16/16 cases, 9,007,070 assertions passed.
+- Focused Lua: 23/23 tests passed.
+- Fresh-directory MSVC/Ninja Debug configuration: passed.
+- Complete Debug build: passed; all server/test executables linked.
+- `git diff --check`: passed.
+- Disposable build directory, root executables/PDBs, and isolated test
+  database: removed.
+
 ## Current resume point
 
-1. Fetch the latest `origin/retail-parity/codex-vanilla-zilart` documentation commits.
-2. Read `AGENTS.md`, `CODEX_MASTER_TASK.md`, `CODEX_BACKLOG.md`, `LOCAL_CODEX_ENVIRONMENT.md`, `CODEX_STATE.md`, `STATUS.md`, this worklog, the completion report, and all findings.
-3. Add focused automated tests for the Temple door, fishing moon pattern, Waders, Moghancement: Region, Shadowbind, and Call for Help.
-4. Run narrow tests and `xi_test` where relevant.
-5. Run the validated full MSVC/Ninja Debug build.
-6. Fix failures caused by fork changes without weakening unrelated assertions.
-7. Update all project records, commit logically, and push only to the fork branch when explicitly permitted.
-8. Continue attack-while-fishing, Ark Angel messages, item additional effects, Elemental Spirits, Ballista, and the exhaustive audit after inherited corrections are test-backed.
+1. Fetch the latest `origin/retail-parity/codex-vanilla-zilart`.
+2. Read the repository instructions, state, backlog, environment guide,
+   worklog, completion report, and relevant findings.
+3. Begin `VZ-CORE-002` attack-while-fishing with a safe state transition and
+   focused tests.
+4. Continue `VZ-BF-001`, `VZ-COMBAT-001`, `VZ-JOB-001`, `VZ-SYS-001`, and the
+   exhaustive audit in bounded passes.
+5. Preserve unsupported Shadowbind coefficients and client-only
+   Call-for-Help/door/economy observations for final validation rather than
+   inventing behavior or requesting intermediate owner tests.

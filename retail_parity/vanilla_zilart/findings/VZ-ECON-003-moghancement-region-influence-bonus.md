@@ -8,8 +8,9 @@
 - **Baseline status:** `INACCURATE`
 - **Severity:** `MODERATE`
 - **Confidence:** `HIGH`
-- **Implementation state:** Implemented on `retail-parity/codex-vanilla-zilart`
+- **Implementation state:** `IMPLEMENTED_AND_TEST_BACKED`
 - **Implementation commit:** `556ad21ccda664e012003e5898fa7b4e2936c208`
+- **Validation commit:** `58c30fd5ecaa6eb1b1c85f76c55c5b384fe21a27`
 
 ## Expected behavior
 
@@ -29,23 +30,41 @@ Files changed:
 
 The pre-existing UTF-8 byte-order marker was restored in follow-up commit `0702a5be6421efd52be6ed17a4fa36347f1c69cf`; no unrelated encoding change remains.
 
-## Validation completed
+## Automated validation completed
 
-- The one-time fork workflow required exactly one matching baseline arithmetic expression before editing.
-- Static post-edit assertions confirmed percentage multiplication is present and the broken expression is absent.
-- `git diff --check` passed.
-- Both temporary workflows removed themselves after committing.
-- A native Ubuntu GCC Debug build was launched separately and is recorded in `CODEX_VALIDATION.md` when complete.
+`GainInfluencePoints` now delegates only the point arithmetic to
+`ApplyRegionInfluenceBonus` and passes the result to the existing
+`AddInfluencePoints(points, nation, region)` path. Nation selection, region
+selection, IPC message construction, and world aggregation are unchanged.
+
+`src/test/tests/conquest_system_tests.cpp` calls the production arithmetic and
+proves:
+
+- 0%: 100 remains 100;
+- 10%: 100 becomes 110;
+- 100%: 100 becomes 200;
+- a small 3-point award at 10% remains 3;
+- 10 points at 15% becomes 11;
+- zero points remain zero;
+- a negative modifier leaves the award unchanged.
+
+The two fractional cases explicitly lock down truncation toward zero after
+percentage multiplication. The Catch2 test passed during `xi_test`, and the
+full MSVC/Ninja Debug build passed.
 
 ## Remaining validation
 
-Add a deterministic conquest/IPC test for zero, 10%, 100%, and small point awards. The implemented conversion floors fractional bonus points; retail observation may still refine rounding behavior.
+The implementation and existing truncation behavior are test-backed. Reliable
+retail evidence may still refine fractional rounding, but this pass does not
+change it without evidence.
 
 ## Completion criteria
 
 - [x] A modifier value of 10 is applied as a percentage of the base award.
 - [x] Zero/nonpositive values do not add a bonus.
-- [x] Source assertion and diff validation pass.
 - [x] Original source encoding is preserved.
-- [ ] Native build passes.
-- [ ] Conquest/IPC regression tests are added.
+- [x] Fractional truncation behavior is explicit and deterministic.
+- [x] Nation/region selection and IPC/world aggregation remain on the existing
+  path.
+- [x] Native MSVC/Ninja Debug build passes.
+- [x] Conquest arithmetic regression tests are added.

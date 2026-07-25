@@ -1,8 +1,8 @@
 # Codex State — Vanilla + Rise of the Zilart
 
-Status: IMPLEMENTATION_READY
-Pass: 2
-Last updated: 2026-07-21
+Status: INHERITED_CORRECTIONS_VALIDATED
+Pass: 3
+Last updated: 2026-07-25
 
 ## Local Codex environment
 
@@ -34,20 +34,41 @@ The earlier `FAILED_INFRASTRUCTURE` state applied only to the assistant's networ
 ## Validation completed
 
 - Exact source inspection and evidence records for all eleven findings.
-- Exact-match source assertions and `git diff --check` for the deterministic fishing/conquest correction commit.
-- Source encoding restoration for `conquest_system.cpp`.
-- Commit-diff isolation review for the door, Shadowbind, and Call for Help changes.
-- Successful full local MSVC/Ninja Debug build of the current branch at commit `2ecefb7fadc15d7a849ff25809d9ad0fad165552`.
-- Successful GitHub fetch and clean worktree restoration.
+- `VZ-ZONE-001`: five Lua interaction cases cover exact/wrong trades,
+  consumption, message parameters, both door identities, and both side checks.
+- `VZ-ECON-001`: Catch2 covers patterns 4 and 5 across every defined moon
+  phase against the production curve dispatch.
+- `VZ-ECON-002`: Catch2 covers Waders reachability, both existing boot
+  branches, and unrelated-feet filtering.
+- `VZ-ECON-003`: Catch2 covers 0%, 10%, 100%, small/zero awards, negative
+  modifiers, and fractional truncation.
+- `VZ-JOB-002`: nine Lua ability cases cover all implemented guards,
+  success/failure messages, ordinary ammo consumption, Unlimited Shot
+  preservation, and main/subjob level availability.
+- `VZ-CORE-001`: nine Lua action cases plus one Catch2 boundary case cover
+  one/multiple/no eligible targets, claim transitions, party/pet personal
+  enmity, blocked/already-enabled mobs, message cardinality, battle and
+  confrontation boundaries, and instance identity.
+- Focused result: all 23 selected Lua tests passed.
+- Catch2 result: all 16 cases and 9,007,070 assertions passed.
+- Lua style checks and `git diff --check` passed.
+- A fresh-directory MSVC/Ninja Debug configuration passed.
+- The complete all-target MSVC/Ninja Debug build passed and linked
+  `xi_connect`, `xi_map`, `xi_search`, `xi_world`, and `xi_test`.
+- The disposable build directory, generated root executables/PDBs, and
+  isolated test database were removed; the working local `xidb` was not
+  modified.
 
 ## Current work
 
-The next Codex pass should add automated regression coverage for the six inherited corrections before beginning another broad gameplay system. The build environment is ready; build repair is no longer a prerequisite.
+The bounded inherited-correction validation pass is complete. Five
+corrections are implemented and test-backed. `VZ-JOB-002` is a test-backed
+partial correction: its supported guards and ammunition behavior are covered,
+while exact `/RNG`, relative-level, ranged-accuracy, duration/resist, and
+`BIND_MEVA` coefficients remain unresolved for lack of evidence.
 
 ## Remaining AI-capable work
 
-- Add focused tests for the six inherited corrections.
-- Resolve any defects exposed by those tests without weakening unrelated assertions.
 - Complete `VZ-CORE-002` attack-while-fishing state cleanup.
 - Complete `VZ-BF-001` Ark Angel/mob-skill ready-message architecture.
 - Complete `VZ-COMBAT-001` item additional-effect inventory and framework refactor.
@@ -58,16 +79,26 @@ The next Codex pass should add automated regression coverage for the six inherit
 
 ## Human-only candidates
 
-No gameplay test is assigned to the owner. Live-retail/client validation candidates remain provisional until the engineering and automated-validation stages are exhausted.
+No gameplay test is assigned to the owner. Provisional client/live-retail
+candidates remain:
+
+- Temple door rendered timing and full route traversal;
+- fishing curve coefficients and exact Waders magnitude;
+- conquest fractional rounding;
+- Call-for-Help reward/outside-player/client presentation;
+- Shadowbind numeric accuracy, level, duration/resist, and Recycle behavior.
 
 ## Exact next-pass instructions
 
-1. Fetch `origin` and confirm the local branch includes the latest documentation commit.
+1. Fetch `origin` and confirm the local branch includes this completed
+   inherited-validation pass.
 2. Read `AGENTS.md`, `CODEX_MASTER_TASK.md`, `CODEX_BACKLOG.md`, `LOCAL_CODEX_ENVIRONMENT.md`, the status/worklog, completion report, and all finding files.
 3. Confirm the worktree is clean and remain on `retail-parity/codex-vanilla-zilart`.
-4. Add the strongest practical automated tests for the six inherited corrections, prioritizing deterministic C++ and existing test-harness coverage.
+4. Begin `VZ-CORE-002` attack-while-fishing with an explicit safe state
+   transition and focused tests.
 5. Initialize MSVC through `VsDevCmd.bat` for all Windows configure/build commands.
 6. Run narrow tests first, then the full MSVC/Ninja Debug build.
 7. Fix failures caused by the fork changes; do not hide failures or weaken unrelated assertions.
-8. Update all project state/report files, create logical fork-only commits, and push only to `origin` when explicitly permitted.
+8. Update all project state/report files, create logical fork-only commits,
+   and push only to `origin` when explicitly permitted.
 9. Never create or suggest an upstream pull request.

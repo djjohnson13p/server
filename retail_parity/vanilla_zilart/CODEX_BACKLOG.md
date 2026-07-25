@@ -15,56 +15,31 @@ This is the resume backlog for the validated local Codex environment. It reflect
 - Use the validated Windows MSVC/Ninja build path in `LOCAL_CODEX_ENVIRONMENT.md`.
 - Keep the worktree clean and remove disposable build artifacts before committing.
 
-## Priority 0 — Test inherited corrections
+## Priority 0 — Inherited corrections complete
 
-The local project, GitHub connectivity, MSVC initialization, CMake configuration, and full Debug build are validated. Build-environment repair is no longer a prerequisite.
+Completed on 2026-07-25:
 
-### `VZ-ZONE-001` — Temple of Uggalepih door
+- `VZ-ZONE-001`: five Lua interaction cases passed.
+- `VZ-ECON-001`: deterministic all-phase moon-dispatch coverage passed.
+- `VZ-ECON-002`: fishing-feet filter and lucky-timing reachability coverage
+  passed.
+- `VZ-ECON-003`: percentage and truncation coverage passed.
+- `VZ-JOB-002`: all implemented guards, messages, ammo paths, and
+  main/subjob availability are test-backed. Unsupported numeric accuracy,
+  level, duration/resist, and Recycle behavior remains deliberately partial.
+- `VZ-CORE-001`: Help-action tests exposed and corrected stale/unclaimed
+  enmity eligibility. Current claim, positive requester CE/VE, boundaries,
+  party/pet distinctions, and message cardinality are test-backed.
 
-- Implementation present at `ed3bb6e3e59dbe482ebc58d44587576e0b035ab9`.
-- Add an interaction test for correct/incorrect key, key consumption, locked-side message, and door opening when the existing harness supports it.
-- Preserve `_mf9` as the Uggalepih-Key door and `_mf8` as the Prelate-Key door unless stronger topology/client evidence disproves the mapping.
+Validation commits:
 
-### `VZ-ECON-001` — Fishing new-moon dispatch
+- `58c30fd5ecaa6eb1b1c85f76c55c5b384fe21a27`
+- `9e989c2c97395bcfef7828e339a80c49c91161dd`
+- `3ef3475a9acb453fdb2ec54d68ced757ae5ded21`
+- `01bb2d6556df17fcb4e26851b9b9202adb445bdf`
 
-- Implementation present at `556ad21ccda664e012003e5898fa7b4e2936c208`.
-- Add deterministic coverage proving pattern 4 and pattern 5 call their independent curves across moon phases.
-- Prefer a direct C++ unit test or the narrowest existing fishing-test seam.
-
-### `VZ-ECON-002` — Waders fishing bonus
-
-- Implementation present at `556ad21ccda664e012003e5898fa7b4e2936c208`.
-- Add a test proving `GetFishingGear` retains Waders and the existing lucky-timing branch executes.
-- Preserve Fisherman's Boots and Angler's Boots behavior.
-
-### `VZ-ECON-003` — Moghancement: Region
-
-- Implementation present at `556ad21ccda664e012003e5898fa7b4e2936c208`.
-- Original source encoding was restored at `0702a5be6421efd52be6ed17a4fa36347f1c69cf`.
-- Add conquest/IPC tests for 0%, 10%, 100%, small awards, and explicit rounding behavior.
-
-### `VZ-JOB-002` — Ranger Shadowbind
-
-- Partial correction present at `b0058b40ef4b71dfd7af2d24dbae7fcf8edfd7f4`.
-- Shared Bind immunity, resistance-trait, and nullification guards are implemented.
-- Add tests for those guards, existing Bind, success/failure messages, and ammunition consumption.
-- Research and implement only evidence-supported main-job versus `/RNG`, relative-level, exact accuracy, duration, and Recycle behavior.
-- Do not replace the remaining roll with an invented spell formula.
-
-### `VZ-CORE-001` — Call for Help
-
-- Candidate correction present at `de408e05de4c8c44250f9db493492817bbe8db65`.
-- Add tests for one/multiple eligible mobs, no active target, personal versus party/pet enmity, already-enabled and blocked mobs, battlefields/confrontations, instance isolation, and enmity retained after claim transitions.
-- Determine from tests/source whether an explicit current-claim check is required in addition to personal enmity membership.
-- Validate reward suppression, outside-player access, claim color, radar/client updates, and message behavior where automated seams exist.
-
-### Required validation for Priority 0
-
-- Run narrow tests after each logical change.
-- Initialize MSVC through `VsDevCmd.bat`.
-- Run the full clean MSVC/Ninja Debug build before closing the pass.
-- Run `xi_test` and any relevant Lua/spec checks discovered during test implementation.
-- Do not weaken unrelated assertions or mark a finding resolved merely because the project builds.
+The focused result was 16/16 Catch2 cases (9,007,070 assertions) and 23/23
+Lua cases, followed by a successful full MSVC/Ninja Debug build.
 
 ## Priority 1 — Remaining known implementation findings
 

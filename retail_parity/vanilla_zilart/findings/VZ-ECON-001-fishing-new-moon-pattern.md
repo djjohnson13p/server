@@ -8,8 +8,9 @@
 - **Baseline status:** `INACCURATE`
 - **Severity:** `MODERATE`
 - **Confidence:** `HIGH`
-- **Implementation state:** Implemented on `retail-parity/codex-vanilla-zilart`
+- **Implementation state:** `IMPLEMENTED_AND_TEST_BACKED`
 - **Implementation commit:** `556ad21ccda664e012003e5898fa7b4e2936c208`
+- **Validation commit:** `58c30fd5ecaa6eb1b1c85f76c55c5b384fe21a27`
 
 ## Expected behavior
 
@@ -27,21 +28,31 @@ Files changed:
 
 - `src/map/utils/fishingutils.cpp`
 
-## Validation completed
+## Automated validation completed
 
-- The one-time fork workflow required exactly one matching baseline expression before editing.
-- Static post-edit assertion confirmed case 5 calls `MOONPATTERN_5`.
-- `git diff --check` passed.
-- The temporary workflow removed itself after committing.
-- A native Ubuntu GCC Debug build was launched separately and is recorded in `CODEX_VALIDATION.md` when complete.
+The production dispatch now has a narrow overload,
+`GetMoonModifier(moonPattern, moonPhase)`, while the live `fish_t` path calls
+that overload with the current moon phase.
+
+`src/test/tests/fishingutils_tests.cpp` calls the real implementation and
+checks patterns 4 and 5 for every defined phase from new moon through waning
+crescent. Each result is compared with its independently configured macro,
+including the production `+0.25` adjustment. A separate assertion proves the
+two dispatches diverge where their curves differ.
+
+The Catch2 test passed during `xi_test`, and the full MSVC/Ninja Debug build
+passed.
 
 ## Remaining validation
 
-A dedicated unit test should expose `GetMoonModifier` or an appropriate test seam and verify patterns 4 and 5 across all phase indices. Broader retail validation of the curve coefficients remains separate from this dispatch correction.
+The dispatch defect is fully test-backed. Broader retail validation of the
+underlying curve coefficients remains separate and requires reliable
+retail/client evidence; it does not block this correction.
 
 ## Completion criteria
 
 - [x] Case 5 calls `MOONPATTERN_5`.
-- [x] Source assertion and diff validation pass.
-- [ ] Native build passes.
-- [ ] Deterministic unit test covers the independent curves.
+- [x] Pattern 4 calls its independently configured curve.
+- [x] Every defined moon phase is covered deterministically.
+- [x] Native MSVC/Ninja Debug build passes.
+- [x] Deterministic unit test covers the independent curves.

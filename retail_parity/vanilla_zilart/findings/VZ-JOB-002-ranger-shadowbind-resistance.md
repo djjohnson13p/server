@@ -8,8 +8,9 @@
 - **Baseline status:** `INACCURATE`
 - **Severity:** `MODERATE`
 - **Confidence:** `HIGH` for the implementation defect; exact retail formula remains unresolved
-- **Implementation state:** `PARTIAL_CORRECTION_IMPLEMENTED`
+- **Implementation state:** `PARTIAL_CORRECTION_TEST_BACKED`
 - **Implementation commit:** `b0058b40ef4b71dfd7af2d24dbae7fcf8edfd7f4`
+- **Validation commit:** `3ef3475a9acb453fdb2ec54d68ced757ae5ded21`
 
 ## Expected retail behavior
 
@@ -43,22 +44,38 @@ Files changed:
 
 - `scripts/globals/job_utils/ranger.lua`
 
-## Validation completed
+## Automated validation completed
 
-- The commit diff is confined to `useShadowbind`.
-- The three shared status-effect guard signatures match patterns used elsewhere in the pinned LandSandBoat source.
-- Ammunition consumption remains after the success/failure branch and is unchanged.
-- The resulting source was read back from GitHub and inspected.
+`scripts/tests/jobs/rng/abilities/shadowbind.lua` drives the real ability
+packet/action path with an equipped Power Bow and Wooden Arrows. Nine focused
+cases prove:
+
+- success applies Bind, uses `IS_EFFECT`, and consumes one arrow;
+- a controlled `BIND_MEVA` failure does not apply Bind, uses `JA_MISS`, and
+  still consumes one arrow;
+- existing Bind is not replaced;
+- target immunity, resistance traits, and effect nullification each block
+  Bind and use the miss message;
+- the production Unlimited Shot/`shouldUseAmmo` path preserves the arrow and
+  consumes Unlimited Shot;
+- a level-39 Ranger cannot use Shadowbind;
+- a level-40 Ranger subjob can use Shadowbind.
+
+The test harness gained optional `sjob`/`slevel` spawn parameters so subjob
+availability is exercised through the same action path rather than by calling
+the Lua utility directly. All nine Lua cases passed, the Catch2 startup suite
+passed, and the full MSVC/Ninja Debug build passed.
 
 ## Remaining work
 
-- Establish and implement `/RNG` accuracy behavior.
+- Establish and implement `/RNG` accuracy penalties, if any. Ability
+  availability at Ranger subjob level 40 is now test-backed; accuracy is not.
 - Establish relative-level correction and any ranged-accuracy contribution.
 - Determine whether `BIND_MEVA` is the correct terminal roll or should be replaced by a dedicated job-ability calculation.
 - Confirm duration and partial-resist behavior.
-- Confirm Recycle/ammunition-preservation behavior.
-- Add automated tests for immunity, resistance traits, nullification, existing Bind, success/failure messaging, ammunition use, main/subjob, and relative level.
-- Run Lua validation and a server build in a functioning local/CI environment.
+- Confirm retail Recycle behavior beyond the existing Unlimited Shot path.
+- Add relative-level/accuracy tests only after their formulas are supported by
+  repository evidence or reliable documentation.
 
 ## Completion criteria
 
@@ -66,7 +83,11 @@ Files changed:
 - [x] Shadowbind respects status-resistance traits.
 - [x] Shadowbind respects effect nullification.
 - [x] Existing Bind and ammunition behavior remain intact.
-- [ ] Main-job and subjob accuracy behavior is represented and tested.
+- [x] Existing Bind, success/failure messages, ordinary ammo use, and
+  Unlimited Shot preservation are automated.
+- [x] Main-job/subjob level availability is represented and tested.
+- [ ] Main-job and subjob accuracy differences are established.
 - [ ] Relative-level behavior is represented when supported by evidence.
-- [ ] Automated tests cover all guard, success, failure, and ammunition paths.
+- [x] Automated tests cover the implemented guard, success, failure, and
+  ammunition paths.
 - [ ] Unresolved numeric retail coefficients are established or explicitly retained as final live-validation items.
