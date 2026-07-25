@@ -924,6 +924,7 @@ uint8               GetHookTime(CCharEntity* PChar);
 float               GetMonthlyTidalInfluence(fish_t* fish);
 float               GetHourlyModifier(fish_t* fish);
 float               GetMoonModifier(fish_t* fish);
+float               GetMoonModifier(uint8 moonPattern, uint8 moonPhase);
 uint8               GetLuckyMoonModifier();
 float               GetWeatherModifier(const CCharEntity* PChar);
 uint16              CalculateStamina(int skill, uint8 count);
@@ -939,9 +940,11 @@ uint8               CalculateFishSense(CCharEntity* PChar, fishresponse_t* respo
 uint16              CalculateCriticalBite(uint8 fishingSkill, uint8 fishSkill, rod_t* rod);
 big_fish_stats_t    CalculateBigFishStats(uint16 minLength, uint16 maxLength);
 fishmob_modifiers_t CalculateMobModifiers(fishmob_t* mob);
+float               GetLuckyTimingGearBonus(const fishing_gear_t& gear);
 
 // Data Access
 fishing_gear_t            GetFishingGear(CCharEntity* PChar);
+uint32                    GetFishingFeetGear(uint32 feet);
 bool                      IsLiveBait(bait_t* bait);
 uint8                     GetFishingSkill(CCharEntity* PChar);
 uint8                     GetBaitPower(bait_t* bait, fish_t* fish);

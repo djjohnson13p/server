@@ -293,12 +293,11 @@ float GetHourlyModifier(fish_t* fish)
     return modifier + 0.25f;
 }
 
-float GetMoonModifier(fish_t* fish) // 0.25 to 1.25
+float GetMoonModifier(const uint8 moonPattern, const uint8 moonPhase) // 0.25 to 1.25
 {
-    float modifier  = 1.0f;
-    uint8 moonPhase = GetMoonPhase();
+    float modifier = 1.0f;
 
-    switch (fish->moonPattern)
+    switch (moonPattern)
     {
         case 1:
             modifier = MOONPATTERN_1(moonPhase);
@@ -318,6 +317,11 @@ float GetMoonModifier(fish_t* fish) // 0.25 to 1.25
     }
 
     return modifier + 0.25f;
+}
+
+float GetMoonModifier(fish_t* fish)
+{
+    return GetMoonModifier(fish->moonPattern, GetMoonPhase());
 }
 
 uint8 GetLuckyMoonModifier()
@@ -545,7 +549,24 @@ uint8 CalculateLuckyTiming(CCharEntity* PChar, uint8 fishingSkill, uint8 catchSk
         }
     }
 
-    // Gear modifier
+    bonus += GetLuckyTimingGearBonus(gear);
+
+    // Bait modifier
+    if (bait->baitFlags & BAITFLAG_GOLD_ARROW_BONUS)
+    {
+        bonus *= 1.25;
+    }
+
+    luckyTiming += (uint8)std::floor(bonus);
+    luckyTiming -= (uint8)std::floor((penalty > luckyTiming) ? luckyTiming : penalty);
+
+    return std::max<uint8>(5, luckyTiming);
+}
+
+float GetLuckyTimingGearBonus(const fishing_gear_t& gear)
+{
+    float bonus = 0;
+
     switch (gear.body)
     {
         case FISHERMANS_TUNICA:
@@ -593,16 +614,7 @@ uint8 CalculateLuckyTiming(CCharEntity* PChar, uint8 fishingSkill, uint8 catchSk
             break;
     }
 
-    // Bait modifier
-    if (bait->baitFlags & BAITFLAG_GOLD_ARROW_BONUS)
-    {
-        bonus *= 1.25;
-    }
-
-    luckyTiming += (uint8)std::floor(bonus);
-    luckyTiming -= (uint8)std::floor((penalty > luckyTiming) ? luckyTiming : penalty);
-
-    return std::max<uint8>(5, luckyTiming);
+    return bonus;
 }
 
 uint16 CalculateHookChance(uint8 fishingSkill, fish_t* fish, bait_t* bait, rod_t* rod)
@@ -1043,13 +1055,18 @@ fishing_gear_t GetFishingGear(CCharEntity* PChar)
     gear.hands           = (hands == FISHERMANS_GLOVES || hands == ANGLERS_GLOVES) ? hands : 0;
     gear.waist           = (waist == FISHERS_ROPE) ? waist : 0;
     gear.legs            = (legs == FISHERMANS_HOSE || legs == ANGLERS_HOSE) ? legs : 0;
-    gear.feet            = (feet == FISHERMANS_BOOTS || feet == ANGLERS_BOOTS || feet == WADERS) ? feet : 0;
+    gear.feet            = GetFishingFeetGear(feet);
     gear.ring1           = 0;
     gear.ring2           = 0;
     gear.ranged          = 0;
     gear.ammo            = 0;
 
     return gear;
+}
+
+uint32 GetFishingFeetGear(const uint32 feet)
+{
+    return (feet == FISHERMANS_BOOTS || feet == ANGLERS_BOOTS || feet == WADERS) ? feet : 0;
 }
 
 bool IsLiveBait(bait_t* bait)

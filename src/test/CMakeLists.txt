@@ -62,7 +62,9 @@ endif()
 # object files in a static library.
 add_executable(xi_test
     ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/tests/conquest_system_tests.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/tests/entity_list_tests.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/tests/fishingutils_tests.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/tests/rng_runtime_tests.cpp
     ${resource})
 
