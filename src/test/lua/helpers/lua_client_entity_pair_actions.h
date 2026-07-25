@@ -56,7 +56,12 @@ public:
     void tradeMake() const;
     void tradeCancel() const;
     void acceptRaise() const;
+    void attack(CLuaBaseEntity* target) const;
+    void attackById(uint32 uniqueNo, uint16 actIndex) const;
     void engage(CLuaBaseEntity* mob) const;
+    void disengage() const;
+    void fish() const;
+    void fishingAction(uint8 mode, int32 para, int32 para2) const;
     void callForHelp() const;
     void skillchain(CLuaBaseEntity* target, sol::variadic_args weaponskillIds) const;
 

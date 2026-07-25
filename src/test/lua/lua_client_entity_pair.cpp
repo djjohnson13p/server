@@ -23,11 +23,14 @@
 #include "enums/tick_type.h"
 #include "map/entities/base_entity.h"
 #include "map/entities/char_entity.h"
+#include "map/entities/mob_entity.h"
 #include "map/item_container.h"
 #include "map/items/item.h"
 #include "map/lua/lua_base_entity.h"
 #include "map/lua/sol_bindings.h"
 #include "map/utils/charutils.h"
+#include "map/utils/fishingutils.h"
+#include "map/utils/zoneutils.h"
 #include "map/zone.h"
 #include "map_engine.h"
 #include "map_networking.h"
@@ -190,6 +193,79 @@ auto CLuaClientEntityPair::getItemInvSlot(const uint16 itemId, const uint8 quant
     }
 
     return std::nullopt;
+}
+
+/************************************************************************
+ *  Function: fishingState()
+ *  Purpose : Returns read-only fishing session state for lifecycle tests.
+ *  Example : local state = player:fishingState()
+ ************************************************************************/
+
+auto CLuaClientEntityPair::fishingState() const -> sol::table
+{
+    const auto* PChar = testChar_->entity();
+    auto        state = lua.create_table();
+
+    state["active"]      = PChar->isFishing();
+    state["animation"]   = PChar->animation;
+    state["token"]       = PChar->fishingToken;
+    state["hasResponse"] = PChar->hookedFish != nullptr;
+
+    if (PChar->hookedFish)
+    {
+        state["responseToken"] = PChar->hookedFish->fishingToken;
+        state["hooked"]        = PChar->hookedFish->hooked;
+        state["catchId"]       = PChar->hookedFish->catchid;
+        state["catchType"]     = PChar->hookedFish->catchtype;
+        state["successType"]   = PChar->hookedFish->successtype;
+        state["special"]       = PChar->hookedFish->special;
+    }
+
+    return state;
+}
+
+/************************************************************************
+ *  Function: setFishingHookForTest()
+ *  Purpose : Places an active test fishing session at the hooked boundary.
+ *  Example : player:setFishingHookForTest(1, xi.item.MOAT_CARP_1, 11, 123)
+ *  Notes   : This fixture cannot start a session or grant a reward. The
+ *            surrounding cast, attack, and late input still use real packets.
+ ************************************************************************/
+
+void CLuaClientEntityPair::setFishingHookForTest(const uint8 catchType, const uint32 catchId, const uint8 catchLevel, const uint32 special)
+{
+    auto* PChar = testChar_->entity();
+
+    if (PChar->animation != ANIMATION_FISHING_START || PChar->fishingToken == 0 || !PChar->hookedFish)
+    {
+        TestError("setFishingHookForTest requires an active waiting fishing session");
+        return;
+    }
+
+    if (catchType < FISHINGCATCHTYPE_SMALLFISH || catchType > FISHINGCATCHTYPE_CHEST || catchId == 0)
+    {
+        TestError("setFishingHookForTest received invalid catch type {} or id {}", catchType, catchId);
+        return;
+    }
+
+    PChar->hookedFish->hooked       = true;
+    PChar->hookedFish->catchtype    = catchType;
+    PChar->hookedFish->catchid      = catchId;
+    PChar->hookedFish->catchlevel   = catchLevel;
+    PChar->hookedFish->count        = 1;
+    PChar->hookedFish->special      = special;
+    PChar->hookedFish->fishingToken = PChar->fishingToken;
+
+    if (catchType == FISHINGCATCHTYPE_MOB)
+    {
+        if (auto* PMob = dynamic_cast<CMobEntity*>(zoneutils::GetEntity(catchId, TYPE_MOB)))
+        {
+            PMob->SetLocalVar("hooked", 1);
+        }
+    }
+
+    PChar->animation = ANIMATION_FISHING_FISH;
+    PChar->updatemask |= UPDATE_HP;
 }
 
 /************************************************************************
@@ -364,6 +440,8 @@ void CLuaClientEntityPair::Register()
     SOL_REGISTER("gotoMogHouse", CLuaClientEntityPair::gotoMogHouse);
     SOL_REGISTER("isPendingZone", CLuaClientEntityPair::isPendingZone);
     SOL_REGISTER("getItemInvSlot", CLuaClientEntityPair::getItemInvSlot);
+    SOL_REGISTER("fishingState", CLuaClientEntityPair::fishingState);
+    SOL_REGISTER("setFishingHookForTest", CLuaClientEntityPair::setFishingHookForTest);
     SOL_REGISTER("claimAndKillMob", CLuaClientEntityPair::claimAndKillMob);
     SOL_REGISTER("claimAndKillMobs", CLuaClientEntityPair::claimAndKillMobs);
     SOL_READONLY("actions", CLuaClientEntityPair::actions);

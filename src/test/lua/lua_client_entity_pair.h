@@ -49,6 +49,8 @@ public:
     void gotoMogHouse(ZONEID zoneId);
     auto isPendingZone() const -> bool;
     auto getItemInvSlot(uint16 itemId, uint8 quantity) const -> Maybe<uint16>;
+    auto fishingState() const -> sol::table;
+    void setFishingHookForTest(uint8 catchType, uint32 catchId, uint8 catchLevel, uint32 special);
     void claimAndKillMob(const sol::object& mobQuery, sol::optional<sol::table> params);
     void claimAndKillMobs(sol::variadic_args mobQueries);
 

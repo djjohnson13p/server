@@ -245,11 +245,12 @@ CCharEntity::CCharEntity()
 
     PAI = std::make_unique<CAIContainer>(this, nullptr, std::make_unique<CPlayerController>(this), std::make_unique<CTargetFind>(this));
 
-    hookedFish   = nullptr;
-    lastCastTime = 0;
-    nextFishTime = 0;
-    fishingToken = 0;
-    hookDelay    = 13;
+    hookedFish           = nullptr;
+    lastCastTime         = 0;
+    nextFishTime         = 0;
+    fishingToken         = 0;
+    fishingTokenSequence = 0;
+    hookDelay            = 13;
 
     profile = {};
     search  = {};

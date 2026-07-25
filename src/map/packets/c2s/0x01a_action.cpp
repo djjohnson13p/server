@@ -96,8 +96,8 @@ auto GP_CLI_COMMAND_ACTION::validate(MapSession* PSession, const CCharEntity* PC
                     }
                     case GP_CLI_COMMAND_ACTION_ACTIONID::Attack:
                     {
-                        // Note: It is possible to attack while fishing on retail and is disabled here on purpose.
-                        pv.blockedBy({ BlockedState::Healing, BlockedState::Sitting, BlockedState::Crafting, BlockedState::Fishing, BlockedState::PreventAction });
+                        // A validated engagement interrupts fishing in CPlayerController::Engage.
+                        pv.blockedBy({ BlockedState::Healing, BlockedState::Sitting, BlockedState::Crafting, BlockedState::PreventAction });
                         break;
                     }
                     case GP_CLI_COMMAND_ACTION_ACTIONID::CastMagic:

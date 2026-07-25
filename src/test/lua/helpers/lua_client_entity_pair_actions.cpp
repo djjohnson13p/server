@@ -61,6 +61,7 @@
 #include "map/packets/c2s/0x0fe_myroom_plant_crop.h"
 #include "map/packets/c2s/0x0ff_myroom_plant_stop.h"
 #include "map/packets/c2s/0x102_extended_job.h"
+#include "map/packets/c2s/0x110_fishing_2.h"
 #include "map/status_effect_container.h"
 #include "packets/c2s/0x015_pos.h"
 #include "test_char.h"
@@ -641,6 +642,45 @@ void CLuaClientEntityPairActions::acceptRaise() const
 }
 
 /************************************************************************
+ *  Function: attack()
+ *  Purpose : Emits an attack packet without moving the player.
+ *  Example : player.actions:attack(mob)
+ *  Notes   : Makes the attack delay ready, but leaves range/facing unchanged.
+ ************************************************************************/
+
+void CLuaClientEntityPairActions::attack(CLuaBaseEntity* target) const
+{
+    if (!target)
+    {
+        TestError("CLuaClientEntityPairActions::attack: Invalid target");
+        return;
+    }
+
+    attackById(target->getID(), target->getTargID());
+}
+
+/************************************************************************
+ *  Function: attackById()
+ *  Purpose : Emits a crafted attack packet for validation-path tests.
+ *  Example : player.actions:attackById(0, 0x7FF)
+ *  Notes   : Does not bypass packet validation or engagement checks.
+ ************************************************************************/
+
+void CLuaClientEntityPairActions::attackById(const uint32 uniqueNo, const uint16 actIndex) const
+{
+    auto* controller = static_cast<CPlayerController*>(parent_->testChar()->entity()->PAI->GetController());
+    controller->setLastAttackTime(timer::now() - 30s);
+
+    const auto packet       = parent_->packets().createPacket<GP_CLI_COMMAND_ACTION>();
+    auto*      attackPacket = packet->as<GP_CLI_COMMAND_ACTION>();
+    attackPacket->UniqueNo  = uniqueNo;
+    attackPacket->ActIndex  = actIndex;
+    attackPacket->ActionID  = GP_CLI_COMMAND_ACTION_ACTIONID::Attack;
+
+    parent_->packets().sendBasicPacket(*packet);
+}
+
+/************************************************************************
  *  Function: engage()
  *  Purpose : Moves char in range of mob and engages it.
  *  Example : player.actions:engage(mob)
@@ -659,16 +699,63 @@ void CLuaClientEntityPairActions::engage(CLuaBaseEntity* mob) const
     PChar->loc.p.rotation = worldAngle(PChar->loc.p, PMob->loc.p);
     PMob->loc.p.rotation  = worldAngle(PMob->loc.p, PChar->loc.p);
 
-    // 3. Change last attack time so we can engage immediately
-    auto* controller = static_cast<CPlayerController*>(parent_->testChar()->entity()->PAI->GetController());
-    controller->setLastAttackTime(timer::now() - 30s);
+    // 3. Send packet to engage
+    attack(mob);
+}
 
-    // 4. Send packet to engage
+/************************************************************************
+ *  Function: disengage()
+ *  Purpose : Emits the ordinary attack-off packet.
+ *  Example : player.actions:disengage()
+ ************************************************************************/
+
+void CLuaClientEntityPairActions::disengage() const
+{
     const auto packet       = parent_->packets().createPacket<GP_CLI_COMMAND_ACTION>();
-    auto*      attackPacket = packet->as<GP_CLI_COMMAND_ACTION>();
-    attackPacket->UniqueNo  = mob->getID();
-    attackPacket->ActIndex  = mob->getTargID();
-    attackPacket->ActionID  = GP_CLI_COMMAND_ACTION_ACTIONID::Attack;
+    auto*      actionPacket = packet->as<GP_CLI_COMMAND_ACTION>();
+    actionPacket->ActionID  = GP_CLI_COMMAND_ACTION_ACTIONID::AttackOff;
+
+    parent_->packets().sendBasicPacket(*packet);
+}
+
+/************************************************************************
+ *  Function: fish()
+ *  Purpose : Emits the ordinary action packet that starts fishing.
+ *  Example : player.actions:fish()
+ *  Notes   : Makes the fishing cast cooldown ready; all other validation remains active.
+ ************************************************************************/
+
+void CLuaClientEntityPairActions::fish() const
+{
+    auto* PChar         = parent_->testChar()->entity();
+    PChar->nextFishTime = 0;
+
+    const auto packet       = parent_->packets().createPacket<GP_CLI_COMMAND_ACTION>();
+    auto*      actionPacket = packet->as<GP_CLI_COMMAND_ACTION>();
+    actionPacket->UniqueNo  = PChar->id;
+    actionPacket->ActIndex  = PChar->targid;
+    actionPacket->ActionID  = GP_CLI_COMMAND_ACTION_ACTIONID::Fish;
+
+    parent_->packets().sendBasicPacket(*packet);
+}
+
+/************************************************************************
+ *  Function: fishingAction()
+ *  Purpose : Emits a fishing mini-game packet through the production handler.
+ *  Example : player.actions:fishingAction(4, 0, 0)
+ ************************************************************************/
+
+void CLuaClientEntityPairActions::fishingAction(const uint8 mode, const int32 para, const int32 para2) const
+{
+    auto* PChar = parent_->testChar()->entity();
+
+    const auto packet        = parent_->packets().createPacket<GP_CLI_COMMAND_FISHING_2>();
+    auto*      fishingPacket = packet->as<GP_CLI_COMMAND_FISHING_2>();
+    fishingPacket->UniqueNo  = PChar->id;
+    fishingPacket->ActIndex  = PChar->targid;
+    fishingPacket->mode      = static_cast<int8>(mode);
+    fishingPacket->para      = para;
+    fishingPacket->para2     = para2;
 
     parent_->packets().sendBasicPacket(*packet);
 }
@@ -1045,7 +1132,12 @@ void CLuaClientEntityPairActions::Register()
     SOL_REGISTER("tradeMake", CLuaClientEntityPairActions::tradeMake);
     SOL_REGISTER("tradeCancel", CLuaClientEntityPairActions::tradeCancel);
     SOL_REGISTER("acceptRaise", CLuaClientEntityPairActions::acceptRaise);
+    SOL_REGISTER("attack", CLuaClientEntityPairActions::attack);
+    SOL_REGISTER("attackById", CLuaClientEntityPairActions::attackById);
     SOL_REGISTER("engage", CLuaClientEntityPairActions::engage);
+    SOL_REGISTER("disengage", CLuaClientEntityPairActions::disengage);
+    SOL_REGISTER("fish", CLuaClientEntityPairActions::fish);
+    SOL_REGISTER("fishingAction", CLuaClientEntityPairActions::fishingAction);
     SOL_REGISTER("skillchain", CLuaClientEntityPairActions::skillchain);
     SOL_REGISTER("moveItem", CLuaClientEntityPairActions::moveItem);
     SOL_REGISTER("sortContainer", CLuaClientEntityPairActions::sortContainer);

@@ -983,7 +983,7 @@ bool SendHookResponse(CCharEntity* PChar, fishresponse_t* response, CancelOnMobL
 void FishingSkillup(CCharEntity* PChar, uint8 catchLevel, uint8 successType);
 
 // Fishing
-void             InterruptFishing(CCharEntity* PChar);
+bool             InterruptFishing(CCharEntity* PChar);
 void             StartFishing(CCharEntity* PChar);
 void             ReelInCatch(CCharEntity* PChar);
 uint8            UnhookMob(CCharEntity* PChar, Lost lost);

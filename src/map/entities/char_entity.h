@@ -659,11 +659,12 @@ public:
 
     bool requestedInfoSync = false;
 
-    fishresponse_t* hookedFish;   // Currently hooked fish/item/monster
-    uint32          nextFishTime; // When char is allowed to fish again
-    uint32          lastCastTime; // When char last cast their rod
-    uint32          fishingToken; // To track fishing process
-    uint8           hookDelay;    // How long it takes to hook a fish
+    fishresponse_t* hookedFish;           // Currently hooked fish/item/monster
+    uint32          nextFishTime;         // When char is allowed to fish again
+    uint32          lastCastTime;         // When char last cast their rod
+    uint32          fishingToken;         // To track fishing process
+    uint32          fishingTokenSequence; // Generates a fresh token for each fishing session
+    uint8           hookDelay;            // How long it takes to hook a fish
 
     void ReloadPartyInc();
     void ReloadPartyDec();

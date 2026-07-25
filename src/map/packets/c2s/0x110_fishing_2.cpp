@@ -29,6 +29,7 @@ auto GP_CLI_COMMAND_FISHING_2::validate(MapSession* PSession, const CCharEntity*
         .blockedBy({ BlockedState::InEvent })
         .mustEqual(settings::get<bool>("map.FISHING_ENABLE"), true, "Fishing is disabled")
         .mustEqual(PChar->GetMLevel() >= settings::get<uint8>("map.FISHING_MIN_LEVEL"), true, "Character below fishing minimum level")
+        .mustEqual(PChar->isFishing(), true, "Character is not fishing")
         .mustEqual(this->UniqueNo, PChar->id, "Character id mismatch")
         .mustEqual(this->ActIndex, PChar->targid, "Character targid mismatch")
         .oneOf<GP_CLI_COMMAND_FISHING_2_MODE>(this->mode)
@@ -39,7 +40,12 @@ auto GP_CLI_COMMAND_FISHING_2::validate(MapSession* PSession, const CCharEntity*
                     {
                         case GP_CLI_COMMAND_FISHING_2_MODE::RequestCheckHook:
                             // para and para2 are both 0 for RequestCheckHook
-                            v.mustEqual(this->para, 0, "para must be 0")
+                            v.mustEqual(PChar->animation, ANIMATION_FISHING_START, "Character is not waiting for a hook")
+                                .mustNotEqual(PChar->fishingToken, 0, "Fishing token is invalid")
+                                .mustEqual(PChar->hookedFish != nullptr, true, "Fishing response is missing")
+                                .mustEqual(PChar->hookedFish && !PChar->hookedFish->hooked, true, "Fishing response is already hooked")
+                                .mustEqual(PChar->hookedFish && PChar->hookedFish->fishingToken == PChar->fishingToken, true, "Fishing response token mismatch")
+                                .mustEqual(this->para, 0, "para must be 0")
                                 .mustEqual(this->para2, 0, "para2 must be 0");
                             break;
                         case GP_CLI_COMMAND_FISHING_2_MODE::RequestEndMiniGame:
@@ -48,7 +54,12 @@ auto GP_CLI_COMMAND_FISHING_2::validate(MapSession* PSession, const CCharEntity*
                             // - Equals to 200 when client force exits the mini game
                             // - Equals to 0 when client successfully catches a fish
                             // - Else it is equal to the fish remaining stamina
-                            v.range("para", this->para, 0, 300);
+                            v.mustEqual(PChar->animation, ANIMATION_FISHING_FISH, "Character is not in the fishing mini-game")
+                                .mustNotEqual(PChar->fishingToken, 0, "Fishing token is invalid")
+                                .mustEqual(PChar->hookedFish != nullptr, true, "Fishing response is missing")
+                                .mustEqual(PChar->hookedFish && PChar->hookedFish->hooked, true, "Fishing response is not hooked")
+                                .mustEqual(PChar->hookedFish && PChar->hookedFish->fishingToken == PChar->fishingToken, true, "Fishing response token mismatch")
+                                .range("para", this->para, 0, 300);
 
                             // if para2 is non-zero, it must equal current hooked fish special
                             if (this->para2 != 0)
@@ -67,7 +78,12 @@ auto GP_CLI_COMMAND_FISHING_2::validate(MapSession* PSession, const CCharEntity*
                         case GP_CLI_COMMAND_FISHING_2_MODE::RequestPotentialTimeout:
                             // para is set to time remaining, para2 is always 0
                             // todo: unknown actual range, this parameter is currently unused
-                            v.range("para", this->para, 0, 10)
+                            v.mustEqual(PChar->animation, ANIMATION_FISHING_FISH, "Character is not in the fishing mini-game")
+                                .mustNotEqual(PChar->fishingToken, 0, "Fishing token is invalid")
+                                .mustEqual(PChar->hookedFish != nullptr, true, "Fishing response is missing")
+                                .mustEqual(PChar->hookedFish && PChar->hookedFish->hooked, true, "Fishing response is not hooked")
+                                .mustEqual(PChar->hookedFish && PChar->hookedFish->fishingToken == PChar->fishingToken, true, "Fishing response token mismatch")
+                                .range("para", this->para, 0, 10)
                                 .mustEqual(this->para2, 0, "para2 must be 0");
                             break;
                     }

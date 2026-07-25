@@ -1910,12 +1910,21 @@ void FishingSkillup(CCharEntity* PChar, uint8 catchLevel, uint8 successType)
  *                              FISHING                                  *
  *                                                                       *
  ************************************************************************/
-void InterruptFishing(CCharEntity* PChar)
+bool InterruptFishing(CCharEntity* PChar)
 {
+    if (!PChar->isFishing())
+    {
+        return false;
+    }
+
     if (PChar->animation == ANIMATION_FISHING_FISH)
     {
         BaitLoss(PChar, RemoveFly::No, SendUpdate::Yes);
     }
+
+    PChar->fishingToken = 0;
+    PChar->lastCastTime = 0;
+
     PChar->animation = ANIMATION_NONE;
     PChar->updatemask |= UPDATE_ALL_CHAR;
 
@@ -1928,6 +1937,8 @@ void InterruptFishing(CCharEntity* PChar)
     }
 
     PChar->pushPacket<GP_SERV_COMMAND_EVENTUCOFF>(PChar, GP_SERV_COMMAND_EVENTUCOFF_MODE::Fishing);
+
+    return true;
 }
 
 void StartFishing(CCharEntity* PChar)
@@ -1978,13 +1989,6 @@ void StartFishing(CCharEntity* PChar)
 
     if (FishingAreaID > 0)
     {
-        PChar->fishingToken = 1 + xirand::GetRandomNumber(9999);
-        destroy(PChar->hookedFish);
-
-        PChar->hookedFish              = new fishresponse_t();
-        PChar->hookedFish->hooked      = false;
-        PChar->hookedFish->successtype = FISHINGSUCCESSTYPE_NONE;
-
         // If in the middle of something else, can't fish
         if (PChar->animation != ANIMATION_NONE)
         {
@@ -2021,6 +2025,19 @@ void StartFishing(CCharEntity* PChar)
 
         if (rod != nullptr && bait != nullptr)
         {
+            if (++PChar->fishingTokenSequence == 0)
+            {
+                ++PChar->fishingTokenSequence;
+            }
+
+            PChar->fishingToken = PChar->fishingTokenSequence;
+            destroy(PChar->hookedFish);
+
+            PChar->hookedFish               = new fishresponse_t();
+            PChar->hookedFish->hooked       = false;
+            PChar->hookedFish->successtype  = FISHINGSUCCESSTYPE_NONE;
+            PChar->hookedFish->fishingToken = PChar->fishingToken;
+
             PChar->hookDelay = GetHookTime(PChar);
             PChar->animation = ANIMATION_FISHING_START;
             PChar->updatemask |= UPDATE_HP;
@@ -2936,7 +2953,9 @@ void FishingAction(CCharEntity* PChar, const GP_CLI_COMMAND_FISHING_2_MODE mode,
                 PChar->hookedFish = nullptr;
             }
 
-            PChar->animation = ANIMATION_NONE;
+            PChar->fishingToken = 0;
+            PChar->lastCastTime = 0;
+            PChar->animation    = ANIMATION_NONE;
             PChar->updatemask |= UPDATE_HP;
         }
 

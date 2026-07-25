@@ -32,6 +32,7 @@
 #include "status_effect_container.h"
 #include "utils/battleutils.h"
 #include "utils/charutils.h"
+#include "utils/fishingutils.h"
 #include "weapon_skill.h"
 
 CPlayerController::CPlayerController(CCharEntity* _PChar)
@@ -75,6 +76,19 @@ bool CPlayerController::Engage(uint16 targid)
         {
             if (m_lastAttackTime + std::chrono::milliseconds(PChar->GetWeaponDelay(false)) < timer::now())
             {
+                // Fishing is an animation/session state rather than a PAI state. Keep
+                // it intact until the target, range, and attack delay checks pass, then
+                // tear it down before the ordinary attack state is entered.
+                if (PChar->isFishing())
+                {
+                    if (!PChar->PAI->CanChangeState())
+                    {
+                        return false;
+                    }
+
+                    fishingutils::InterruptFishing(PChar);
+                }
+
                 if (CController::Engage(targid))
                 {
                     PChar->PLatentEffectContainer->CheckLatentsWeaponDraw(true);
