@@ -33,6 +33,7 @@ enum class ActionReactKind : uint8_t;
 enum class ActionProcSkillChain : uint8_t;
 #include "data/enums/weather.h"
 class CMobEntity;
+class CCharEntity;
 class CAbility;
 class CAttack;
 class CItemWeapon;
@@ -41,6 +42,7 @@ class CPetSkill;
 class CSpell;
 class CTrait;
 class CWeaponSkill;
+class CInstance;
 struct action_result_t;
 enum class PHYSICAL_ATTACK_TYPE;
 
@@ -251,6 +253,8 @@ void turnTowardsTarget(CBaseEntity* PEntity, CBaseEntity* PTarget, bool force = 
 
 void AddTraits(CBattleEntity* PEntity, TraitList_t* TraitList, uint8 level);
 bool HasClaim(CBattleEntity* PEntity, CBattleEntity* PTarget);
+bool IsCallForHelpEligible(CCharEntity* PChar, CMobEntity* PMob);
+bool IsSameCallForHelpInstance(const CInstance* PRequesterInstance, const CInstance* PMobInstance);
 
 timer::duration CalculateSpellCastTime(CBattleEntity*, CMagicState*);
 uint16          CalculateSpellCost(CBattleEntity*, CSpell*);

@@ -244,6 +244,21 @@ void CLuaClientEntityPairActions::rangedAttack(CLuaBaseEntity* target) const
 }
 
 /************************************************************************
+ *  Function: callForHelp()
+ *  Purpose : Emits the Call for Help action.
+ *  Example : player.actions:callForHelp()
+ ************************************************************************/
+
+void CLuaClientEntityPairActions::callForHelp() const
+{
+    const auto packet       = parent_->packets().createPacket<GP_CLI_COMMAND_ACTION>();
+    auto*      actionPacket = packet->as<GP_CLI_COMMAND_ACTION>();
+    actionPacket->ActionID  = GP_CLI_COMMAND_ACTION_ACTIONID::Help;
+
+    parent_->packets().sendBasicPacket(*packet);
+}
+
+/************************************************************************
  *  Function: useItem()
  *  Purpose : Emits packet to use an item.
  *  Example : player.actions:useItem(player, 5, xi.inv.INVENTORY) -- uses item in slot 5 of inventory on self
@@ -1012,6 +1027,7 @@ void CLuaClientEntityPairActions::Register()
     SOL_REGISTER("useAbility", CLuaClientEntityPairActions::useAbility);
     SOL_REGISTER("changeTarget", CLuaClientEntityPairActions::changeTarget);
     SOL_REGISTER("rangedAttack", CLuaClientEntityPairActions::rangedAttack);
+    SOL_REGISTER("callForHelp", CLuaClientEntityPairActions::callForHelp);
     SOL_REGISTER("useItem", CLuaClientEntityPairActions::useItem);
     SOL_REGISTER("trigger", CLuaClientEntityPairActions::trigger);
     SOL_REGISTER("guildBuy", CLuaClientEntityPairActions::guildBuy);

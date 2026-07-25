@@ -57,6 +57,7 @@ public:
     void tradeCancel() const;
     void acceptRaise() const;
     void engage(CLuaBaseEntity* mob) const;
+    void callForHelp() const;
     void skillchain(CLuaBaseEntity* target, sol::variadic_args weaponskillIds) const;
 
     void guildBuy(uint16 itemId, uint8 quantity) const;

@@ -326,9 +326,7 @@ void GP_CLI_COMMAND_ACTION::process(MapSession* PSession, CCharEntity* PChar) co
                 PChar,
                 [PChar, &callForHelpSucceeded](CMobEntity* PMob)
                 {
-                    if (!PMob->GetCallForHelpFlag() &&
-                        PMob->PEnmityContainer->HasID(PChar->id) &&
-                        !PMob->m_CallForHelpBlocked)
+                    if (battleutils::IsCallForHelpEligible(PChar, PMob))
                     {
                         PMob->SetCallForHelpFlag(true);
                         callForHelpSucceeded = true;

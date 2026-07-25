@@ -5379,6 +5379,39 @@ bool HasClaim(CBattleEntity* PEntity, CBattleEntity* PTarget)
     return found;
 }
 
+bool IsSameCallForHelpInstance(const CInstance* PRequesterInstance, const CInstance* PMobInstance)
+{
+    return PRequesterInstance == PMobInstance;
+}
+
+bool IsCallForHelpEligible(CCharEntity* PChar, CMobEntity* PMob)
+{
+    if (PChar == nullptr || PMob == nullptr || PMob->PEnmityContainer == nullptr)
+    {
+        return false;
+    }
+
+    if (PMob->isDead() || PMob->GetCallForHelpFlag() || PMob->m_CallForHelpBlocked)
+    {
+        return false;
+    }
+
+    if (PChar->StatusEffectContainer->GetConfrontationEffect() != PMob->StatusEffectContainer->GetConfrontationEffect() ||
+        PChar->PBattlefield != PMob->PBattlefield ||
+        !IsSameCallForHelpInstance(PChar->PInstance, PMob->PInstance) ||
+        PChar->getBattleID() != PMob->getBattleID())
+    {
+        return false;
+    }
+
+    if (!HasClaim(PChar, PMob))
+    {
+        return false;
+    }
+
+    return PMob->PEnmityContainer->GetCE(PChar) > 0 || PMob->PEnmityContainer->GetVE(PChar) > 0;
+}
+
 timer::duration CalculateSpellCastTime(CBattleEntity* PEntity, CMagicState* PMagicState)
 {
     CSpell* PSpell = PMagicState->GetSpell();
