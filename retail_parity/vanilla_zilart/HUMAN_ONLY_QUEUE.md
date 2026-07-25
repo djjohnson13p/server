@@ -5,15 +5,16 @@ Status: NOT_FINAL_ENGINEERING_CONTINUES
 No gameplay, retail-capture, server-deployment, or manual test task is being assigned to the owner at this state.
 
 The local Codex desktop environment, GitHub connectivity, MSVC toolchain,
-CMake/Ninja configuration, full Debug build, and focused tests for all six
-inherited corrections are validated. The remaining known engineering work is
-still AI-capable, so it does not belong in a final human-only queue yet.
+CMake/Ninja configuration, full Debug build, focused inherited-correction
+tests, and the `VZ-CORE-002` safe fishing-to-combat transition are validated.
+The remaining known engineering work is still AI-capable, so it does not
+belong in a final human-only queue yet.
 
 ## Current AI stage
 
 Codex must still:
 
-- complete the five remaining known implementation findings;
+- complete the four remaining known implementation findings;
 - continue the exhaustive Vanilla/Zilart local-repository audit;
 - run the available C++, Lua, SQL, unit, integration, startup, and build checks;
 - update the findings and project reports.
@@ -36,6 +37,10 @@ These items may become human-only after all remaining AI-capable engineering and
 - Measure Shadowbind main-job versus `/RNG` accuracy, target-level correction,
   duration/resist behavior, and Recycle rules beyond the automated Unlimited
   Shot path.
+- Capture Attack-while-fishing release packets, messages, and rendered
+  animation ordering in waiting and hooked phases, plus representative
+  invalid-target behavior. Server cleanup, resource accounting, stale-input
+  rejection, and recovery are automated.
 - Capture representative Ark Angel instant/zero-delay ready/use messages.
 - Collect controlled item additional-effect accuracy, resistance, potency, and duration data by item family.
 - Measure Elemental Spirit HP/MP/stat/weapon-damage scaling and Light Spirit decision behavior.

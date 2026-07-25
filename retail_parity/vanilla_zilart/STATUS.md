@@ -11,7 +11,7 @@
 - **Assistant source-accessible stage:** Complete
 - **Codex handoff:** Ready
 - **Local Codex environment:** Validated
-- **Current project state:** `INHERITED_CORRECTIONS_VALIDATED`
+- **Current project state:** `VZ_CORE_002_VALIDATED`
 - **Upstream pull requests:** None; prohibited
 
 ## Baseline finding counts
@@ -31,13 +31,13 @@ These are baseline discrepancy counts, not resolution counts. The absence of add
 
 | Implementation state | Count |
 |---|---:|
-| Corrected or candidate-corrected on fork | 5 |
+| Corrected or candidate-corrected on fork | 6 |
 | Partially corrected on fork | 1 |
-| Not yet implemented | 5 |
+| Not yet implemented | 4 |
 
-Of the six inherited corrections, five are now implemented and test-backed.
-Shadowbind remains a test-backed partial correction because unsupported
-accuracy/level coefficients were deliberately not invented.
+Six findings are now implemented and test-backed. Shadowbind remains a
+test-backed partial correction because unsupported accuracy/level
+coefficients were deliberately not invented.
 
 ## Findings and implementation state
 
@@ -48,7 +48,7 @@ accuracy/level coefficients were deliberately not invented.
 | `VZ-ZONE-001` | Temple of Uggalepih door keys | `INACCURATE` | Implemented and interaction-test-backed |
 | `VZ-JOB-001` | Summoner Elemental Spirits | `INACCURATE` | Not implemented; data/formula work remains |
 | `VZ-CORE-001` | Call for Help scope | `INACCURATE` | Hardened claim/CE/VE/boundary rules; Lua and C++ tests pass |
-| `VZ-CORE-002` | Attack while fishing | `INACCURATE` | Not implemented; safe state cleanup required |
+| `VZ-CORE-002` | Attack while fishing | `INACCURATE` | Safe validated-target transition, lifecycle guards, and eight Lua cases pass |
 | `VZ-JOB-002` | Ranger Shadowbind | `INACCURATE` | Partial correction is guard/ammo/availability-test-backed; accuracy coefficients remain |
 | `VZ-ECON-001` | Fishing new-moon pattern | `INACCURATE` | Implemented and unit-test-backed across every moon phase |
 | `VZ-ECON-002` | Waders fishing bonus | `INACCURATE` | Implemented and unit-test-backed |
@@ -84,6 +84,10 @@ Completed:
 - Call for Help now rejects unclaimed/stale enmity and enforces current claim,
   positive requester CE/VE, confrontation, battlefield, instance, and battle
   boundaries.
+- Attack now performs ordinary engagement validation before idempotently
+  interrupting fishing. Eight Lua cases cover waiting and hooked phases,
+  stale/crafted packets, invalid targets, resources, monster cleanup, and
+  recovery.
 - Lua style checks and `git diff --check` passed.
 - Fresh-directory MSVC/Ninja Debug configuration and all-target build passed.
 - Disposable build outputs and isolated test database were removed without
@@ -91,7 +95,7 @@ Completed:
 
 Still required:
 
-- Completion of the remaining five known findings.
+- Completion of the remaining four known findings.
 - Continued exhaustive local-repository Vanilla/Zilart audit.
 - Final client/live-retail validation for behavior without an automated seam.
 
@@ -104,9 +108,10 @@ Still required:
 - [x] Configure Codex desktop against the local clone
 - [x] Validate shell, GitHub fetch, repository instructions, MSVC, CMake, and Ninja
 - [x] Complete a full clean local MSVC/Ninja Debug build
-- [x] Apply six safe fork-only corrections or partial corrections
+- [x] Apply seven safe fork-only corrections or partial corrections
 - [x] Add focused automated tests for inherited corrections
-- [ ] Complete the remaining five known findings
+- [x] Complete `VZ-CORE-002` safe attack-while-fishing transition
+- [ ] Complete the remaining four known findings
 - [ ] Continue the exhaustive local-repository Vanilla/Zilart audit
 - [ ] Produce a final actionable human-only validation queue
 
@@ -115,8 +120,8 @@ Still required:
 Use the latest head of `retail-parity/codex-vanilla-zilart`. Fetch `origin`,
 read `CODEX_STATE.md`, `CODEX_BACKLOG.md`, `LOCAL_CODEX_ENVIRONMENT.md`, the
 worklog, completion report, and all finding files. Begin the next bounded
-implementation pass with `VZ-CORE-002` (attack while fishing), then continue
-the remaining known findings and exhaustive audit.
+implementation pass with `VZ-BF-001` (Ark Angel zero-delay ready messages),
+then continue the remaining known findings and exhaustive audit.
 
 ## Guardrails
 

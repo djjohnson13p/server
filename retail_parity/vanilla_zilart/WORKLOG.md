@@ -237,7 +237,7 @@ production boundary seam, while the action continues to enumerate with
 - Disposable build directory, root executables/PDBs, and isolated test
   database: removed.
 
-## Current resume point
+## Resume point after inherited correction validation
 
 1. Fetch the latest `origin/retail-parity/codex-vanilla-zilart`.
 2. Read the repository instructions, state, backlog, environment guide,
@@ -249,3 +249,101 @@ production boundary seam, while the action continues to enumerate with
 5. Preserve unsupported Shadowbind coefficients and client-only
    Call-for-Help/door/economy observations for final validation rather than
    inventing behavior or requesting intermediate owner tests.
+
+## 2026-07-25 — VZ-CORE-002 safe attack-while-fishing transition
+
+### Lifecycle trace
+
+- Traced Fish action entry, CheckHook, EndMiniGame, PotentialTimeout, Release,
+  hostile interruption, zone cleanup, fishing result generation, bait/rod
+  rules, skill-up, monster reservation/spawn, animation ownership, and PAI
+  engagement.
+- Confirmed fishing is an animation/character-owned session rather than a PAI
+  state. Catch resolution is synchronous packet processing; no deferred
+  fishing reward callback or timer exists.
+- Confirmed the baseline interruption helper already owned client release,
+  hooked-phase bait loss, response destruction, animation cleanup, and
+  fishing-monster unhooking, but did not invalidate the token and accepted
+  late/wrong-phase fishing input remained insufficiently guarded.
+
+### Production correction
+
+Commit `a5bdb74c3b7511a2f098a3dc28336cf70f91dafd`:
+
+- removed `BlockedState::Fishing` from Attack only;
+- performs normal enemy, distance, attack-delay, and PAI-change checks before
+  interrupting fishing, then enters the ordinary engagement path;
+- made `InterruptFishing` idempotent and authoritative for token, response,
+  animation, bait, hooked-monster, and release-packet cleanup;
+- added fresh monotonically advancing nonzero fishing session tokens and
+  delayed session allocation until cast validation succeeds;
+- rejects fishing packets outside their waiting/hooked phase or without a
+  matching live token/response;
+- invalidates token/cast state on ordinary release;
+- added controlled Lua packet/state helpers without exposing a reward-granting
+  test shortcut.
+
+### Automated coverage
+
+Eight real-path Lua cases cover:
+
+- waiting/no-bite and hooked/minigame interruption;
+- the latest controllable pre-reward boundary;
+- exact rod/bait/catch/skill-up behavior;
+- fishing-monster unhooking and no stale spawn;
+- duplicate Attack and repeated cancellation;
+- late, malformed, duplicate, and wrong-phase fishing packets;
+- invalid entity, self, range, and despawned-target Attack attempts;
+- ordinary release, post-combat recovery with a fresh token, unchanged
+  non-Attack fishing restrictions, and ordinary non-fishing Attack.
+
+Final validation:
+
+- Lua style: passed.
+- Focused Lua: 8/8 passed on two final runs after fixture correction.
+- Catch2: 16/16 cases and 9,007,070 assertions passed on every `xi_test` run.
+- Fresh MSVC/Ninja Debug configuration: passed.
+- Focused `xi_test` target build: passed (`905/905`).
+- Complete all-target Debug build: passed (`151/151` remaining steps).
+- `clang-format` and `git diff --check`: passed.
+- The working local `xidb` was not modified; a disposable current-schema
+  database was used.
+
+### Defects and test-environment issues resolved
+
+- The original fishing packet handler accepted late and wrong-phase packets
+  after interruption. Phase, response, and token validation now prevents
+  those paths.
+- Session state was allocated before active animation/rod/bait validation and
+  used a reusable random token. Allocation now occurs only after validation
+  and uses a fresh per-character sequence.
+- A fresh database requires `dbtool.py setup <database>` rather than express
+  `update`; the first disposable partial import was discarded and recreated.
+- The first Lua run inherited the repository default
+  `map.FISHING_ENABLE=false`; the validated reruns used the explicit
+  `XI_MAP_FISHING_ENABLE=true` test override.
+- The first enabled fixture used a nonexistent generated item constant and
+  did not make the real-time cast recast ready. The generic packet helper now
+  advances only test recast readiness, and all production validation remains
+  active.
+
+### Remaining client-only uncertainty
+
+Exact retail fishing-release packet order, rendered animation/message timing,
+and the response to every invalid Attack target require a client/live capture.
+The client fishing input carries no session token, so an old CheckHook arriving
+during the indistinguishable waiting phase of a newly started cast cannot be
+identified at protocol level. All server-distinguishable stale, post-cancel,
+wrong-phase, duplicate-hook, and malformed paths are rejected.
+
+## Current resume point
+
+1. Fetch the latest `origin/retail-parity/codex-vanilla-zilart`.
+2. Read the repository instructions, state, backlog, environment guide,
+   worklog, completion report, and relevant findings.
+3. Begin the next bounded pass with `VZ-BF-001` Ark Angel zero-delay
+   ready-message behavior.
+4. Continue `VZ-COMBAT-001`, `VZ-JOB-001`, `VZ-SYS-001`, and the exhaustive
+   audit in bounded passes.
+5. Preserve all unsupported retail/client details for final validation rather
+   than inventing behavior or requesting intermediate owner tests.

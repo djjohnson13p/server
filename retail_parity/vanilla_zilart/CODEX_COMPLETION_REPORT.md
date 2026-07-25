@@ -6,18 +6,23 @@ Status: BOUNDED_PASS_COMPLETE_PROJECT_IN_PROGRESS
 
 - Repository: `djjohnson13p/server`
 - Work branch: `retail-parity/codex-vanilla-zilart`
-- Starting commit: `9461b8d918135f97738710bb0dad8e8371f7d984`
+- Starting commit: `6525d679b6c6d4650a9ff33440426ee72facbe68`
 - Pinned upstream baseline: `242ab0d055dfb80396e7398b0dd7361b750c74e2`
 - Upstream pull requests: none; prohibited
 - Upstream push: disabled/prohibited
 
-The inherited-correction validation pass is complete. Five corrections are
-implemented and test-backed. Shadowbind is a test-backed partial correction
-because its exact accuracy, relative-level, duration/resist, and Recycle
-coefficients remain unsupported by sufficient evidence.
+The bounded `VZ-CORE-002` pass is complete. Attack now follows a safe
+validated fishing-to-combat transition, with eight real packet/state Lua
+cases covering lifecycle, stale-input, resource, invalid-target, idempotence,
+and recovery behavior. Six findings are implemented and test-backed.
+Shadowbind remains a test-backed partial correction because its exact
+accuracy, relative-level, duration/resist, and Recycle coefficients remain
+unsupported by sufficient evidence.
 
 ## Commits created
 
+- `a5bdb74c3b7511a2f098a3dc28336cf70f91dafd` —
+  `fix(retail-parity): safely interrupt fishing on attack`
 - `58c30fd5ecaa6eb1b1c85f76c55c5b384fe21a27` —
   `test(retail-parity): validate fishing and conquest fixes`
 - `9e989c2c97395bcfef7828e339a80c49c91161dd` —
@@ -30,6 +35,28 @@ coefficients remain unsupported by sufficient evidence.
 The documentation/state commit follows these source/test commits.
 
 ## Tests added by finding
+
+### `VZ-CORE-002`
+
+`scripts/tests/systems/fishing/attack_transition.lua` adds eight real
+packet/state cases for:
+
+- waiting/no-bite interruption and exactly-once cleanup before engagement;
+- hooked fish interruption at the latest controllable pre-reward boundary;
+- exact waiting/hooked bait rules, rod preservation, no catch, and no skill-up;
+- reserved fishing-monster release and no stale spawn;
+- duplicate Attack, late fishing input, wrong-phase input, duplicate
+  CheckHook, malformed stamina, and repeated release;
+- invalid entity index, self target, out-of-range target, and despawned target
+  preserving the original fishing session;
+- ordinary release plus fresh-token recovery;
+- post-combat fishing recovery, unchanged non-Attack fishing restrictions,
+  and unchanged ordinary non-fishing Attack.
+
+The Lua harness now emits real Fish, Attack, AttackOff, and fishing-minigame
+packets and exposes read-only session state. Its controlled hooked-state
+fixture can only advance an existing valid waiting session; it cannot start a
+session or grant a reward.
 
 ### `VZ-ZONE-001`
 
@@ -95,6 +122,129 @@ cases for:
 identity seam for non-instanced, same-instance, and different-instance
 entities.
 
+## VZ-CORE-002 defects discovered and corrected
+
+- Removing the Attack blocked-state flag alone would leave the character's
+  response, token, animation, and hooked monster alive during engagement.
+  Attack now interrupts through one authoritative helper only after ordinary
+  engagement validation succeeds.
+- The existing interruption did not invalidate the fishing token/cast state.
+  It is now idempotent, invalidates token/state, preserves existing
+  waiting/hooked bait rules, destroys the response, unhooks the monster,
+  clears animation, and sends the existing release packet once.
+- The fishing packet handler accepted CheckHook, EndMiniGame, and Timeout
+  outside their lifecycle phases. It now requires an active session, correct
+  animation phase, live response, hook state, and matching nonzero token.
+- StartFishing allocated response/token state before active animation and
+  rod/bait validation and used a random value that could be reused. Allocation
+  now happens after validation with a fresh nonzero per-character sequence.
+
+## VZ-CORE-002 exact validation commands and results
+
+### Fresh configure
+
+```text
+cmd.exe /d /s /c 'call "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\Common7\Tools\VsDevCmd.bat" -no_logo -arch=x64 -host_arch=x64 && cmake -G Ninja -S . -B build-codex-vz-core-002 --fresh -DCMAKE_BUILD_TYPE=Debug -DENABLE_CLANG_TIDY=OFF -DTRACY_ENABLE=OFF -DPCH_ENABLE=OFF -DCACHE_OPTION=sccache'
+```
+
+Result: exit `0`; CMake `4.3.3`, Ninja generator, MSVC `19.44.35228`,
+x64 Debug.
+
+### Focused test target
+
+```text
+cmd.exe /d /s /c 'call "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\Common7\Tools\VsDevCmd.bat" -no_logo -arch=x64 -host_arch=x64 && cmake --build build-codex-vz-core-002 --target xi_test'
+```
+
+Result: exit `0`; the fresh build linked `xi_test` at `905/905`. The
+post-fixture incremental rebuild also exited `0`.
+
+### Isolated test database
+
+The owner database was not modified. A disposable
+`xidb_codex_vz_core_002_20260725162306` was created with:
+
+```text
+python tools\dbtool.py setup xidb_codex_vz_core_002_20260725162306
+```
+
+Result: exit `0`; repository SQL imported successfully. Existing credentials
+were passed only through process environment/arguments and were not printed
+or stored in the repository.
+
+### Focused Catch2 and Lua
+
+```text
+.\xi_test.exe --keep-going --file attack_transition
+```
+
+The successful runs used `XI_MAP_FISHING_ENABLE=true` plus
+`XI_NETWORK_SQL_*` for the disposable database.
+
+Final result: exit `0`.
+
+- Catch2: 16/16 cases and 9,007,070 assertions passed.
+- Focused Lua: 8/8 cases in two suites passed.
+- A second final focused run also passed 8/8 after formatting and the complete
+  build.
+
+### Lua style
+
+```text
+python tools\ci\sanity_checks\lua_stylecheck.py scripts\tests\systems\fishing\attack_transition.lua
+```
+
+Result: exit `0`.
+
+### C++ formatting
+
+```text
+C:\Program Files\LLVM\bin\clang-format.exe -i --style=file <all modified C++ and header files>
+```
+
+Result: exit `0`; clang-format `22.1.8`.
+
+### Complete Debug build
+
+```text
+cmd.exe /d /s /c 'call "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\Common7\Tools\VsDevCmd.bat" -no_logo -arch=x64 -host_arch=x64 && cmake --build build-codex-vz-core-002'
+```
+
+Result: exit `0`; all remaining `151/151` steps passed and `xi_connect`,
+`xi_map`, `xi_search`, `xi_world`, and `xi_test` linked. The final
+post-format all-target check also exited `0`.
+
+### Diff and cleanup
+
+```text
+git diff --check
+```
+
+Result: exit `0`.
+
+- `build-codex-vz-core-002`: removed.
+- Generated root `xi_*.exe`/`xi_*.pdb`: 10 files removed.
+- Disposable database: dropped and confirmed absent.
+- Working local `xidb`: not modified.
+
+## VZ-CORE-002 intermediate failures resolved
+
+- The first command-shell attempt quoted `VsDevCmd.bat` incorrectly and exited
+  `1` before CMake. The corrected `cmd.exe /d /s /c 'call "..." ...'`
+  invocation configured successfully.
+- `dbtool.py update` on an empty database exited `1` after importing only
+  express tables; migration 006 reported missing `spell_list`. The disposable
+  database was dropped and recreated through the supported
+  `dbtool.py setup <database>` path.
+- The first Lua run exited `1`: all eight cases reached the repository default
+  `map.FISHING_ENABLE=false` and reported `Fishing is currently disabled`.
+  Reruns used the explicit test override.
+- The first enabled run exited `1` with 4/8 passing. Two fixtures used the
+  nonexistent `MOAT_CARP` constant, and immediate recovery hit the real cast
+  recast. The fixture now uses `MOAT_CARP_1`; the generic Fish packet helper
+  makes only the test recast ready while retaining every production
+  validation. Both final runs passed 8/8.
+
 ## Defect discovered and corrected
 
 The inherited Call-for-Help implementation accepted requester ID membership
@@ -112,7 +262,7 @@ Eligibility now requires:
 The action still iterates through `ForEachMobInstance`, changes every eligible
 mob, and sends exactly one success or failure message.
 
-## Exact validation commands and results
+## Prior inherited-correction validation commands and results
 
 ### Fresh configure
 
@@ -229,6 +379,9 @@ whose checkout normalization is configured by the repository.
 - `VZ-ECON-003` — conquest region-bonus arithmetic and truncation.
 - `VZ-CORE-001` — server eligibility, scope, claim/enmity distinctions,
   boundaries, and message cardinality, subject to the client limits below.
+- `VZ-CORE-002` — validated fishing interruption, waiting/hooked lifecycle,
+  stale-input rejection, resources, invalid targets, idempotence, and
+  recovery, subject to the client limits below.
 
 ## Finding still partial
 
@@ -252,10 +405,14 @@ No spell-skill, dSTAT, ranged-accuracy, subjob, or level formula was invented.
   color/radar, and rendered client update. Source tracing supports these paths,
   but this pass does not label them end-to-end validated.
 - Shadowbind numeric accuracy/level/duration/resist/Recycle behavior.
+- Attack-while-fishing release-packet ordering, rendered animation/message
+  timing, and invalid-target retail presentation. The client fishing packet
+  has no session token, so an old CheckHook received during a new waiting
+  phase is protocol-indistinguishable.
 
 ## Recommended next pass
 
-Begin `VZ-CORE-002` attack while fishing with a safe cancellation/state
-transition and focused action/state tests. Then continue `VZ-BF-001`,
-`VZ-COMBAT-001`, `VZ-JOB-001`, `VZ-SYS-001`, and the exhaustive
-Vanilla/Zilart audit in bounded passes.
+Begin `VZ-BF-001` Ark Angel zero-delay ready-message behavior with an explicit
+state/message seam and focused tests. Then continue `VZ-COMBAT-001`,
+`VZ-JOB-001`, `VZ-SYS-001`, and the exhaustive Vanilla/Zilart audit in
+bounded passes.

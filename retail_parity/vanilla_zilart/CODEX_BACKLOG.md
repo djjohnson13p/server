@@ -15,7 +15,7 @@ This is the resume backlog for the validated local Codex environment. It reflect
 - Use the validated Windows MSVC/Ninja build path in `LOCAL_CODEX_ENVIRONMENT.md`.
 - Keep the worktree clean and remove disposable build artifacts before committing.
 
-## Priority 0 — Inherited corrections complete
+## Priority 0 — Completed corrections
 
 Completed on 2026-07-25:
 
@@ -41,14 +41,24 @@ Validation commits:
 The focused result was 16/16 Catch2 cases (9,007,070 assertions) and 23/23
 Lua cases, followed by a successful full MSVC/Ninja Debug build.
 
-## Priority 1 — Remaining known implementation findings
-
 ### `VZ-CORE-002` — Attack while fishing
 
-- Model and implement a safe fishing-to-combat transition.
-- Cancel the fishing minigame, invalidate tokens/state, clean client fishing state, and prevent stale catch/reward processing before engaging.
-- Add tests for cast, hook, active minigame, catch-resolution, cancellation, and crafted/repeated packets.
-- Do not merely remove `BlockedState::Fishing`.
+Completed in
+`a5bdb74c3b7511a2f098a3dc28336cf70f91dafd`.
+
+- Valid enemy, range, attack-delay, and PAI-change checks run before fishing
+  teardown; accepted engagement interrupts fishing before combat starts.
+- The authoritative interruption is idempotent and clears response, token,
+  animation, and hooked-monster state while preserving existing rod/bait
+  rules.
+- Waiting and hooked phases, the pre-reward boundary, resource accounting,
+  invalid targets, late/crafted packets, duplicate actions, ordinary
+  cancellation, other fishing restrictions, and recovery are covered in
+  eight passing real-path Lua cases.
+- Exact client packet/animation ordering and invalid-target retail
+  presentation remain final live-capture candidates.
+
+## Priority 1 — Remaining known implementation findings
 
 ### `VZ-BF-001` — Ark Angel zero-delay ready-message spam
 

@@ -1,7 +1,7 @@
 # Codex State — Vanilla + Rise of the Zilart
 
-Status: INHERITED_CORRECTIONS_VALIDATED
-Pass: 3
+Status: VZ_CORE_002_VALIDATED
+Pass: 4
 Last updated: 2026-07-25
 
 ## Local Codex environment
@@ -30,6 +30,8 @@ The earlier `FAILED_INFRASTRUCTURE` state applied only to the assistant's networ
 4. `VZ-ECON-003` — Moghancement: Region applies its modifier as a percentage of base influence.
 5. `VZ-JOB-002` — Shadowbind respects shared Bind immunity, resistance-trait, and effect-nullification guards while retaining unresolved accuracy coefficients.
 6. `VZ-CORE-001` — Call for Help processes currently eligible personal-enmity mobs within the requesting player's current instance instead of only `GetBattleTarget()`.
+7. `VZ-CORE-002` — a valid Attack safely and idempotently interrupts fishing
+   after ordinary engagement validation, with stale fishing input rejected.
 
 ## Validation completed
 
@@ -49,7 +51,11 @@ The earlier `FAILED_INFRASTRUCTURE` state applied only to the assistant's networ
   one/multiple/no eligible targets, claim transitions, party/pet personal
   enmity, blocked/already-enabled mobs, message cardinality, battle and
   confrontation boundaries, and instance identity.
-- Focused result: all 23 selected Lua tests passed.
+- `VZ-CORE-002`: eight Lua packet/state cases cover waiting and hooked
+  interruption, pre-reward cancellation, invalid targets, exact resource
+  accounting, fishing-monster cleanup, stale/crafted packets, idempotence,
+  ordinary cancellation, other action restrictions, and recovery.
+- Latest focused result: all 8 selected fishing/Attack Lua tests passed.
 - Catch2 result: all 16 cases and 9,007,070 assertions passed.
 - Lua style checks and `git diff --check` passed.
 - A fresh-directory MSVC/Ninja Debug configuration passed.
@@ -61,15 +67,21 @@ The earlier `FAILED_INFRASTRUCTURE` state applied only to the assistant's networ
 
 ## Current work
 
-The bounded inherited-correction validation pass is complete. Five
-corrections are implemented and test-backed. `VZ-JOB-002` is a test-backed
-partial correction: its supported guards and ammunition behavior are covered,
-while exact `/RNG`, relative-level, ranged-accuracy, duration/resist, and
-`BIND_MEVA` coefficients remain unresolved for lack of evidence.
+The bounded `VZ-CORE-002` pass is complete. The safe server transition is
+implemented and test-backed from the waiting and hooked phases through
+validated engagement, stale-input rejection, resource preservation, and
+post-combat recovery. Exact retail client packet/animation presentation and
+invalid-target behavior remain final live-capture candidates, not remaining
+server engineering.
+
+Six findings are implemented and test-backed. `VZ-JOB-002` remains a
+test-backed partial correction: its supported guards and ammunition behavior
+are covered, while exact `/RNG`, relative-level, ranged-accuracy,
+duration/resist, and `BIND_MEVA` coefficients remain unresolved for lack of
+evidence.
 
 ## Remaining AI-capable work
 
-- Complete `VZ-CORE-002` attack-while-fishing state cleanup.
 - Complete `VZ-BF-001` Ark Angel/mob-skill ready-message architecture.
 - Complete `VZ-COMBAT-001` item additional-effect inventory and framework refactor.
 - Complete `VZ-JOB-001` Elemental Spirit data, spell-selection, and scaling work.
@@ -86,7 +98,9 @@ candidates remain:
 - fishing curve coefficients and exact Waders magnitude;
 - conquest fractional rounding;
 - Call-for-Help reward/outside-player/client presentation;
-- Shadowbind numeric accuracy, level, duration/resist, and Recycle behavior.
+- Shadowbind numeric accuracy, level, duration/resist, and Recycle behavior;
+- attack-while-fishing release packet order, rendered animation/message
+  timing, and invalid-target client behavior.
 
 ## Exact next-pass instructions
 
@@ -94,8 +108,8 @@ candidates remain:
    inherited-validation pass.
 2. Read `AGENTS.md`, `CODEX_MASTER_TASK.md`, `CODEX_BACKLOG.md`, `LOCAL_CODEX_ENVIRONMENT.md`, the status/worklog, completion report, and all finding files.
 3. Confirm the worktree is clean and remain on `retail-parity/codex-vanilla-zilart`.
-4. Begin `VZ-CORE-002` attack-while-fishing with an explicit safe state
-   transition and focused tests.
+4. Begin `VZ-BF-001` Ark Angel zero-delay ready-message behavior with an
+   explicit message/state transition and focused tests.
 5. Initialize MSVC through `VsDevCmd.bat` for all Windows configure/build commands.
 6. Run narrow tests first, then the full MSVC/Ninja Debug build.
 7. Fix failures caused by the fork changes; do not hide failures or weaken unrelated assertions.
