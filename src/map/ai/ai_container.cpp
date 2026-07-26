@@ -365,6 +365,7 @@ void CAIContainer::enterState(std::unique_ptr<CState> next)
         m_stateStack.push(std::move(m_currentState));
     }
     m_currentState = std::move(next);
+    m_currentState->Enter();
 }
 
 void CAIContainer::resumeNextState()

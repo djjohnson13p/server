@@ -100,6 +100,26 @@ bool CMobSkill::isBloodPactWard() const
     return m_Flag & SKILLFLAG_BLOODPACT_WARD;
 }
 
+auto CMobSkill::getStartMessage(timer::duration castTime, uint32 poolId) const -> MsgBasic
+{
+    if (m_Flag & SKILLFLAG_NO_START_MSG)
+    {
+        return MsgBasic::None;
+    }
+
+    if (const auto poolOverride = m_startMessages.find(poolId); poolOverride != m_startMessages.end())
+    {
+        return poolOverride->second;
+    }
+
+    if (const auto defaultPolicy = m_startMessages.find(0); defaultPolicy != m_startMessages.end())
+    {
+        return defaultPolicy->second;
+    }
+
+    return castTime > 0s ? MsgBasic::ReadiesWeaponskill : MsgBasic::None;
+}
+
 void CMobSkill::setID(uint16 id)
 {
     m_ID = id;
@@ -381,4 +401,9 @@ auto CMobSkill::isCritical() const -> bool
 void CMobSkill::setCritical(const bool isCritical)
 {
     m_isCritical = isCritical;
+}
+
+void CMobSkill::setStartMessage(const uint32 poolId, const MsgBasic message)
+{
+    m_startMessages[poolId] = message;
 }

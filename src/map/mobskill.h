@@ -28,6 +28,7 @@
 #include "enums/action/animation.h"
 #include "enums/action/knockback.h"
 
+#include <unordered_map>
 #include <vector>
 
 class CBattleEntity;
@@ -94,6 +95,7 @@ public:
     uint8           getTertiarySkillchain() const;
     auto            getAttackType() const -> xi::AttackType;
     auto            isCritical() const -> bool;
+    auto            getStartMessage(timer::duration castTime, uint32 poolId) const -> MsgBasic;
 
     bool isDamageMsg() const;
 
@@ -121,33 +123,35 @@ public:
     void setTertiarySkillchain(uint8 skillchain);
     void setAttackType(xi::AttackType attackType);
     void setCritical(bool isCritical);
+    void setStartMessage(uint32 poolId, MsgBasic message);
 
     const std::string& getName();
     void               setName(const std::string& name);
 
 private:
-    uint16          m_ID;
-    uint16          m_TotalTargets;
-    uint32          m_primaryTargetID; // Primary target ID
-    int16           m_Param;
-    uint16          m_AnimID;
-    uint8           m_Aoe;       // Defines the type of AOE
-    float           m_AoeRadius; // Radius of any aoe skill
-    float           m_Distance;  // Distance at which the skill will be triggered
-    uint16          m_Flag;
-    uint16          m_ValidTarget;
-    timer::duration m_AnimationTime;  // how long the tp animation lasts for in ms
-    timer::duration m_ActivationTime; // how long the mob prepares the tp move for
-    MsgBasic        m_Message;        // message param, scripters can edit this depending on self/resist/etc.
-    int16           m_TP;             // the tp at the time of finish readying (for scripts)
-    int32           m_HP;             // HP at the time of using mob skill (for scripts)
-    uint8           m_HPP;            // HPP at the time of using mob skill (for scripts)
-    Knockback       m_knockback;      // knockback value (0-7)
-    uint8           m_primarySkillchain;
-    uint8           m_secondarySkillchain;
-    uint8           m_tertiarySkillchain;
-    xi::AttackType  m_attackType{ xi::AttackType::None };
-    bool            m_isCritical{ false };
+    uint16                               m_ID;
+    uint16                               m_TotalTargets;
+    uint32                               m_primaryTargetID; // Primary target ID
+    int16                                m_Param;
+    uint16                               m_AnimID;
+    uint8                                m_Aoe;       // Defines the type of AOE
+    float                                m_AoeRadius; // Radius of any aoe skill
+    float                                m_Distance;  // Distance at which the skill will be triggered
+    uint16                               m_Flag;
+    uint16                               m_ValidTarget;
+    timer::duration                      m_AnimationTime;  // how long the tp animation lasts for in ms
+    timer::duration                      m_ActivationTime; // how long the mob prepares the tp move for
+    MsgBasic                             m_Message;        // message param, scripters can edit this depending on self/resist/etc.
+    int16                                m_TP;             // the tp at the time of finish readying (for scripts)
+    int32                                m_HP;             // HP at the time of using mob skill (for scripts)
+    uint8                                m_HPP;            // HPP at the time of using mob skill (for scripts)
+    Knockback                            m_knockback;      // knockback value (0-7)
+    uint8                                m_primarySkillchain;
+    uint8                                m_secondarySkillchain;
+    uint8                                m_tertiarySkillchain;
+    xi::AttackType                       m_attackType{ xi::AttackType::None };
+    bool                                 m_isCritical{ false };
+    std::unordered_map<uint32, MsgBasic> m_startMessages;
 
     Maybe<uint8> m_FinalAnimationSub; // If non-null, entity will get this new animation sub after state exits
 

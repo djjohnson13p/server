@@ -235,6 +235,20 @@ void LoadMobSkillsList()
         luautils::LoadLuaObjectFromFile(filename);
     }
 
+    rset = db::preparedStmt("SELECT mob_skill_id, mob_pool_id, start_message FROM mob_skill_start_messages");
+    FOR_DB_MULTIPLE_RESULTS(rset)
+    {
+        const auto skillId = rset->get<uint16>("mob_skill_id");
+        if (auto* PMobSkill = GetMobSkill(skillId))
+        {
+            PMobSkill->setStartMessage(rset->get<uint32>("mob_pool_id"), rset->get<MsgBasic>("start_message"));
+        }
+        else
+        {
+            ShowWarningFmt("Start-message policy references undefined mob skill {}", skillId);
+        }
+    }
+
     rset = db::preparedStmt("SELECT skill_list_id, mob_skill_id FROM mob_skill_lists");
     FOR_DB_MULTIPLE_RESULTS(rset)
     {

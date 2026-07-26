@@ -58,6 +58,11 @@ public:
 
     bool DoUpdate(timer::time_point tick);
 
+    // Called exactly once after the state becomes the container's current state.
+    virtual void Enter()
+    {
+    }
+
     // try interrupt (on hit)
     virtual void TryInterrupt(CBattleEntity* PAttacker)
     {

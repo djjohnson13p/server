@@ -39,6 +39,8 @@ public:
         return m_spentTP;
     }
 
+    virtual void Enter() override;
+
 protected:
     virtual bool CanChangeState() override
     {
@@ -67,6 +69,7 @@ private:
     int16                      m_spentTP;
     bool                       m_skillSuccess{ false };
 
+    void sendStartMessage();
     void reduceTpOnInterrupt() const;
 };
 

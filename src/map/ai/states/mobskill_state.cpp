@@ -83,47 +83,18 @@ CMobSkillState::CMobSkillState(CBattleEntity* PEntity, uint16 targid, uint16 wsi
     {
         m_castTime = m_PSkill->getActivationTime();
     }
+}
+
+void CMobSkillState::Enter()
+{
+    sendStartMessage();
 
     if (m_castTime > 0s)
     {
-        // For self-centered AoE damaging moves, show battle target in readies message
-        // For true self-target buffs (TARGET_SELF), show self
-        const bool isSelfBuff    = skill->getValidTargets() == TARGET_SELF;
-        auto*      PActionTarget = isSelfBuff ? m_PEntity : (isSelfCenteredAoE ? m_PEntity->GetBattleTarget() : m_PEntity->GetEntity(targid));
-        if (!PActionTarget)
-        {
-            PActionTarget = m_PEntity;
-        }
-
-        auto targetID = PActionTarget ? PActionTarget->id : m_PEntity->id;
-
-        if (m_PEntity->objtype != TYPE_PC && settings::get<bool>("map.HIDE_READIES_TARGET"))
-        {
-            targetID = m_PEntity->id;
-        }
-
-        action_t action{
-            .actorId    = m_PEntity->id,
-            .actiontype = ActionCategory::SkillStart,
-            .actionid   = static_cast<uint32_t>(FourCC::SkillUse),
-            .targets    = {
-                {
-                    .actorId = targetID,
-                    .results = {
-                        {
-                            .param     = m_PSkill->getID(),
-                            .messageID = m_PSkill->getFlag() & SKILLFLAG_NO_START_MSG ? MsgBasic::None : MsgBasic::ReadiesWeaponskill,
-                        },
-                    },
-                },
-            },
-        };
-
-        m_PEntity->loc.zone->PushPacket(m_PEntity, CHAR_INRANGE_SELF, std::make_unique<GP_SERV_COMMAND_BATTLE2>(action));
-
         // face toward target // TODO : add force param to turnTowardsTarget on certain TP moves like Petro Eyes
-        battleutils::turnTowardsTarget(m_PEntity, PTarget);
+        battleutils::turnTowardsTarget(m_PEntity, GetTarget());
     }
+
     m_PEntity->PAI->EventHandler.triggerListener("WEAPONSKILL_STATE_ENTER", m_PEntity, m_PSkill->getID());
     SpendCost();
 
@@ -133,6 +104,56 @@ CMobSkillState::CMobSkillState(CBattleEntity* PEntity, uint16 targid, uint16 wsi
     {
         DoUpdate(GetEntryTime());
     }
+}
+
+void CMobSkillState::sendStartMessage()
+{
+    uint32 poolId = 0;
+    if (const auto* PMob = dynamic_cast<CMobEntity*>(m_PEntity))
+    {
+        poolId = PMob->m_Pool;
+    }
+
+    const auto startMessage = m_PSkill->getStartMessage(m_castTime, poolId);
+    if (startMessage == MsgBasic::None)
+    {
+        return;
+    }
+
+    // For self-centered AoE damaging moves, show battle target in readies message.
+    // For true self-target buffs (TARGET_SELF), show self.
+    const bool isSelfCenteredAoE = m_PSkill->getAoe() == static_cast<uint8>(AOE_RADIUS::ATTACKER);
+    const bool isSelfBuff        = m_PSkill->getValidTargets() == TARGET_SELF;
+    auto*      PActionTarget     = isSelfBuff ? m_PEntity : (isSelfCenteredAoE ? m_PEntity->GetBattleTarget() : m_PEntity->GetEntity(GetTargetID()));
+    if (!PActionTarget)
+    {
+        PActionTarget = m_PEntity;
+    }
+
+    auto targetId = PActionTarget->id;
+    if (m_PEntity->objtype != TYPE_PC && settings::get<bool>("map.HIDE_READIES_TARGET"))
+    {
+        targetId = m_PEntity->id;
+    }
+
+    action_t action{
+        .actorId    = m_PEntity->id,
+        .actiontype = ActionCategory::SkillStart,
+        .actionid   = static_cast<uint32_t>(FourCC::SkillUse),
+        .targets    = {
+            {
+                .actorId = targetId,
+                .results = {
+                    {
+                        .param     = m_PSkill->getID(),
+                        .messageID = startMessage,
+                    },
+                },
+            },
+        },
+    };
+
+    m_PEntity->loc.zone->PushPacket(m_PEntity, CHAR_INRANGE_SELF, std::make_unique<GP_SERV_COMMAND_BATTLE2>(action));
 }
 
 CMobSkill* CMobSkillState::GetSkill()
@@ -172,9 +193,6 @@ void CMobSkillState::SpendCost()
 
 bool CMobSkillState::Update(timer::time_point tick)
 {
-    // Reset the state for the current skill attempt
-    m_skillSuccess = false;
-
     // Rotate towards target during ability // TODO : add force param to turnTowardsTarget on certain TP moves like Petro Eyes
     if (m_castTime > 0s && tick < GetEntryTime() + m_castTime)
     {
