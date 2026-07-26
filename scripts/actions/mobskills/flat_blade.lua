@@ -7,10 +7,6 @@
 local mobskillObject = {}
 
 mobskillObject.onMobSkillCheck = function(target, mob, skill)
-    if mob:getPool() ~= xi.mobPool.QUBIA_ARENA_TRION then
-        mob:messageBasic(xi.msg.basic.READIES_WS, 0, 35)
-    end
-
     return 0
 end
 

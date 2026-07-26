@@ -140,6 +140,15 @@ if [[ -n "$binding_usage_output" ]]; then
     echo "$binding_usage_output"
 fi
 
+mobskill_check_purity_output=$(python tools/ci/sanity_checks/mobskill_check_purity.py 2>&1 || true)
+
+if [[ -n "$mobskill_check_purity_output" ]]; then
+    any_issues=true
+    echo "## :x: Lua Checks Failed"
+    echo "### Mob-skill Check Purity:"
+    echo "$mobskill_check_purity_output"
+fi
+
 for file in "${targets[@]}"; do
     [[ -f $file && ($file == scripts/**/*.lua || $file == settings/default/*.lua || $file == modules/**/*.lua) ]] || continue
 

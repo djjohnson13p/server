@@ -7,8 +7,6 @@
 local mobskillObject = {}
 
 mobskillObject.onMobSkillCheck = function(target, mob, skill)
-    mob:messageBasic(xi.msg.basic.READIES_SKILL, 0, xi.mobSkill.NOTT)
-
     return 0
 end
 

@@ -7,10 +7,6 @@
 local mobskillObject = {}
 
 mobskillObject.onMobSkillCheck = function(target, mob, skill)
-    if mob:getPool() ~= xi.mobPool.QUBIA_ARENA_TRION then -- TODO: Should this be limited to Trion?
-        mob:messageBasic(xi.msg.basic.READIES_WS, 0, 42)
-    end
-
     return 0
 end
 

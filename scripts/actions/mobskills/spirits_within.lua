@@ -7,10 +7,6 @@
 local mobskillObject = {}
 
 mobskillObject.onMobSkillCheck = function(target, mob, skill)
-    if mob:getPool() ~= xi.mobPool.THRONE_ROOM_VOLKER then
-        mob:messageBasic(xi.msg.basic.READIES_WS, 0, 39)
-    end
-
     return 0
 end
 
