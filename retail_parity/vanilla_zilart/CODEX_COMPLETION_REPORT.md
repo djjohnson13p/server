@@ -28,6 +28,8 @@ test-backed; Shadowbind and item additional effects are deliberately partial.
   `fix(retail-parity): correct item additional-effect framework`
 - `1684e6fd9a836db206e7d3504edca27aa3735e73` —
   `feat(retail-parity): inventory item additional effects`
+- `9a917a7b542e2840d6c092ecaa6a8e4122dfb3de` —
+  `test(retail-parity): pin drain compatibility profiles`
 - `b98b576c95f27c8882e5401eea67b0716f01f6dc` —
   `fix(retail-parity): own mob-skill start messages in state`
 - `94acc4f249c5db5b3b892f508bee3c3de7099178` —
