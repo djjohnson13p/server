@@ -1,96 +1,195 @@
-# VZ-BF-001 — Ark Angel Zero-Delay Weapon Skills Emit Incorrect Repeated “Readies” Messages
+# VZ-BF-001 — Ark Angel and Humanoid Zero-Delay Ready Messages
 
 ## Identification
 
 - **ID:** `VZ-BF-001`
-- **Title:** Ark Angel weapon skills fake ready messages in the skill-check callback, producing repeated and packet-inaccurate messages
 - **Expansion scope:** Rise of the Zilart
-- **Area:** Ark Angels / Divine Might / mob-skill state and client messaging
-- **Status:** `INACCURATE`
+- **Area:** Ark Angels / Divine Might / humanoid mob skills
+- **Baseline status:** `INACCURATE`
+- **Fork status:** `CORRECTED_SERVER_DEFECT_RETAIL_PRESENTATION_PENDING`
 - **Severity:** `MODERATE`
-- **Confidence:** `HIGH`
-- **Disposition:** `CODEX`
+- **Confidence:** `HIGH` for the repeated-check defect and corrected packet
+  ownership; `MEDIUM` for inherited per-move ready policy
+- **Disposition:** `CODEX_COMPLETE`
 
-## Expected retail behavior
+## Confirmed defect
 
-Ark Angel weapon skills should present the correct client-visible preparation/use messaging for each skill. A zero-delay or instant mob skill must not repeatedly broadcast a “readies” message every time the server re-evaluates whether the skill can execute. Skills that retail presents only with a use message must not receive a fabricated ready message.
+LandSandBoat issue
+[#3611](https://github.com/LandSandBoat/server/issues/3611) records repeated
+Ark Angel ready lines while the intended target is out of range. Current
+source tracing confirmed the mechanism:
 
-## Current LandSandBoat behavior
+1. `CMobController::MobSkill` calls Lua `onMobSkillCheck` while selecting a
+   candidate, before its range check.
+2. The controller can repeat this work on later combat ticks while the
+   candidate remains unusable.
+3. Seventeen humanoid scripts emitted a user-visible `messageBasic` ready
+   line from that repeatable callback.
+4. A zero-activation-time `CMobSkillState` emitted no engine start action,
+   so the scripts were compensating for a missing state-entry policy.
+5. The compensation used a basic-message packet instead of the ordinary
+   battle-action `SkillStart` packet.
 
-At pinned baseline `242ab0d055dfb80396e7398b0dd7361b750c74e2`:
+Changing activation time to one second would alter timing and
+interruptibility. Moving the same scripted packet to `onMobSkillUse` would
+retain split ownership and the wrong packet path. Neither workaround was
+used.
 
-- Open upstream issue `#3611` reproduces repeated “Ark Angel EV readies Spirits Within” and similar messages by engaging Divine Might, giving an Ark Angel TP, and moving out of range.
-- The issue is reported against `base` and remains open.
-- Maintainer discussion identifies the cause as zero-delay skills manually emitting ready text from the skill-check path. Skill checks can execute repeatedly before the skill is used.
-- The discussion also states that the manually faked message is packet-inaccurate and that changing delay from zero to one would merely make one bug conceal another.
-- Current `scripts/actions/mobskills/spirits_within.lua` still calls `mob:messageBasic(xi.msg.basic.READIES_WS, 0, 39)` inside `onMobSkillCheck` for nearly every user of the skill.
-- Source search finds the same manual `READIES_WS` pattern across numerous humanoid weapon-skill scripts used by Ark Angels and other NPC combatants.
+## Lifecycle and packet inventory
 
-## Difference
+| Case | Baseline start behavior | Fork behavior |
+|---|---|---|
+| Positive activation, ordinary policy | One engine `SkillStart`, message 43 | Unchanged |
+| Positive activation, `NO_START_MSG` | A `SkillStart` action whose result used message 0 | No start action |
+| Zero activation, no explicit policy | No start; immediate finish | Unchanged |
+| Zero activation, inherited scripted ready | Repeatable basic message from `skillCheck`; no engine start | One engine `SkillStart` after state entry, then immediate finish |
+| Explicit alternate start | Not representable independently | Explicit message ID in the policy table |
+| `NO_FINISH_MSG` | Finish policy independent | Still independent |
 
-The ready message is coupled to a callback that may execute more than once and is used as a workaround for missing zero-delay message semantics. This causes repeated messages and can emit the wrong message type compared with retail. The defect is shared infrastructure plus data, not merely one Ark Angel script.
+`CMobSkillState` validates Amnesia/Impairment and the target in its constructor.
+Only after `CAIContainer` successfully installs the state does `Enter()` emit
+the configured start action, trigger `WEAPONSKILL_STATE_ENTER`, spend TP, and
+immediately update a zero-time state. Positive-time states retain their
+existing preparation, facing, interruption, and completion behavior.
 
-## Evidence
+The action target remains:
 
-- **Current source:**
-  - `scripts/actions/mobskills/spirits_within.lua`
-  - Other mob-skill scripts found through the same manual `READIES_WS` pattern
-  - Mob-skill state/message infrastructure to be traced by Codex
-- **Upstream issue:** https://github.com/LandSandBoat/server/issues/3611
-- **Reproduction:** The upstream issue provides exact Divine Might reproduction steps and screenshot evidence.
-- **Maintainer analysis:** Issue discussion explains the repeated skill-check execution, the fabricated message, and why altering skill delay is not a correct fix.
-- **Uncertainty:** The exact ready/use message behavior must be established per skill from retail captures. The architecture defect and repeated-message behavior are confirmed independently.
+- caster for a true `TARGET_SELF` skill;
+- current battle target for an attacker-centered damaging area skill;
+- validated target for an ordinary targeted skill;
+- caster as the safe presentation fallback;
+- caster when `map.HIDE_READIES_TARGET` is enabled for a non-player actor.
 
-## Reproduction
+The start action is one `0x028` battle action with category `SkillStart`,
+action ID `FourCC::SkillUse`, skill ID as its result parameter, and the
+resolved `MsgBasic`. It is sent before an immediate zero-time finish. No
+`0x029` basic ready packet is generated.
 
-### Fork/server test
+## Explicit policy model
 
-1. Enter Divine Might with Ark Angel EV active.
-2. Engage, grant sufficient TP, then move outside the selected weapon skill’s valid range.
-3. Allow the AI to repeatedly evaluate the skill.
-4. Observe repeated ready messages without corresponding skill execution.
-5. Repeat with other Ark Angel zero-delay humanoid weapon skills.
+`sql/mob_skill_start_messages.sql` owns explicit start-message policy:
 
-### Automated test
+- no row: backward-compatible default (positive time uses message 43; zero
+  time has no start);
+- message `0`: explicitly no start action;
+- positive message ID: emit that message in one normal `SkillStart` action;
+- pool `0`: skill-wide policy;
+- nonzero pool: encounter/pool override;
+- `SKILLFLAG_NO_START_MSG`: authoritative no-start compatibility override.
 
-1. Build a mob-skill state fixture whose skill check executes repeatedly before use.
-2. Verify a single attempted skill does not emit multiple ready messages.
-3. Verify message selection is independent of cast duration and comes from explicit skill data/state behavior.
-4. Verify instant skills that should have no ready message emit only the appropriate use result.
+This keeps start and finish policy separate and permits a shared script to
+have a narrow encounter exception without mutating its shared `CMobSkill`
+object. The table is loaded through the ordinary SQL/dbtool import path.
 
-## Dependencies and regression risk
+## Migrated manual ready-message inventory
 
-- Mob-skill state lifecycle and check/use callbacks.
-- `mob_skills.sql` timing and any message metadata.
-- Battle action packets and localized battle messages.
-- All mob weapon skills manually emitting `READIES_WS`, not only Ark Angels.
-- NPC skills that genuinely need a visible ready message despite minimal delay.
+All active ready-message side effects were removed from
+`onMobSkillCheck`. The policy table replaces them as follows:
 
-Regression risk is high if solved by globally suppressing messages or changing skill delays. The correct solution must preserve per-skill messaging semantics.
+| Script | Skill IDs with standard start policy | Notes |
+|---|---:|---|
+| `burning_blade.lua` | 33 | Generic humanoid |
+| `circle_blade.lua` | 38, 938 | Generic and Ark Angel HM |
+| `fast_blade.lua` | 32 | Generic humanoid |
+| `fast_blade_ii.lua` | 229 | Generic humanoid |
+| `flat_blade.lua` | 35 | Trion pool exception below |
+| `gust_slash.lua` | 19 | Generic humanoid |
+| `nott.lua` | 3502 | `READIES_SKILL` is the same confirmed message ID 43 |
+| `red_lotus_blade.lua` | 34 | Trion/Volker pool exceptions below |
+| `savage_blade.lua` | 42 | Trion pool exception below |
+| `seraph_blade.lua` | 37 | Generic humanoid |
+| `shining_blade.lua` | 36 | Generic humanoid |
+| `skullbreaker.lua` | 165 | Generic humanoid |
+| `spirits_within.lua` | 39, 942 | Generic and Ark Angel EV; Volker exception below |
+| `swift_blade.lua` | 41, 939 | Generic and Ark Angel HM |
+| `true_strike.lua` | 166 | Generic humanoid |
+| `uriel_blade.lua` | 238 | Generic humanoid |
+| `vorpal_blade.lua` | 40, 943 | Generic and Ark Angel EV; Volker exception below |
 
-## Proposed correction
+`aeolian_edge.lua` contained only a stale commented ready-message call; that
+comment was removed. Repository-wide inspection found no other active
+user-visible packet/text side effect in a mob-skill `onMobSkillCheck`.
 
-Move ready-message emission out of repeatable skill-check scripts and into a single state transition that occurs once per committed skill attempt. Add explicit per-skill message metadata or another data-driven mechanism that can express:
+The encounter-specific no-start policies are:
 
-- standard ready message;
-- alternate ready message;
-- no ready message;
-- instant use with only a use message.
+| Pool | Skill IDs | Preserved behavior |
+|---:|---:|---|
+| 4006, Qu'Bia Arena Trion | 968, 969, 970 | Red Lotus Blade, Flat Blade, and Savage Blade retain custom dialogue without a generic ready action |
+| 4249, Throne Room Volker | 973, 974, 975 | Red Lotus Blade, Spirits Within, and Vorpal Blade retain custom dialogue without a generic ready action |
 
-Migrate Ark Angel and related humanoid weapon skills away from manual `onMobSkillCheck` message calls.
+The scripts' eligibility, damage, effects, completion messages, and custom
+dialogue remain in their original callbacks. Only ready-packet ownership
+moved.
 
-## Implementation plan
+## Ark Angel policy and evidence
 
-- **Assistant work completed:** Verified the open issue against the pinned source and confirmed the manual message remains in current skill scripts.
-- **Codex work:** Trace the complete mob-skill state and packet path, design the smallest data-driven message model, migrate affected scripts/data, and add state/message regression tests.
-- **Do not:** Change zero-delay skills to one-second skills solely to force a message, or remove every message without per-skill evidence.
-- **Human validation required:** Retail capture comparison for Ark Angel EV Shield Strike, Spirits Within, Charm, and representative other Ark Angel weapon skills.
+The four zero-time Ark Angel skills that had an active manual standard-ready
+workaround retain that intended policy through explicit data:
 
-## Completion criteria
+- Ark Angel HM Circle Blade (938)
+- Ark Angel HM Swift Blade (939)
+- Ark Angel EV Spirits Within (942)
+- Ark Angel EV Vorpal Blade (943)
 
-- Repeated skill checks cannot produce repeated ready messages for one attempted action.
-- Ark Angel skills emit the correct ready/use sequence according to explicit data.
-- Zero-delay timing remains zero-delay when retail requires it.
-- Manual ready-message calls are removed from migrated scripts.
-- Automated tests reproduce the baseline spam and pass after correction.
-- Final retail captures validate representative Ark Angel skills.
+Ark Angel EV Vorpal Blade and Ark Angel HM Circle Blade are exercised through
+the real state and packet path. The remaining Ark Angel EV, GK, MR, and TT
+zero-time moves that had no manual-ready evidence remain silent by the legacy
+default; no Shield Strike, Charm, job-special, or other exception was
+invented. Positive-time Ark Angel moves retain the legacy standard start
+policy.
+
+Evidence levels:
+
+- **High:** repeated `skillCheck` packet defect, state-entry ownership,
+  exactly-once `SkillStart`, zero-time ordering, no-start compatibility,
+  positive-time regression, Trion/Volker repository dialogue behavior.
+- **Medium:** the 21 migrated standard-ready skill IDs, because the fork
+  preserves existing scripted intent while correcting packet ownership.
+- **Unverified retail detail:** exact ready/no-ready policy for every
+  individual Ark Angel move and exact client rendering of two same-tick
+  start/finish actions.
+
+## Behavioral validation
+
+Automated tests prove:
+
+- repeated out-of-range controller consideration of a real humanoid skill
+  list emits no `SkillStart`, fake ready message, finish, or TP cost;
+- Ark Angel EV Vorpal Blade enters once, emits exactly one correct start
+  action, immediately emits exactly one finish action in that order, spends
+  TP once, and does not repeat on a later tick;
+- zero-time Shield Strike executes with no start action;
+- a positive-time skill starts once, cannot finish early, finishes once, and
+  can be interrupted without a finish;
+- positive-time `NO_START_MSG` suppresses only start and retains finish;
+- explicit standard, no-start, alternate-message, pool override, copied-skill,
+  and independent `NO_FINISH_MSG` policies resolve in Catch2;
+- true self, enemy target, attacker-centered area, missing presentation
+  target, and both `HIDE_READIES_TARGET` settings resolve correctly;
+- Amnesia prevents state creation, packets, and TP spending;
+- real Trion and Volker battlefield phases preserve exactly one custom
+  dialogue packet and no generic start;
+- the full 65-case `0x028` packet suite preserves mob skills, pet Ready,
+  wyvern breaths, Blood Pacts, player weapon skills, interruption, and
+  unrelated action packets;
+- the new repository purity check rejects any future manual
+  `READIES_WS`/`READIES_SKILL` call inside `onMobSkillCheck`.
+
+## Classification and remaining uncertainty
+
+The confirmed server defect is corrected: repeatable eligibility checks are
+packet-pure, and all configured starts are engine-owned, state-entry-bound,
+proper battle actions. The architecture supports standard, no-start,
+alternate, zero-time, positive-time, and pool-specific policy without
+changing activation duration.
+
+The following remain client/live-retail validation candidates and do not
+block the server correction:
+
+- move-by-move confirmation of ready/no-ready policy for Ark Angel Shield
+  Strike, Charm, job specials, and other moves for which the repository had
+  no ready evidence;
+- exact rendered ordering when a zero-time start and finish are serialized in
+  the same server update;
+- whether any retail encounter uses an alternate start message not present in
+  current production data.

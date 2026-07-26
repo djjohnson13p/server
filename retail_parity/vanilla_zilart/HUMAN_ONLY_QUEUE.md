@@ -6,7 +6,8 @@ No gameplay, retail-capture, server-deployment, or manual test task is being ass
 
 The local Codex desktop environment, GitHub connectivity, MSVC toolchain,
 CMake/Ninja configuration, full Debug build, focused inherited-correction
-tests, and the `VZ-CORE-002` safe fishing-to-combat transition are validated.
+tests, the `VZ-CORE-002` safe fishing-to-combat transition, and the
+`VZ-BF-001` engine-owned mob-skill start-message correction are validated.
 The remaining known engineering work is still AI-capable, so it does not
 belong in a final human-only queue yet.
 
@@ -14,7 +15,7 @@ belong in a final human-only queue yet.
 
 Codex must still:
 
-- complete the four remaining known implementation findings;
+- complete the three remaining known implementation findings;
 - continue the exhaustive Vanilla/Zilart local-repository audit;
 - run the available C++, Lua, SQL, unit, integration, startup, and build checks;
 - update the findings and project reports.
@@ -41,7 +42,11 @@ These items may become human-only after all remaining AI-capable engineering and
   animation ordering in waiting and hooked phases, plus representative
   invalid-target behavior. Server cleanup, resource accounting, stale-input
   rejection, and recovery are automated.
-- Capture representative Ark Angel instant/zero-delay ready/use messages.
+- Capture Ark Angel move-by-move ready/no-ready behavior where current data
+  had no evidence, especially Shield Strike, Charm, and job specials. Also
+  record the rendered order of a zero-time start/finish pair sent in one
+  server update. State ownership, packet category, spam prevention, inherited
+  standard-ready policies, and Trion/Volker exceptions are automated.
 - Collect controlled item additional-effect accuracy, resistance, potency, and duration data by item family.
 - Measure Elemental Spirit HP/MP/stat/weapon-damage scaling and Light Spirit decision behavior.
 - Capture Ballista packet fields, current schedules/rules, and client-visible match behavior.

@@ -336,14 +336,98 @@ during the indistinguishable waiting phase of a newly started cast cannot be
 identified at protocol level. All server-distinguishable stale, post-cancel,
 wrong-phase, duplicate-hook, and malformed paths are rejected.
 
+## 2026-07-25 — VZ-BF-001 engine-owned mob-skill start messages
+
+### Trace and inventory
+
+- Traced `CMobController::MobSkill`, all `OnMobSkillCheck` callers,
+  `CMobSkillState` construction/update/interruption, SQL skill loading,
+  `SkillStart`/finish packet serialization, target presentation, and the
+  `NO_START_MSG`/`NO_FINISH_MSG` flags.
+- Confirmed the issue-#3611 spam path: selection calls Lua eligibility before
+  range validation and can repeat on combat ticks, while 17 scripts emitted a
+  user-visible basic ready message from that callback.
+- Inventoried all Ark Angel and Divine Might skill lists. Only HM Circle/Swift
+  Blade and EV Spirits Within/Vorpal Blade had inherited manual-ready
+  evidence; other zero-time moves were not guessed.
+- Identified 21 skill IDs represented by the scripted standard-ready calls,
+  six Trion/Volker encounter-specific no-start cases, and a stale commented
+  Aeolian Edge call.
+
+### Production correction
+
+- Added an `Enter()` state lifecycle hook called only after the AI container
+  has successfully installed a state.
+- `CMobSkillState::Enter()` now resolves and sends one configured normal
+  battle-action `SkillStart`, triggers the existing listener, spends TP, and
+  immediately executes a zero-time state. Positive-time preparation and
+  interruption are unchanged.
+- Added `mob_skill_start_messages` with backward-compatible absence,
+  explicit no-start, explicit standard/alternate message, and pool override
+  semantics. `NO_START_MSG` remains authoritative and `NO_FINISH_MSG` remains
+  independent.
+- Migrated all active manual humanoid ready calls out of `onMobSkillCheck`.
+  Trion pool 4006 and Volker pool 4249 retain their custom dialogue without
+  generic ready actions.
+- Added a repository sanity check with an explicit empty allowlist to prevent
+  future `READIES_WS`/`READIES_SKILL` side effects in mob-skill checks.
+
+### Behavioral coverage
+
+- Reproduced issue #3611 through a real humanoid skill list and repeated
+  out-of-range controller ticks: zero start/basic/finish packets and no TP
+  cost until state entry.
+- Proved Ark Angel EV zero-time standard start-before-finish behavior, Ark
+  Angel zero-time no-start behavior, positive preparation/interruption,
+  `NO_START_MSG`, true-self and attacker-centered target presentation,
+  missing-target fallback, both hidden-target settings, and Amnesia state
+  rejection.
+- Entered the real Heir to the Light and Where Two Paths Converge battlefield
+  phases to prove Trion/Volker custom dialogue is retained without a generic
+  start.
+- Catch2 covers default, standard, no-start, alternate, pool override, copied
+  policy, `NO_START_MSG`, and independent `NO_FINISH_MSG` resolution.
+
+### Validation result
+
+- Fresh MSVC/Ninja Debug configure: exit `0`.
+- Focused `xi_test` target build: exit `0`.
+- Catch2: 19/19 cases, 9,007,079 assertions passed.
+- Focused Lua: 11/11 passed with default presentation and 11/11 passed after
+  the full build with `HIDE_READIES_TARGET=true`.
+- Complete `0x028` packet regression suite: 65/65 passed.
+- SQL setup/import against disposable database: exit `0`.
+- Lua `luacheck`, style, and mob-skill-check purity: exit `0`.
+- SQL sanity, `clang-format`, and `git diff --check`: exit `0`.
+- Complete all-target Debug build: exit `0`; all five executables linked.
+- The owner's working `xidb` was not modified.
+
+### Remaining retail/client uncertainty
+
+Exact ready/no-ready behavior for Ark Angel moves that had no repository
+ready evidence, exact same-update start/finish rendering, and any retail
+alternate message not represented in current data require live captures.
+These do not leave a known server architecture defect.
+
+### Test-fixture/environment corrections
+
+- The repository Lua sanity wrapper needed Python UTF-8 mode and an explicit
+  Windows `luacheck.bat` bridge; all actual checks then passed.
+- The first packet-regression file selectors addressed data modules rather
+  than their collecting `0x028` base and therefore collected zero tests. The
+  corrected `--file 0x028` run collected and passed all 65 cases.
+- Early focused fixtures were corrected for the real Sonic Boom preparation
+  duration, settings initialization, battle-target context, action-message
+  filtering, and TP gained from dealt damage. No production workaround was
+  introduced.
+
 ## Current resume point
 
 1. Fetch the latest `origin/retail-parity/codex-vanilla-zilart`.
 2. Read the repository instructions, state, backlog, environment guide,
    worklog, completion report, and relevant findings.
-3. Begin the next bounded pass with `VZ-BF-001` Ark Angel zero-delay
-   ready-message behavior.
-4. Continue `VZ-COMBAT-001`, `VZ-JOB-001`, `VZ-SYS-001`, and the exhaustive
-   audit in bounded passes.
+3. Begin the next bounded pass with `VZ-COMBAT-001` item additional effects.
+4. Continue `VZ-JOB-001`, `VZ-SYS-001`, and the exhaustive audit in bounded
+   passes.
 5. Preserve all unsupported retail/client details for final validation rather
    than inventing behavior or requesting intermediate owner tests.

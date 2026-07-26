@@ -11,7 +11,7 @@
 - **Assistant source-accessible stage:** Complete
 - **Codex handoff:** Ready
 - **Local Codex environment:** Validated
-- **Current project state:** `VZ_CORE_002_VALIDATED`
+- **Current project state:** `VZ_BF_001_VALIDATED`
 - **Upstream pull requests:** None; prohibited
 
 ## Baseline finding counts
@@ -31,11 +31,11 @@ These are baseline discrepancy counts, not resolution counts. The absence of add
 
 | Implementation state | Count |
 |---|---:|
-| Corrected or candidate-corrected on fork | 6 |
+| Corrected or candidate-corrected on fork | 7 |
 | Partially corrected on fork | 1 |
-| Not yet implemented | 4 |
+| Not yet implemented | 3 |
 
-Six findings are now implemented and test-backed. Shadowbind remains a
+Seven findings are now implemented and test-backed. Shadowbind remains a
 test-backed partial correction because unsupported accuracy/level
 coefficients were deliberately not invented.
 
@@ -52,7 +52,7 @@ coefficients were deliberately not invented.
 | `VZ-JOB-002` | Ranger Shadowbind | `INACCURATE` | Partial correction is guard/ammo/availability-test-backed; accuracy coefficients remain |
 | `VZ-ECON-001` | Fishing new-moon pattern | `INACCURATE` | Implemented and unit-test-backed across every moon phase |
 | `VZ-ECON-002` | Waders fishing bonus | `INACCURATE` | Implemented and unit-test-backed |
-| `VZ-BF-001` | Ark Angel zero-delay ready messages | `INACCURATE` | Not implemented; state/message refactor required |
+| `VZ-BF-001` | Ark Angel zero-delay ready messages | `INACCURATE` | Engine-owned explicit start policy, 11 focused Lua cases, and issue-#3611 reproduction pass |
 | `VZ-ECON-003` | Moghancement: Region bonus | `INACCURATE` | Implemented and unit-test-backed with explicit truncation |
 
 ## Local environment validation
@@ -88,6 +88,10 @@ Completed:
   interrupting fishing. Eight Lua cases cover waiting and hooked phases,
   stale/crafted packets, invalid targets, resources, monster cleanup, and
   recovery.
+- Mob-skill checks are packet-pure. An explicit skill/pool start-message
+  policy now emits at most one proper `SkillStart` after state entry, including
+  zero-time Ark Angel skills. Eleven focused Lua cases, 19 Catch2 cases
+  (9,007,079 assertions), and all 65 `0x028` packet cases pass.
 - Lua style checks and `git diff --check` passed.
 - Fresh-directory MSVC/Ninja Debug configuration and all-target build passed.
 - Disposable build outputs and isolated test database were removed without
@@ -95,7 +99,7 @@ Completed:
 
 Still required:
 
-- Completion of the remaining four known findings.
+- Completion of the remaining three known findings.
 - Continued exhaustive local-repository Vanilla/Zilart audit.
 - Final client/live-retail validation for behavior without an automated seam.
 
@@ -108,10 +112,11 @@ Still required:
 - [x] Configure Codex desktop against the local clone
 - [x] Validate shell, GitHub fetch, repository instructions, MSVC, CMake, and Ninja
 - [x] Complete a full clean local MSVC/Ninja Debug build
-- [x] Apply seven safe fork-only corrections or partial corrections
+- [x] Apply eight safe fork-only corrections or partial corrections
 - [x] Add focused automated tests for inherited corrections
 - [x] Complete `VZ-CORE-002` safe attack-while-fishing transition
-- [ ] Complete the remaining four known findings
+- [x] Complete `VZ-BF-001` engine-owned ready-message behavior
+- [ ] Complete the remaining three known findings
 - [ ] Continue the exhaustive local-repository Vanilla/Zilart audit
 - [ ] Produce a final actionable human-only validation queue
 
@@ -120,8 +125,8 @@ Still required:
 Use the latest head of `retail-parity/codex-vanilla-zilart`. Fetch `origin`,
 read `CODEX_STATE.md`, `CODEX_BACKLOG.md`, `LOCAL_CODEX_ENVIRONMENT.md`, the
 worklog, completion report, and all finding files. Begin the next bounded
-implementation pass with `VZ-BF-001` (Ark Angel zero-delay ready messages),
-then continue the remaining known findings and exhaustive audit.
+implementation pass with `VZ-COMBAT-001` (item additional effects), then
+continue the remaining known findings and exhaustive audit.
 
 ## Guardrails
 

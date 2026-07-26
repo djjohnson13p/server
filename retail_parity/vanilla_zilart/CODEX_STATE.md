@@ -1,7 +1,7 @@
 # Codex State — Vanilla + Rise of the Zilart
 
-Status: VZ_CORE_002_VALIDATED
-Pass: 4
+Status: VZ_BF_001_VALIDATED
+Pass: 5
 Last updated: 2026-07-25
 
 ## Local Codex environment
@@ -32,6 +32,9 @@ The earlier `FAILED_INFRASTRUCTURE` state applied only to the assistant's networ
 6. `VZ-CORE-001` — Call for Help processes currently eligible personal-enmity mobs within the requesting player's current instance instead of only `GetBattleTarget()`.
 7. `VZ-CORE-002` — a valid Attack safely and idempotently interrupts fishing
    after ordinary engagement validation, with stale fishing input rejected.
+8. `VZ-BF-001` — mob-skill ready messages are explicit engine-owned
+   state-entry policy; zero-time Ark Angel skills no longer emit packets from
+   repeated eligibility checks.
 
 ## Validation completed
 
@@ -55,9 +58,16 @@ The earlier `FAILED_INFRASTRUCTURE` state applied only to the assistant's networ
   interruption, pre-reward cancellation, invalid targets, exact resource
   accounting, fishing-monster cleanup, stale/crafted packets, idempotence,
   ordinary cancellation, other action restrictions, and recovery.
-- Latest focused result: all 8 selected fishing/Attack Lua tests passed.
-- Catch2 result: all 16 cases and 9,007,070 assertions passed.
-- Lua style checks and `git diff --check` passed.
+- `VZ-BF-001`: 11 real state/controller/battlefield Lua cases cover the
+  issue-#3611 out-of-range reproduction, Ark Angel standard and no-start
+  zero-time behavior, positive preparation/interruption, pool exceptions,
+  failed state creation, target presentation, and custom dialogue.
+- Latest focused result: all 11 selected mob-skill start-message Lua tests
+  passed with both visible and hidden ready-target settings.
+- Catch2 result: all 19 cases and 9,007,079 assertions passed.
+- The complete 65-case `0x028` battle-action packet suite passed, including
+  pets, Blood Pacts, player weapon skills, and ordinary mob skills.
+- Lua style/purity, SQL sanity, C++ formatting, and `git diff --check` passed.
 - A fresh-directory MSVC/Ninja Debug configuration passed.
 - The complete all-target MSVC/Ninja Debug build passed and linked
   `xi_connect`, `xi_map`, `xi_search`, `xi_world`, and `xi_test`.
@@ -67,14 +77,15 @@ The earlier `FAILED_INFRASTRUCTURE` state applied only to the assistant's networ
 
 ## Current work
 
-The bounded `VZ-CORE-002` pass is complete. The safe server transition is
-implemented and test-backed from the waiting and hooked phases through
-validated engagement, stale-input rejection, resource preservation, and
-post-combat recovery. Exact retail client packet/animation presentation and
-invalid-target behavior remain final live-capture candidates, not remaining
-server engineering.
+The bounded `VZ-BF-001` pass is complete. `onMobSkillCheck` is packet-pure,
+start policy is explicit by skill and optional pool, and a successfully
+entered zero-time state emits one ordinary `SkillStart` immediately before
+its finish without gaining a delay. The inherited 21 standard-ready policies
+and six Trion/Volker pool suppressions are migrated. Exact move-by-move retail
+ready policy and same-update client rendering remain live-capture candidates,
+not remaining server architecture work.
 
-Six findings are implemented and test-backed. `VZ-JOB-002` remains a
+Seven findings are implemented and test-backed. `VZ-JOB-002` remains a
 test-backed partial correction: its supported guards and ammunition behavior
 are covered, while exact `/RNG`, relative-level, ranged-accuracy,
 duration/resist, and `BIND_MEVA` coefficients remain unresolved for lack of
@@ -82,7 +93,6 @@ evidence.
 
 ## Remaining AI-capable work
 
-- Complete `VZ-BF-001` Ark Angel/mob-skill ready-message architecture.
 - Complete `VZ-COMBAT-001` item additional-effect inventory and framework refactor.
 - Complete `VZ-JOB-001` Elemental Spirit data, spell-selection, and scaling work.
 - Implement `VZ-SYS-001` Ballista.
@@ -101,6 +111,8 @@ candidates remain:
 - Shadowbind numeric accuracy, level, duration/resist, and Recycle behavior;
 - attack-while-fishing release packet order, rendered animation/message
   timing, and invalid-target client behavior.
+- exact per-move Ark Angel ready/no-ready policy and rendered ordering of a
+  zero-time start/finish pair.
 
 ## Exact next-pass instructions
 
@@ -108,8 +120,8 @@ candidates remain:
    inherited-validation pass.
 2. Read `AGENTS.md`, `CODEX_MASTER_TASK.md`, `CODEX_BACKLOG.md`, `LOCAL_CODEX_ENVIRONMENT.md`, the status/worklog, completion report, and all finding files.
 3. Confirm the worktree is clean and remain on `retail-parity/codex-vanilla-zilart`.
-4. Begin `VZ-BF-001` Ark Angel zero-delay ready-message behavior with an
-   explicit message/state transition and focused tests.
+4. Begin `VZ-COMBAT-001` item additional-effect inventory and framework work
+   as a new bounded pass.
 5. Initialize MSVC through `VsDevCmd.bat` for all Windows configure/build commands.
 6. Run narrow tests first, then the full MSVC/Ninja Debug build.
 7. Fix failures caused by the fork changes; do not hide failures or weaken unrelated assertions.

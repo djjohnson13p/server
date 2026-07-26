@@ -58,15 +58,27 @@ Completed in
 - Exact client packet/animation ordering and invalid-target retail
   presentation remain final live-capture candidates.
 
+### `VZ-BF-001` — Ark Angel zero-delay ready messages
+
+Completed on 2026-07-25.
+
+- A successful mob-skill state entry now resolves explicit skill/pool
+  start-message policy and emits at most one normal battle-action
+  `SkillStart`.
+- Zero-time skills remain zero-time and execute immediately after their
+  configured start action. Positive-time and interruption behavior are
+  unchanged.
+- Seventeen active scripted `onMobSkillCheck` ready-message workarounds,
+  representing 21 skill IDs, were migrated to explicit SQL policy.
+- Trion pool 4006 and Volker pool 4249 retain custom dialogue through six
+  explicit no-start overrides.
+- Eleven Lua cases reproduce issue #3611 and cover standard/no-start,
+  zero/positive time, target presentation, state failure, and encounter
+  exceptions. The 19-case Catch2 run and 65-case `0x028` packet suite pass.
+- Exact per-move retail ready policy and same-update client rendering remain
+  final live-capture candidates; unsupported exceptions were not invented.
+
 ## Priority 1 — Remaining known implementation findings
-
-### `VZ-BF-001` — Ark Angel zero-delay ready-message spam
-
-- Move ready-message emission out of repeatedly invoked skill-check callbacks.
-- Implement explicit per-skill message behavior for standard ready, alternate ready, no ready, and instant use.
-- Migrate Ark Angel/humanoid weapon skills using manual `READIES_WS` calls.
-- Reproduce upstream issue `#3611` in an automated state test.
-- Do not change zero-delay skills to one-second skills as a workaround.
 
 ### `VZ-COMBAT-001` — Item additional-effect framework
 
