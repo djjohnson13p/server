@@ -4,6 +4,7 @@
 -----------------------------------
 require('scripts/globals/magic') -- For resist functions
 require('scripts/globals/teleports') -- For warp weapon proc.
+require('scripts/globals/additional_effect_profiles')
 -----------------------------------
 xi = xi or {}
 xi.additionalEffect = xi.additionalEffect or {}
@@ -76,32 +77,37 @@ xi.additionalEffect.statusAttack = function(addStatus, defender)
     return 0
 end
 
--- Todo: swap from using element to damageType enum, so Excalibur etc. can happen.
+-- Pure damage calculation. The outcome is applied exactly once by the
+-- selected proc handler after packet presentation values are resolved.
 xi.additionalEffect.calcDamage = function(attacker, element, defender, damage)
     local params = {}
 
     params.bonusmab   = 0
-    params.includemab = false -- May possibly need to include mab on case by case basis, further tests needed
+    params.includemab = false
     damage            = addBonusesAbility(attacker, element, defender, damage, params)
     damage            = math.floor(damage * applyResistanceAddEffect(attacker, defender, element, 0))
     damage            = math.floor(damage * xi.spells.damage.calculateAbsorption(defender, element, false, true, false, false))
     damage            = math.floor(damage * xi.spells.damage.calculateNullification(defender, element, false, true, false, false))
     damage            = math.floor(damage * xi.combat.damage.calculateDamageAdjustment(defender, false, true, false, false))
-    damage            = math.floor(damage * xi.spells.damage.calculateAbsorption(defender, element, false, true, false, false))
-    damage            = math.floor(damage * xi.spells.damage.calculateNullification(defender, element, false, true, false, false))
     damage            = math.floor(defender:handleSevereDamage(damage, false))
     damage            = utils.handlePhalanx(defender, damage)
     damage            = utils.handleOneForAll(defender, damage)
     damage            = utils.handleStoneskin(defender, damage)
-    damage            = utils.clamp(damage, -99999, 99999)
 
+    return utils.clamp(damage, -99999, 99999)
+end
+
+xi.additionalEffect.applyDamage = function(attacker, defender, damage, attackType, damageType)
     if damage < 0 then
-        damage = -(defender:addHP(-damage))
-    else
-        defender:takeDamage(damage, attacker, xi.attackType.MAGICAL, xi.damageType.ELEMENTAL + element)
+        return -defender:addHP(-damage)
+    elseif damage == 0 then
+        return 0
     end
 
-    return damage
+    local startingHP = defender:getHP()
+    defender:takeDamage(damage, attacker, attackType, damageType)
+
+    return startingHP - defender:getHP()
 end
 
 xi.additionalEffect.calcPhysDamage = function(attacker, defender, item, params)
@@ -135,7 +141,7 @@ xi.additionalEffect.calcPhysDamage = function(attacker, defender, item, params)
     end
 
     if
-        params.isBREATH and
+        params.isBreath and
         math.randomInt(1, 100) <= defender:getMod(xi.mod.NULL_BREATH_DAMAGE)
     then
         return 0
@@ -205,23 +211,24 @@ xi.additionalEffect.procType =
     PHYS_DAMAGE   = 15,
 }
 
--- TODO: add resistance check for params.element
 xi.additionalEffect.procFunctions[xi.additionalEffect.procType.DAMAGE] = function(attacker, defender, item, params)
     local subEffect = params.subEffect
     local msgID     = 0
     local msgParam  = 0
 
     local damage = xi.additionalEffect.calcDamage(attacker, params.element, defender, params.damage)
+    damage = xi.additionalEffect.applyDamage(
+        attacker,
+        defender,
+        damage,
+        xi.attackType.MAGICAL,
+        xi.damageType.ELEMENTAL + params.element)
     msgID  = xi.msg.basic.ADD_EFFECT_DMG
 
     if damage < 0 then
         msgID = xi.msg.basic.ADD_EFFECT_HEAL
 
         damage = damage * -1
-
-        defender:addHP(damage)
-    else
-        defender:delHP(damage)
     end
 
     msgParam = damage
@@ -264,7 +271,16 @@ xi.additionalEffect.procFunctions[xi.additionalEffect.procType.DEBUFF] = functio
     end
 
     -- Early return: Regular resist rate.
-    local resistRate = xi.combat.magicHitRate.calculateResistRate(actor, target, 0, 0, xi.skillRank.A, actionElement, xi.mod.INT, effectId, 0)
+    local resistRate = xi.combat.magicHitRate.calculateResistRate(
+        actor,
+        target,
+        0,
+        0,
+        params.skillRank,
+        actionElement,
+        params.governingStat,
+        effectId,
+        0)
     if resistRate < 0.5 then
         return 0, 0, 0
     end
@@ -274,7 +290,9 @@ xi.additionalEffect.procFunctions[xi.additionalEffect.procType.DEBUFF] = functio
     local tick     = xi.additionalEffect.statusAttack(effectId, target)
     local duration = math.floor(params.duration * resistRate)
 
-    target:addStatusEffect(effectId, { power = power, duration = duration, origin = actor, tick = tick })
+    if not target:addStatusEffect(effectId, { power = power, duration = duration, origin = actor, tick = tick }) then
+        return 0, 0, 0
+    end
 
     return subEffect, xi.msg.basic.ADD_EFFECT_STATUS_2, effectId
 end
@@ -307,7 +325,6 @@ xi.additionalEffect.procFunctions[xi.additionalEffect.procType.MP_HEAL] =  funct
     return subEffect, msgID, msgParam
 end
 
--- TODO: add resistance check for params.element
 xi.additionalEffect.procFunctions[xi.additionalEffect.procType.HP_DRAIN] =  function(attacker, defender, item, params)
     local subEffect = params.subEffect
     local msgID     = 0
@@ -315,16 +332,19 @@ xi.additionalEffect.procFunctions[xi.additionalEffect.procType.HP_DRAIN] =  func
 
     -- Hardcoded for now
     params.element = xi.element.DARK
-    local damage = xi.additionalEffect.calcDamage(attacker, params.element, defender, params.damage)
-
     -- Undead cannot be drained
     if defender:isUndead() then
         return 0, 0, 0
     end
 
-    if damage > defender:getHP() then
-        damage = defender:getHP()
-    end
+    local damage = xi.additionalEffect.calcDamage(attacker, params.element, defender, params.damage)
+    damage = math.max(math.min(damage, defender:getHP()), 0)
+    damage = xi.additionalEffect.applyDamage(
+        attacker,
+        defender,
+        damage,
+        xi.attackType.MAGICAL,
+        xi.damageType.DARK)
 
     msgID    = xi.msg.basic.ADD_EFFECT_HP_DRAIN
     msgParam = damage
@@ -333,7 +353,6 @@ xi.additionalEffect.procFunctions[xi.additionalEffect.procType.HP_DRAIN] =  func
     return subEffect, msgID, msgParam
 end
 
--- TODO: add resistance check for params.element
 xi.additionalEffect.procFunctions[xi.additionalEffect.procType.MP_DRAIN] =  function(attacker, defender, item, params)
     local subEffect = params.subEffect
     local msgID     = 0
@@ -341,16 +360,13 @@ xi.additionalEffect.procFunctions[xi.additionalEffect.procType.MP_DRAIN] =  func
 
     -- Hardcoded for now
     params.element = xi.element.DARK
-    local damage = xi.additionalEffect.calcDamage(attacker, params.element, defender, params.damage)
-
     -- Undead cannot be drained
     if defender:isUndead() then
         return 0, 0, 0
     end
 
-    if damage > defender:getMP() then
-        damage = defender:getMP()
-    end
+    local damage = xi.additionalEffect.calcDamage(attacker, params.element, defender, params.damage)
+    damage = math.max(math.min(damage, defender:getMP()), 0)
 
     msgID    = xi.msg.basic.ADD_EFFECT_MP_DRAIN
     msgParam = damage
@@ -360,7 +376,6 @@ xi.additionalEffect.procFunctions[xi.additionalEffect.procType.MP_DRAIN] =  func
     return subEffect, msgID, msgParam
 end
 
--- TODO: add resistance check for params.element
 xi.additionalEffect.procFunctions[xi.additionalEffect.procType.TP_DRAIN] =  function(attacker, defender, item, params)
     local subEffect = params.subEffect
     local msgID     = 0
@@ -376,9 +391,7 @@ xi.additionalEffect.procFunctions[xi.additionalEffect.procType.TP_DRAIN] =  func
 
     local damage = xi.additionalEffect.calcDamage(attacker, params.element, defender, params.damage)
 
-    if damage > defender:getTP() then
-        damage = defender:getTP()
-    end
+    damage = math.max(math.min(damage, defender:getTP()), 0)
 
     msgID    = xi.msg.basic.ADD_EFFECT_TP_DRAIN
     msgParam = damage
@@ -473,7 +486,9 @@ xi.additionalEffect.procFunctions[xi.additionalEffect.procType.DEATH] = function
 end
 
 xi.additionalEffect.procFunctions[xi.additionalEffect.procType.HPMP_DRAIN] = function(attacker, defender, item, params)
-    local drainRoll = math.randomInt(1, 2) -- This is wrong and needs retail verification. Current theory is that it rolls one after another until one doesn't resist or they all resist.
+    -- VZ-COMBAT-001 compatibility policy: the current random branch is
+    -- isolated and classified VERIFY_LIVE until retail ordering is captured.
+    local drainRoll = math.randomInt(1, 2)
 
     local drainFuncs =
     {
@@ -485,7 +500,9 @@ xi.additionalEffect.procFunctions[xi.additionalEffect.procType.HPMP_DRAIN] = fun
 end
 
 xi.additionalEffect.procFunctions[xi.additionalEffect.procType.HPMPTP_DRAIN] = function(attacker, defender, item, params)
-    local drainRoll = math.randomInt(1, 3) -- This is wrong and needs retail verification. Current theory is that it rolls one after another until one doesn't resist or they all resist.
+    -- VZ-COMBAT-001 compatibility policy: the current random branch is
+    -- isolated and classified VERIFY_LIVE until retail ordering is captured.
+    local drainRoll = math.randomInt(1, 3)
 
     local drainFuncs =
     {
@@ -509,11 +526,21 @@ xi.additionalEffect.procFunctions[xi.additionalEffect.procType.PHYS_DAMAGE] = fu
     if damage < 0 then
         msgID = xi.msg.basic.ADD_EFFECT_HEAL
 
-        damage = damage * -1
-
-        defender:addHP(damage)
+        damage = -xi.additionalEffect.applyDamage(
+            attacker,
+            defender,
+            damage,
+            params.isRanged and xi.attackType.RANGED or
+                (params.isBreath and xi.attackType.BREATH or xi.attackType.PHYSICAL),
+            params.damageType)
     else
-        defender:delHP(damage)
+        damage = xi.additionalEffect.applyDamage(
+            attacker,
+            defender,
+            damage,
+            params.isRanged and xi.attackType.RANGED or
+                (params.isBreath and xi.attackType.BREATH or xi.attackType.PHYSICAL),
+            params.damageType)
     end
 
     msgParam = damage
@@ -582,6 +609,12 @@ xi.additionalEffect.procFunctions[xi.additionalEffect.procType.NM_SPECIFIC] = fu
     then
         -- Calculate damage
         local damage = xi.additionalEffect.calcDamage(attacker, params.element, defender, params.damage)
+        damage = xi.additionalEffect.applyDamage(
+            attacker,
+            defender,
+            damage,
+            xi.attackType.MAGICAL,
+            xi.damageType.ELEMENTAL + params.element)
         msgID = xi.msg.basic.ADD_EFFECT_DMG
         msgParam = damage
 
@@ -606,25 +639,48 @@ end
 
 -- paralyze on hit, fire damage on hit, etc.
 xi.additionalEffect.attack = function(attacker, defender, baseAttackDamage, item)
-    local params     = {}
-    params.lvCorrect = item:getMod(xi.mod.ITEM_ADDEFFECT_LVADJUST)
-    params.dStat     = item:getMod(xi.mod.ITEM_ADDEFFECT_DSTAT)
-    params.addType   = item:getMod(xi.mod.ITEM_ADDEFFECT_TYPE)
-    params.subEffect = item:getMod(xi.mod.ITEM_SUBEFFECT)
-    params.damage    = item:getMod(xi.mod.ITEM_ADDEFFECT_DMG)
-    params.chance    = item:getMod(xi.mod.ITEM_ADDEFFECT_CHANCE)
-    params.element   = item:getMod(xi.mod.ITEM_ADDEFFECT_ELEMENT)
-    params.addStatus = item:getMod(xi.mod.ITEM_ADDEFFECT_STATUS)
-    params.power     = item:getMod(xi.mod.ITEM_ADDEFFECT_POWER)
-    params.duration  = item:getMod(xi.mod.ITEM_ADDEFFECT_DURATION)
-
-    -- This is the  damage of the auto attack that generated this function call (swing did 5 damage, base attack damage is 5)
-    params.baseAttackDamage = baseAttackDamage
-
     -- If player is level synced below the level of the item, do no proc
     if item:getReqLvl() > attacker:getMainLvl() then
         return 0, 0, 0
     end
+
+    local profile = xi.additionalEffect.profile.resolve(item, baseAttackDamage)
+    local valid, errors = xi.additionalEffect.profile.validate(profile)
+    if not valid then
+        if not xi.additionalEffect.profile.reportedInvalidItems[item:getID()] then
+            print(string.format(
+                'ERR: invalid additional-effect profile for item %u: %s',
+                item:getID(),
+                table.concat(errors, '; ')))
+            xi.additionalEffect.profile.reportedInvalidItems[item:getID()] = true
+        end
+
+        return 0, 0, 0
+    end
+
+    local params =
+    {
+        profile          = profile,
+        lvCorrect        = profile.proc.levelCorrection,
+        dStat            = item:getMod(xi.mod.ITEM_ADDEFFECT_DSTAT),
+        addType          = profile.outcome.family,
+        subEffect        = profile.presentation.subEffect,
+        damage           = profile.outcome.damage,
+        chance           = profile.proc.chance,
+        element          = profile.accuracy.element,
+        skillRank        = profile.accuracy.skillRank,
+        governingStat    = profile.accuracy.governingStat,
+        addStatus        = profile.outcome.statusEffect,
+        power            = profile.outcome.power,
+        duration         = profile.outcome.duration,
+        baseAttackDamage = profile.outcome.baseAttackDamage,
+    }
+
+    params.chance = xi.additionalEffect.levelCorrectRates(
+        defender:getMainLvl(),
+        attacker:getMainLvl(),
+        params.chance,
+        params.lvCorrect)
 
     -- If we're not going to proc, lets not execute all those checks!
     if math.randomInt(1, 100) > params.chance then
