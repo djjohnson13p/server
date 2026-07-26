@@ -421,11 +421,13 @@ Result: exit `0` (`24/24` final post-format steps).
 Disposable database setup:
 
 ```text
-python tools/dbtool.py setup xidb_codex_vz_bf_001_202607251900
+python tools/dbtool.py setup xidb_codex_vz_bf_001_update2_20260725
+python tools/dbtool.py update
 ```
 
-Result: exit `0`; all current SQL, including
-`mob_skill_start_messages.sql`, imported. The owner's working `xidb` was not
+Result: both exit `0`; all current SQL, including
+`mob_skill_start_messages.sql`, imported, and the supported existing-database
+update reported `Database is up to date.` The owner's working `xidb` was not
 used.
 
 Focused state/controller/battlefield tests:
@@ -517,7 +519,7 @@ Result: exit `0`; only checkout line-ending notices were emitted.
 
 - `build-codex-vz-bf-001`: removed after the complete build.
 - Generated root `xi_*.exe` and `xi_*.pdb`: removed.
-- `xidb_codex_vz_bf_001_202607251900`: dropped and confirmed absent.
+- Both disposable validation databases were dropped and confirmed absent.
 - Owner working `xidb`: not modified.
 
 ### Retail/client uncertainty retained

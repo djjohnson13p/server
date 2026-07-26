@@ -396,7 +396,8 @@ wrong-phase, duplicate-hook, and malformed paths are rejected.
 - Focused Lua: 11/11 passed with default presentation and 11/11 passed after
   the full build with `HIDE_READIES_TARGET=true`.
 - Complete `0x028` packet regression suite: 65/65 passed.
-- SQL setup/import against disposable database: exit `0`.
+- SQL setup/import and subsequent supported `dbtool.py update` against a
+  disposable database: both exit `0`.
 - Lua `luacheck`, style, and mob-skill-check purity: exit `0`.
 - SQL sanity, `clang-format`, and `git diff --check`: exit `0`.
 - Complete all-target Debug build: exit `0`; all five executables linked.
