@@ -6,22 +6,28 @@ Status: BOUNDED_PASS_COMPLETE_PROJECT_IN_PROGRESS
 
 - Repository: `djjohnson13p/server`
 - Work branch: `retail-parity/codex-vanilla-zilart`
-- Current bounded-pass starting commit: `94806464c77e3cdd3c21d15cf78c85f2613beaa9`
+- Current bounded-pass starting commit: `8f956bb13e2781eaf51873f621bc07d47735ce7c`
 - Pinned upstream baseline: `242ab0d055dfb80396e7398b0dd7361b750c74e2`
 - Upstream pull requests: none; prohibited
 - Upstream push: disabled/prohibited
 
-The bounded `VZ-BF-001` pass is complete. Ready-message policy is explicit
-and engine-owned after successful mob-skill state entry. Zero-time Ark Angel
-skills can emit one proper start immediately before one finish without an
-artificial delay, while repeatable Lua eligibility checks emit no packets.
-Seven findings are implemented and test-backed. Shadowbind remains a
-test-backed partial correction because its exact accuracy, relative-level,
-duration/resist, and Recycle coefficients remain unsupported by sufficient
-evidence.
+The bounded `VZ-COMBAT-001` Phase A pass is complete. A generated conservative
+inventory covers every active or issue-scoped item, SQL remains the numeric
+source, and an explicit profile layer separates proc, accuracy/resistance,
+outcome, and presentation. Deterministic double-application and flag defects
+are corrected and real melee/ranged/NM paths are test-backed.
+
+The overall finding remains partial: item-specific retail numerics, several
+family formulas, many introduction eras, and client presentation still need
+bounded Phase B evidence work. Seven findings are fully implemented and
+test-backed; Shadowbind and item additional effects are deliberately partial.
 
 ## Commits created
 
+- `2f3d6fe5c33f1ac0eceba0b8efc7bedc51a38a00` —
+  `fix(retail-parity): correct item additional-effect framework`
+- `1684e6fd9a836db206e7d3504edca27aa3735e73` —
+  `feat(retail-parity): inventory item additional effects`
 - `b98b576c95f27c8882e5401eea67b0716f01f6dc` —
   `fix(retail-parity): own mob-skill start messages in state`
 - `94acc4f249c5db5b3b892f508bee3c3de7099178` —
@@ -531,6 +537,117 @@ Result: exit `0`; only checkout line-ending notices were emitted.
   data. Alternate-message transport is covered only by a synthetic C++
   policy fixture.
 
+## VZ-COMBAT-001 Phase A — inventory and deterministic framework correction
+
+### Inventory result
+
+The tracked generator emits a 420-row CSV and Markdown report with the 34
+required fields.
+
+| Dimension | Totals |
+|---|---|
+| Era | 18 `VANILLA_OR_ZILART`; 402 `ERA_UNRESOLVED` |
+| Effect family | 183 damage; 124 debuff; 46 equipment-spikes; 27 scripted; 13 HP-drain; five Dispel; six NM-specific; remaining families in the artifact |
+| Configuration source | 387 SQL; 25 SQL+item-script; five SQL+latent; one item-script; two issue-evidence-only |
+| Classification | 122 configuration-error; 185 era-unresolved; 98 `VERIFY_LIVE`; ten framework-correct/legacy-numerics; five special-test-backed |
+
+All 18 maintained Vanilla/Zilart entries are reachable and non-error. The 341
+individual repository-wide configuration findings include unresolved
+later-era configurations and are deliberately reported rather than hidden.
+
+Artifacts:
+
+- `retail_parity/vanilla_zilart/artifacts/VZ-COMBAT-001-item-inventory.csv`
+- `retail_parity/vanilla_zilart/artifacts/VZ-COMBAT-001-item-inventory.md`
+- `tools/retail_parity/generate_item_additional_effect_inventory.py`
+- `tools/retail_parity/check_item_additional_effect_profiles.py`
+
+### Production architecture and corrections
+
+- `additional_effect_profiles.lua` resolves SQL-backed proc,
+  accuracy/resistance, outcome, and presentation policy.
+- Acid/Sleep Bolt alone use issue-supported item-native A rank. Governing INT
+  remains `LEGACY_UNVERIFIED`; the profile does not claim dINT or no-dSTAT.
+- Calculators are pure and one operation applies final HP damage/healing.
+- Absorption and nullification are evaluated once.
+- Damage, HP drain, MP/TP drain calculation, physical-profile damage, and NM
+  hooks have one explicit mutation owner.
+- `isBreath` is now read consistently, enabling `NULL_BREATH_DAMAGE`.
+- A failed/non-overwriting status application no longer emits a false
+  success additional effect.
+- Level correction is applied independently after profile resolution and
+  before the proc roll; above-level items are rejected before resolution.
+- Unsupported drain/order, self-buff, Death, and related families retain
+  named `VERIFY_LIVE` compatibility behavior.
+
+No SQL schema or numeric item data changed.
+
+### Defect reproduction
+
+With the legacy mutations temporarily restored, the focused test exited `1`
+and reported:
+
+- target HP mutation did not match packet amount;
+- absorption evaluated twice;
+- nullification evaluated twice;
+- breath additional damage was not nullified.
+
+After restoring the correction, all four cases pass. The status
+non-overwrite regression independently reproduced and corrected its false
+success presentation.
+
+### Tests and validation
+
+Focused files:
+
+- `scripts/tests/systems/combat/item_additional_effects.lua`
+- `scripts/tests/systems/combat/item_additional_effects_ranged.lua`
+- `scripts/tests/systems/combat/item_additional_effects_nm.lua`
+
+They cover real melee and ranged 0x028 action paths, Acid/Sleep ammunition,
+proc-versus-resistance, exact damage/healing ownership, elemental/general
+absorb/nullification, physical/ranged/breath flags, damage-type SDT, status
+guards and parameters, level eligibility, and every maintained NM hook.
+
+Validation results:
+
+- isolated current-SQL database import: exit `0`;
+- fresh MSVC/Ninja Debug configure: exit `0`;
+- `xi_test` build: exit `0` (`906/906`);
+- corrected focused framework checkpoint: 27/27, exit `0`;
+- real ranged checkpoint: 3/3, exit `0`;
+- final combined additional-effect framework/ranged/NM repeat: 39/39,
+  exit `0`;
+- all 65 `0x028` plus nine Shadowbind regressions: 74/74, exit `0`;
+- all-target Debug build: exit `0` (`148/148` remaining steps), all five
+  executables linked;
+- generator write/check, profile sanity, Lua/Python formatting/sanity, and
+  `git diff --check`: exit `0`.
+- generator strict audit: expected exit `1`, reporting all 341 known
+  repository-wide configuration diagnostics rather than suppressing them.
+
+Cleanup:
+
+- `build-codex-phase-a`: removed after the complete build and final focused
+  repeat.
+- Generated root `xi_*.exe`/`xi_*.pdb`: ten files removed.
+- `xidb_codex_vz_combat_001_phase_a_20260725` and both temporary privilege
+  rows: removed and confirmed absent.
+- Issue-#7899 attachment cache: removed.
+- Owner working `xidb`: not modified.
+
+### Compatibility and remaining Phase B
+
+Fire/Ice/Lightning Arrow remain reachable per-item `VERIFY_LIVE` scripts.
+Ten maintained status-ammunition entries retain framework-correct legacy
+numerics. The five Zilart special hooks are behaviorally test-backed.
+
+Combined drains, other drain accuracy/scaling, Dispel, self-buffs, Death,
+spikes, item-specific damage/status formulas, and 402 unresolved era
+classifications remain Phase B work. Controlled retail datasets and client
+captures are required where repository evidence cannot resolve them. Phase A
+does not classify the overall finding as corrected.
+
 ## Findings now fully test-backed
 
 - `VZ-ZONE-001` — server-side Uggalepih/Prelate door behavior.
@@ -547,7 +664,7 @@ Result: exit `0`; only checkout line-ending notices were emitted.
   Trion/Volker exceptions, and migration completeness, subject to the
   move-by-move retail presentation limits below.
 
-## Finding still partial
+## Findings still partial
 
 `VZ-JOB-002` remains partial only where evidence is insufficient:
 
@@ -559,6 +676,11 @@ Result: exit `0`; only checkout line-ending notices were emitted.
 - Recycle behavior beyond the tested Unlimited Shot path.
 
 No spell-skill, dSTAT, ranged-accuracy, subjob, or level formula was invented.
+
+`VZ-COMBAT-001` is Phase-A complete but remains partial for item-specific
+retail numerics, unsupported family formulas, unresolved era classifications,
+and client presentation. Its inventory, profile ownership, and deterministic
+framework corrections are complete and test-backed.
 
 ## Client/live-retail-only candidates
 
@@ -575,9 +697,13 @@ No spell-skill, dSTAT, ranged-accuracy, subjob, or level formula was invented.
   phase is protocol-indistinguishable.
 - Ark Angel move-by-move ready/no-ready behavior and rendered ordering of a
   same-update zero-time start/finish pair.
+- Item additional-effect governing-stat/dSTAT and item-family proc/resist
+  datasets, damage type/scaling, drain ordering/accuracy, self-buff/Death/
+  spikes formulas, and exact client presentation beyond Phase A.
 
 ## Recommended next pass
 
-Begin `VZ-COMBAT-001` item additional-effect inventory and framework work.
-Then continue `VZ-JOB-001`, `VZ-SYS-001`, and the exhaustive Vanilla/Zilart
-audit in bounded passes.
+Begin one bounded `VZ-COMBAT-001` Phase B family/configuration group using
+the generated inventory and its evidence classifications. Then continue
+`VZ-JOB-001`, `VZ-SYS-001`, and the exhaustive Vanilla/Zilart audit in
+bounded passes.

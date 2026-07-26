@@ -11,7 +11,7 @@
 - **Assistant source-accessible stage:** Complete
 - **Codex handoff:** Ready
 - **Local Codex environment:** Validated
-- **Current project state:** `VZ_BF_001_VALIDATED`
+- **Current project state:** `VZ_COMBAT_001_PHASE_A_VALIDATED`
 - **Upstream pull requests:** None; prohibited
 
 ## Baseline finding counts
@@ -32,19 +32,19 @@ These are baseline discrepancy counts, not resolution counts. The absence of add
 | Implementation state | Count |
 |---|---:|
 | Corrected or candidate-corrected on fork | 7 |
-| Partially corrected on fork | 1 |
-| Not yet implemented | 3 |
+| Partially corrected on fork | 2 |
+| Not yet implemented | 2 |
 
-Seven findings are now implemented and test-backed. Shadowbind remains a
-test-backed partial correction because unsupported accuracy/level
-coefficients were deliberately not invented.
+Seven findings are implemented and test-backed. Shadowbind and the item
+additional-effect finding remain partial because unsupported retail
+coefficients and formulas were deliberately not invented.
 
 ## Findings and implementation state
 
 | ID | Area | Baseline status | Current fork state |
 |---|---|---|---|
 | `VZ-SYS-001` | Ballista | `MISSING` | Not implemented; largest remaining system |
-| `VZ-COMBAT-001` | Item additional effects | `INACCURATE` | Not implemented; inventory/framework work remains |
+| `VZ-COMBAT-001` | Item additional effects | `INACCURATE` | Phase A complete: 420-row generated inventory, explicit profiles, deterministic framework fixes, and maintained-item tests; retail formulas remain Phase B |
 | `VZ-ZONE-001` | Temple of Uggalepih door keys | `INACCURATE` | Implemented and interaction-test-backed |
 | `VZ-JOB-001` | Summoner Elemental Spirits | `INACCURATE` | Not implemented; data/formula work remains |
 | `VZ-CORE-001` | Call for Help scope | `INACCURATE` | Hardened claim/CE/VE/boundary rules; Lua and C++ tests pass |
@@ -92,6 +92,12 @@ Completed:
   policy now emits at most one proper `SkillStart` after state entry, including
   zero-time Ark Angel skills. Eleven focused Lua cases, 19 Catch2 cases
   (9,007,079 assertions), and all 65 `0x028` packet cases pass.
+- Item additional-effect Phase A inventories 420 active/issue-scoped items,
+  including 18 maintained Vanilla/Zilart profiles. Tests reproduce and
+  correct double HP mutation, duplicate absorption/nullification, the breath
+  flag mismatch, and false status success presentation. Real melee/ranged
+  packets, Acid/Sleep ammunition, level eligibility, status guards, physical
+  flags, and all five maintained NM interactions are covered.
 - Lua style checks and `git diff --check` passed.
 - Fresh-directory MSVC/Ninja Debug configuration and all-target build passed.
 - Disposable build outputs and isolated test database were removed without
@@ -99,7 +105,8 @@ Completed:
 
 Still required:
 
-- Completion of the remaining three known findings.
+- Phase B evidence/formula work for `VZ-COMBAT-001`.
+- Completion of the remaining two unimplemented known findings.
 - Continued exhaustive local-repository Vanilla/Zilart audit.
 - Final client/live-retail validation for behavior without an automated seam.
 
@@ -116,7 +123,9 @@ Still required:
 - [x] Add focused automated tests for inherited corrections
 - [x] Complete `VZ-CORE-002` safe attack-while-fishing transition
 - [x] Complete `VZ-BF-001` engine-owned ready-message behavior
-- [ ] Complete the remaining three known findings
+- [x] Complete `VZ-COMBAT-001` Phase A inventory/framework pass
+- [ ] Complete `VZ-COMBAT-001` Phase B evidence/formula passes
+- [ ] Complete the remaining two unimplemented known findings
 - [ ] Continue the exhaustive local-repository Vanilla/Zilart audit
 - [ ] Produce a final actionable human-only validation queue
 
@@ -124,9 +133,10 @@ Still required:
 
 Use the latest head of `retail-parity/codex-vanilla-zilart`. Fetch `origin`,
 read `CODEX_STATE.md`, `CODEX_BACKLOG.md`, `LOCAL_CODEX_ENVIRONMENT.md`, the
-worklog, completion report, and all finding files. Begin the next bounded
-implementation pass with `VZ-COMBAT-001` (item additional effects), then
-continue the remaining known findings and exhaustive audit.
+worklog, completion report, generated VZ-COMBAT-001 inventory, and finding
+files. Begin a bounded VZ-COMBAT-001 Phase B pass around one evidence-backed
+family or configuration-error group, then continue the remaining known
+findings and exhaustive audit.
 
 ## Guardrails
 

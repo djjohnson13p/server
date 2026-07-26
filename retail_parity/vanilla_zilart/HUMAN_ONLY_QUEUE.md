@@ -6,16 +6,17 @@ No gameplay, retail-capture, server-deployment, or manual test task is being ass
 
 The local Codex desktop environment, GitHub connectivity, MSVC toolchain,
 CMake/Ninja configuration, full Debug build, focused inherited-correction
-tests, the `VZ-CORE-002` safe fishing-to-combat transition, and the
-`VZ-BF-001` engine-owned mob-skill start-message correction are validated.
-The remaining known engineering work is still AI-capable, so it does not
-belong in a final human-only queue yet.
+tests, `VZ-CORE-002`, `VZ-BF-001`, and the `VZ-COMBAT-001` Phase A
+inventory/framework correction are validated. The remaining known
+engineering work is still AI-capable, so it does not belong in a final
+human-only queue yet.
 
 ## Current AI stage
 
 Codex must still:
 
-- complete the three remaining known implementation findings;
+- complete `VZ-COMBAT-001` Phase B and the two remaining unimplemented known
+  findings;
 - continue the exhaustive Vanilla/Zilart local-repository audit;
 - run the available C++, Lua, SQL, unit, integration, startup, and build checks;
 - update the findings and project reports.
@@ -47,7 +48,12 @@ These items may become human-only after all remaining AI-capable engineering and
   record the rendered order of a zero-time start/finish pair sent in one
   server update. State ownership, packet category, spam prevention, inherited
   standard-ready policies, and Trion/Volker exceptions are automated.
-- Collect controlled item additional-effect accuracy, resistance, potency, and duration data by item family.
+- Collect controlled item additional-effect datasets by item/family:
+  separate proc from resist, test dSTAT/no-dSTAT and damage type, potency,
+  duration/partial resist, drain order/accuracy/scaling, self-buff/Death/
+  spikes behavior, and exact combat presentation. Acid/Sleep item-native
+  A-rank is already represented; their governing-stat question and any
+  extension to other ammunition remain unresolved.
 - Measure Elemental Spirit HP/MP/stat/weapon-damage scaling and Light Spirit decision behavior.
 - Capture Ballista packet fields, current schedules/rules, and client-visible match behavior.
 

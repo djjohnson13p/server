@@ -78,15 +78,41 @@ Completed on 2026-07-25.
 - Exact per-move retail ready policy and same-update client rendering remain
   final live-capture candidates; unsupported exceptions were not invented.
 
+### `VZ-COMBAT-001` Phase A — Item additional-effect inventory/framework
+
+Completed on 2026-07-25.
+
+- Reproducible CSV/Markdown inventory covers 420 active or issue-scoped
+  items, including 18 maintained Vanilla/Zilart entries and conservative
+  `ERA_UNRESOLVED` classification where repository era metadata is absent.
+- SQL remains the numeric source. The Lua profile layer separates proc,
+  accuracy/resistance, outcome, and presentation and rejects malformed
+  profiles explicitly.
+- Behavioral tests reproduced and corrected duplicate HP mutation,
+  twice-applied absorption/nullification, and the breath-flag mismatch.
+  Status application now emits no false success when overwrite/application
+  fails.
+- Real melee and ranged 0x028 paths, Acid/Sleep bolts, status guards and
+  partial duration, physical flags, level eligibility, and the five
+  maintained Zilart NM interactions are test-backed.
+- Only Acid/Sleep receive the issue-supported item-native A-rank policy. INT
+  remains legacy-unverified; no ammunition-wide dSTAT formula was invented.
+- Combined drains, other unsupported drain/scaling behavior, self-buffs,
+  Death, spikes, and item-specific formulas remain explicit Phase B work.
+
 ## Priority 1 — Remaining known implementation findings
 
-### `VZ-COMBAT-001` — Item additional-effect framework
+### `VZ-COMBAT-001` Phase B — Evidence-backed family migrations
 
-- Inventory every Vanilla/Zilart item using `ITEM_ADDEFFECT_*` data and map it to the active handler.
-- Separate proc chance, accuracy/resistance, potency, duration, element, damage type, immunity, and messaging.
-- Correct confirmed omitted resistance paths, known-wrong combined-drain selection, incomplete self-buffs, and dead spikes support where evidence permits.
-- Use data-driven profiles and broad regression tests.
-- Do not generalize one ammunition dataset to unrelated item families without evidence.
+- Use the generated inventory to select one bounded effect family or
+  configuration-error group at a time.
+- Establish item/era evidence before changing classifications or numerics.
+- Resolve damage type/MAB/dSTAT, drain accuracy/scaling/order, Dispel,
+  self-buff, Death, and equipment-spikes behavior only where evidence
+  supports it.
+- Preserve compatibility/`VERIFY_LIVE` behavior when evidence is still
+  insufficient; do not generalize the Acid/Sleep A-rank result.
+- Add real melee/ranged/reaction packet tests for each migrated group.
 
 ### `VZ-JOB-001` — Summoner Elemental Spirits
 

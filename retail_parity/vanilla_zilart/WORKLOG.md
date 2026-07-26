@@ -432,3 +432,103 @@ These do not leave a known server architecture defect.
    passes.
 5. Preserve all unsupported retail/client details for final validation rather
    than inventing behavior or requesting intermediate owner tests.
+
+## 2026-07-25 — VZ-COMBAT-001 Phase A inventory and framework
+
+### Evidence and lifecycle trace
+
+- Read LandSandBoat issue #7899, all seven comments, and all eight attached
+  images. The supported boundary is item-native A-rank magic accuracy for
+  Acid Bolt and Sleep Bolt; dSTAT and extension to other ammunition remain
+  unresolved.
+- Traced melee `HandleEnspell`, ranged `OnRangedAttack`, global and per-item
+  Lua callbacks, level-scaled modifiers/latents, active equipment spikes,
+  NM hooks, action-result construction, and 0x028 serialization.
+- Confirmed the global calculator owned HP mutation even though the family
+  dispatcher also mutated HP. MP/TP drain calculation therefore also had an
+  unintended HP side effect.
+
+### Generated inventory and profile model
+
+- Added a deterministic generator and tracked CSV/Markdown artifacts.
+- Inventory currently covers 420 active or explicitly issue-scoped items:
+  18 maintained Vanilla/Zilart and 402 `ERA_UNRESOLVED`.
+- All 18 maintained entries are reachable and non-error. The repository-wide
+  scan records 341 individual configuration findings and 122
+  configuration-error rows instead of omitting them.
+- Added a profile/sanity layer that leaves SQL as the numeric source and
+  separates proc, accuracy/resistance, outcome, and presentation.
+- Acid/Sleep alone resolve item-native A rank. Their INT argument is retained
+  as `LEGACY_UNVERIFIED`; no dINT/no-dSTAT or ammunition-family formula was
+  invented.
+- Unsupported drains, combined-drain selection, Dispel, self-buff, Death,
+  and related families resolve through explicit `VERIFY_LIVE` compatibility
+  policy.
+
+### Behavioral reproduction and production correction
+
+The pre-correction focused run exited `1` and behaviorally reproduced:
+
+- HP delta greater than the returned magical effect amount;
+- two absorption evaluations;
+- two nullification evaluations;
+- ignored `NULL_BREATH_DAMAGE` because `isBreath` was read as `isBREATH`.
+
+The corrected path makes calculation pure and applies the final HP outcome
+exactly once. Absorption/nullification run once, packet amount equals the
+actual HP delta/heal, MP/TP drains no longer inherit HP mutation, and the
+breath flag is honored.
+
+The new status regression exposed another inherited defect: a failed
+non-overwriting `addStatusEffect` still returned a success message. It now
+returns no additional-effect presentation.
+
+### Behavioral coverage
+
+- Real Sirocco Kukri melee actions serialize one 0x028 additional result per
+  applied effect.
+- Acid/Sleep real ranged states cover ammo consumption, distance handling,
+  profile resolution, A-rank transport, status power/duration, and packet
+  presentation.
+- Direct production-path cases separate proc from resist and cover partial/
+  full status resolution, immunity, resistance trait, effect nullification,
+  opposing-boost removal, non-overwrite, Sleep, Defense Down, Poison, Blind,
+  above-level items, and latent-derived eligibility.
+- Physical-profile cases cover all/physical/ranged/breath nullification,
+  physical/ranged absorption, and damage-type SDT.
+- Seiryu/Zephyr, Genbu/Antarctic Wind, Suzaku/Arctic Wind, Byakko/East Wind,
+  and Brigandish Blade/Buccaneer's Knife all pass, with wrong-item and
+  unrelated-target negative cases.
+
+### Validation
+
+- Isolated database
+  `xidb_codex_vz_combat_001_phase_a_20260725` was created, granted only to
+  the existing local test account, and fully populated from current SQL.
+  The owner's working `xidb` was not modified.
+- Fresh MSVC/Ninja Debug configure: exit `0`.
+- Focused `xi_test` target build: exit `0` (`906/906`).
+- Pre-fix behavioral reproduction: exit `1`, with the four expected
+  deterministic failures above.
+- Corrected focused framework run: exit `0` (27/27 at that checkpoint).
+- Real ranged run: exit `0` (3/3).
+- Final combined additional-effect framework/ranged/NM repeat: exit `0`
+  (39/39).
+- Packet/status regression: exit `0` (74/74: all 65 `0x028` plus nine
+  Shadowbind cases).
+- Complete all-target Debug build: exit `0` (`148/148` remaining steps);
+  `xi_connect`, `xi_search`, `xi_world`, `xi_map`, and `xi_test` linked.
+- Inventory generation/check and maintained-profile sanity: exit `0`.
+- Strict inventory audit: expected exit `1`, exposing all 341 recorded
+  repository-wide configuration diagnostics.
+- The disposable build directory, ten root executables/PDBs, isolated
+  database and its two privilege rows, and issue-attachment cache were
+  removed. The owner working `xidb` was not modified.
+
+### Remaining Phase B and live-retail boundary
+
+Exact item-specific damage/status numerics, governing stats, damage types,
+drain accuracy/scaling/order, self-buff/Death/spikes formulas, and many item
+introduction eras remain unresolved. These are now visible and classifiable,
+but Phase A does not guess them or classify the complete finding as
+corrected.

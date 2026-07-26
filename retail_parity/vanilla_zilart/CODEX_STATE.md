@@ -1,7 +1,7 @@
 # Codex State — Vanilla + Rise of the Zilart
 
-Status: VZ_BF_001_VALIDATED
-Pass: 5
+Status: VZ_COMBAT_001_PHASE_A_VALIDATED
+Pass: 6
 Last updated: 2026-07-25
 
 ## Local Codex environment
@@ -35,6 +35,10 @@ The earlier `FAILED_INFRASTRUCTURE` state applied only to the assistant's networ
 8. `VZ-BF-001` — mob-skill ready messages are explicit engine-owned
    state-entry policy; zero-time Ark Angel skills no longer emit packets from
    repeated eligibility checks.
+9. `VZ-COMBAT-001` Phase A — generated inventory/profile ownership is in
+   place; deterministic double-application, duplicate absorb/null, breath
+   flag, and false status-presentation defects are corrected. Unsupported
+   retail formulas remain explicitly partial.
 
 ## Validation completed
 
@@ -67,6 +71,12 @@ The earlier `FAILED_INFRASTRUCTURE` state applied only to the assistant's networ
 - Catch2 result: all 19 cases and 9,007,079 assertions passed.
 - The complete 65-case `0x028` battle-action packet suite passed, including
   pets, Blood Pacts, player weapon skills, and ordinary mob skills.
+- `VZ-COMBAT-001` Phase A: generated inventory covers 420 items and all 18
+  maintained Vanilla/Zilart profiles pass reachability/classification sanity.
+  Focused Lua covers real melee/ranged packets, Acid/Sleep status ammo,
+  proc/resistance separation, exactly-once damage, absorb/nullification,
+  physical/ranged/breath flags, level eligibility, status families, and all
+  five maintained NM hooks.
 - Lua style/purity, SQL sanity, C++ formatting, and `git diff --check` passed.
 - A fresh-directory MSVC/Ninja Debug configuration passed.
 - The complete all-target MSVC/Ninja Debug build passed and linked
@@ -77,23 +87,23 @@ The earlier `FAILED_INFRASTRUCTURE` state applied only to the assistant's networ
 
 ## Current work
 
-The bounded `VZ-BF-001` pass is complete. `onMobSkillCheck` is packet-pure,
-start policy is explicit by skill and optional pool, and a successfully
-entered zero-time state emits one ordinary `SkillStart` immediately before
-its finish without gaining a delay. The inherited 21 standard-ready policies
-and six Trion/Volker pool suppressions are migrated. Exact move-by-move retail
-ready policy and same-update client rendering remain live-capture candidates,
-not remaining server architecture work.
+The bounded `VZ-COMBAT-001` Phase A pass is complete. SQL remains the numeric
+source of truth, an explicit Lua profile separates proc, accuracy/resistance,
+outcome, and presentation policy, and a reproducible inventory records every
+active or issue-scoped item conservatively. Sleep and Acid Bolt alone receive
+the issue-supported item-native A-rank policy; their governing-stat formula
+remains unresolved.
 
-Seven findings are implemented and test-backed. `VZ-JOB-002` remains a
-test-backed partial correction: its supported guards and ammunition behavior
-are covered, while exact `/RNG`, relative-level, ranged-accuracy,
-duration/resist, and `BIND_MEVA` coefficients remain unresolved for lack of
-evidence.
+Seven findings are implemented and test-backed. `VZ-JOB-002` and
+`VZ-COMBAT-001` remain partial only where evidence is insufficient. The item
+framework's combined-drain, other drain, self-buff, Death, spikes, and
+item-specific damage/status numerics are explicit `VERIFY_LIVE` or
+compatibility work, not claimed retail-correct.
 
 ## Remaining AI-capable work
 
-- Complete `VZ-COMBAT-001` item additional-effect inventory and framework refactor.
+- Continue `VZ-COMBAT-001` Phase B in bounded, evidence-backed family or
+  configuration groups.
 - Complete `VZ-JOB-001` Elemental Spirit data, spell-selection, and scaling work.
 - Implement `VZ-SYS-001` Ballista.
 - Continue the exhaustive local-repository audit beyond the eleven assistant findings.
@@ -113,6 +123,9 @@ candidates remain:
   timing, and invalid-target client behavior.
 - exact per-move Ark Angel ready/no-ready policy and rendered ordering of a
   zero-time start/finish pair.
+- controlled item additional-effect proc/resist datasets, damage type and
+  scaling, drain ordering/accuracy, self-buff/Death/spikes formulas, and
+  client presentation beyond the Phase A server behavior.
 
 ## Exact next-pass instructions
 
@@ -120,8 +133,8 @@ candidates remain:
    inherited-validation pass.
 2. Read `AGENTS.md`, `CODEX_MASTER_TASK.md`, `CODEX_BACKLOG.md`, `LOCAL_CODEX_ENVIRONMENT.md`, the status/worklog, completion report, and all finding files.
 3. Confirm the worktree is clean and remain on `retail-parity/codex-vanilla-zilart`.
-4. Begin `VZ-COMBAT-001` item additional-effect inventory and framework work
-   as a new bounded pass.
+4. Begin one bounded `VZ-COMBAT-001` Phase B family/configuration pass using
+   the generated inventory and its explicit evidence classifications.
 5. Initialize MSVC through `VsDevCmd.bat` for all Windows configure/build commands.
 6. Run narrow tests first, then the full MSVC/Ninja Debug build.
 7. Fix failures caused by the fork changes; do not hide failures or weaken unrelated assertions.
