@@ -191,19 +191,21 @@ describe('Item additional effect framework', function()
         assert(blindProfile.accuracy.mode == xi.additionalEffect.profile.accuracyMode.LEGACY_UNVERIFIED_RANK)
     end)
 
-    it('isolates unsupported evidence families behind VERIFY_LIVE profiles', function()
-        for _, itemId in ipairs({
-            16528, -- Bloody Rapier: HP drain
-            16509, -- Aspir Knife: MP drain
-            17823, -- Shinsoku: TP drain
-            17745, -- Hofud: HP/MP drain
-            20706, -- Vampirism: HP/MP/TP drain
-            16944, -- Lockheart: Dispel
-            16504, -- Oynos Knife: self buff
-            18551, -- Twilight Scythe: Death
+    it('isolates unsupported evidence families behind named VERIFY_LIVE compatibility profiles', function()
+        for _, case in ipairs({
+            { itemId = 16528, resource = 'HP',             selection = 'SINGLE' }, -- Bloody Rapier
+            { itemId = 16509, resource = 'MP',             selection = 'SINGLE' }, -- Aspir Knife
+            { itemId = 17823, resource = 'TP',             selection = 'SINGLE' }, -- Shinsoku
+            { itemId = 17745, resource = 'HP_OR_MP',       selection = 'LEGACY_RANDOM_VERIFY_LIVE' }, -- Hofud
+            { itemId = 20706, resource = 'HP_OR_MP_OR_TP', selection = 'LEGACY_RANDOM_VERIFY_LIVE' }, -- Vampirism
+            { itemId = 16944, resource = 'NONE',           selection = 'SINGLE' }, -- Lockheart: Dispel
+            { itemId = 16504, resource = 'NONE',           selection = 'SINGLE' }, -- Oynos Knife: self buff
+            { itemId = 18551, resource = 'NONE',           selection = 'SINGLE' }, -- Twilight Scythe: Death
         }) do
-            local profile = xi.additionalEffect.profile.resolve(findTestItem(itemId), 0)
+            local profile = xi.additionalEffect.profile.resolve(findTestItem(case.itemId), 0)
             assert(profile.classification == xi.additionalEffect.profile.classification.VERIFY_LIVE)
+            assert(profile.outcome.drainResource == case.resource)
+            assert(profile.outcome.selectionPolicy == case.selection)
         end
     end)
 
