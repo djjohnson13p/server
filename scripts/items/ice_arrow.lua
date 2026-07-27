@@ -7,17 +7,7 @@
 local itemObject = {}
 
 itemObject.onItemAdditionalEffect = function(actor, target, baseAttackDamage, item)
-    -- Unconfirmed power.
-    local pTable =
-    {
-        ignoreEnSpell   = true,
-        basePower       = math.random(7, 10),
-        attackType      = xi.attackType.MAGICAL,
-        magicalElement  = xi.element.ICE,
-        canResist       = true,
-    }
-
-    return xi.combat.action.executeAddEffectDamage(actor, target, pTable)
+    return xi.combat.action.executeScriptedDamageProfile(actor, target, item)
 end
 
 return itemObject

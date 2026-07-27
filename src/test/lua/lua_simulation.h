@@ -61,6 +61,7 @@ public:
     void tick(Maybe<TickType> boundary = std::nullopt) const;
     void processClientUpdates() const;
     void tickEntity(CLuaBaseEntity& entity) const;
+    void advanceTime(uint32 seconds) const;
     void skipTime(uint32 seconds) const;
     void setVanaTime(uint8 vanaHour, uint8 vanaMinute) const;
     void setVanaDay(uint8 day) const;

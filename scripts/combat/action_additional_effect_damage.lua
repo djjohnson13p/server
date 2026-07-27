@@ -2,6 +2,7 @@
 -- Global file for additional effects (damage)
 -----------------------------------
 require('scripts/globals/spells/damage_spell')
+require('scripts/globals/additional_effect_profiles')
 -----------------------------------
 xi = xi or {}
 xi.combat = xi.combat or {}
@@ -207,4 +208,52 @@ xi.combat.action.executeAddEffectDamage = function(actor, target, fedData)
     params.aeTarget:takeDamage(damage, actor, params.attackType, actionDamageType)
 
     return params.animation, params.messageDamage, damage
+end
+
+xi.combat.action.executeScriptedDamageProfile = function(actor, target, item)
+    local profile = xi.additionalEffect.profile.resolveScriptedDamage(item)
+    if not profile then
+        error(string.format(
+            'missing scripted additional-effect damage profile for item %u',
+            item:getID()))
+    end
+
+    local valid, errors = xi.additionalEffect.profile.validateScriptedDamage(profile)
+    if not valid then
+        error(string.format(
+            'invalid scripted additional-effect damage profile for item %u: %s',
+            item:getID(),
+            table.concat(errors, '; ')))
+    end
+
+    local basePower = math.random(profile.power.minimum, profile.power.maximum)
+    local params =
+    {
+        chance         = profile.proc.chance,
+        ignoreEnSpell  = true,
+        basePower      = basePower,
+        attackType     = profile.outcome.attackType,
+        magicalElement = profile.outcome.element,
+        actorStat      = profile.accuracy.actorStat,
+        targetStat     = profile.accuracy.targetStat,
+        skillRank      = profile.accuracy.skillBasis,
+        macc           = profile.accuracy.magicAccuracy,
+        canMAB         = profile.multipliers.magicAttackBonus.enabled,
+        canResist      = profile.accuracy.resistancePolicy == 'MAGICAL_TIERS',
+        lowestResist   = profile.accuracy.lowestResist,
+        animation      = profile.presentation.subEffect,
+        messageDamage  = profile.presentation.message,
+    }
+
+    local initialHP = target:getHP()
+    local subEffect, message, amount =
+        xi.combat.action.executeAddEffectDamage(actor, target, params)
+
+    if message == xi.msg.basic.ADD_EFFECT_DMG then
+        amount = math.max(initialHP - target:getHP(), 0)
+    elseif message == xi.msg.basic.ADD_EFFECT_HEAL then
+        amount = math.max(target:getHP() - initialHP, 0)
+    end
+
+    return subEffect, message, amount
 end

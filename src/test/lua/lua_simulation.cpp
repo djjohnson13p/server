@@ -115,6 +115,21 @@ void CLuaSimulation::tickEntity(CLuaBaseEntity& entity) const
 }
 
 /************************************************************************
+ *  Function: advanceTime()
+ *  Purpose : Moves the steady clock without ticking world entities.
+ *  Example : sim:advanceTime(10)
+ *  Notes   : Tests can seed and tick one entity deterministically afterward.
+ ************************************************************************/
+
+void CLuaSimulation::advanceTime(uint32 seconds) const
+{
+    TracyZoneScoped;
+
+    ShowInfoFmt("Advancing clock {} seconds without a world tick", seconds);
+    timer::add_offset(std::chrono::seconds(seconds));
+}
+
+/************************************************************************
  *  Function: skipTime()
  *  Purpose : Moves the steady clock forward by given number of seconds.
  *  Example : sim:skipTime(300) -- skip 5 minutes
@@ -638,6 +653,8 @@ void CLuaSimulation::Register()
     SOL_USERTYPE("CSimulation", CLuaSimulation);
     SOL_REGISTER("tick", CLuaSimulation::tick);
     SOL_REGISTER("tickEntity", CLuaSimulation::tickEntity);
+    SOL_REGISTER("advanceTime", CLuaSimulation::advanceTime);
+    SOL_REGISTER("processClientUpdates", CLuaSimulation::processClientUpdates);
     SOL_REGISTER("skipTime", CLuaSimulation::skipTime);
     SOL_REGISTER("setVanaTime", CLuaSimulation::setVanaTime);
     SOL_REGISTER("setVanaDay", CLuaSimulation::setVanaDay);
