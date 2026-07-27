@@ -13,6 +13,7 @@ ALLOWED_CLASSIFICATIONS = {
     "EVIDENCE_BACKED",
     "FRAMEWORK_CORRECT_LEGACY_NUMERICS",
     "VERIFY_LIVE",
+    "NOT_APPLICABLE",
     "SPECIAL_CASE_TEST_BACKED",
     "CONFIGURATION_ERROR",
     "NOT_ACTIVE",
@@ -33,6 +34,17 @@ ISSUE_7899_ITEM_IDS = {
     21313,
     21314,
     21323,
+}
+
+ELEMENTAL_ARROW_CONSTANTS = {
+    17322: ("FIRE_ARROW", "fire_arrow.lua", "FIRE", "FIRE_DAMAGE"),
+    17323: ("ICE_ARROW", "ice_arrow.lua", "ICE", "ICE_DAMAGE"),
+    17324: (
+        "LIGHTNING_ARROW",
+        "lightning_arrow.lua",
+        "THUNDER",
+        "LIGHTNING_DAMAGE",
+    ),
 }
 
 
@@ -119,6 +131,91 @@ def main() -> int:
             )
         if "governing dSTAT/no-dSTAT behavior" not in row["unresolved_questions"]:
             errors.append(f"item {item_id}: dSTAT uncertainty is not recorded")
+
+    profile_path = root / generator.ELEMENTAL_ARROW_PROFILE_SOURCE
+    profile_text = profile_path.read_text(encoding="utf-8")
+    if profile_text.count("elementalArrowProfile(") != 4:
+        errors.append(
+            "elemental-arrow registry must contain one constructor and exactly "
+            "three profile definitions"
+        )
+
+    for item_id, (
+        item_constant,
+        script_name,
+        element,
+        subeffect,
+    ) in ELEMENTAL_ARROW_CONSTANTS.items():
+        row = by_id[item_id]
+        script_path = root / "scripts/items" / script_name
+        script_text = script_path.read_text(encoding="utf-8")
+
+        if script_text.count("executeScriptedDamageProfile(") != 1:
+            errors.append(
+                f"item {item_id}: script must call the profile executor exactly once"
+            )
+        if "executeAddEffectDamage(" in script_text or "math.random" in script_text:
+            errors.append(f"item {item_id}: script still duplicates profile numerics")
+
+        expected_fragment = (
+            f"xi.item.{item_constant},\n"
+            f"        '{script_name.removesuffix('.lua')}',\n"
+            f"        xi.element.{element},\n"
+            f"        xi.subEffect.{subeffect})"
+        )
+        if expected_fragment not in profile_text:
+            errors.append(
+                f"item {item_id}: profile identity/element/presentation drift"
+            )
+
+        config = generator.parse_configs(root)[item_id]
+        if config.mods.get(1181) != [1] or config.value(431):
+            errors.append(
+                f"item {item_id}: expected exactly one scripted handler marker"
+            )
+
+        expected_row_values = {
+            "profile_source": generator.ELEMENTAL_ARROW_PROFILE_SOURCE,
+            "current_handler": "PER_ITEM_LUA_PROFILE",
+            "proc_chance": "100",
+            "proc_policy": "FIXED_PERCENT_COMPATIBILITY; VERIFY_LIVE",
+            "base_power_policy": (
+                "UNIFORM_INTEGER_RANGE_7_TO_10_COMPATIBILITY; VERIFY_LIVE"
+            ),
+            "accuracy_or_skill_basis": "LEGACY_A_PLUS; VERIFY_LIVE",
+            "governing_stat_or_dstat": ("NO_STAT_COMPATIBILITY; VERIFY_LIVE"),
+            "mab_policy": "DISABLED_COMPATIBILITY; VERIFY_LIVE",
+            "element": element,
+            "subeffect": subeffect,
+            "current_classification": "VERIFY_LIVE",
+            "evidence_sources": generator.ELEMENTAL_ARROW_EVIDENCE_SOURCE,
+        }
+        for field, expected in expected_row_values.items():
+            if row[field] != expected:
+                errors.append(
+                    f"item {item_id}: {field} was {row[field]!r}, "
+                    f"expected {expected!r}"
+                )
+
+        for test_name in (
+            "item_additional_effects_elemental_arrows.lua",
+            "item_additional_effects_elemental_arrow_profiles.lua",
+        ):
+            if test_name not in row["automated_test_reference"]:
+                errors.append(
+                    f"item {item_id}: missing behavioral test reference {test_name}"
+                )
+
+    for later_script in (
+        "earth_arrow.lua",
+        "water_arrow.lua",
+        "wind_arrow.lua",
+        "grand_knights_arrow.lua",
+        "temple_knights_arrow.lua",
+    ):
+        text = (root / "scripts/items" / later_script).read_text(encoding="utf-8")
+        if "executeScriptedDamageProfile" in text:
+            errors.append(f"out-of-scope item migrated: {later_script}")
 
     if errors:
         for error in errors:

@@ -162,6 +162,30 @@ AUDIT_SCOPE_ITEMS = {
     18164,
 }
 
+ELEMENTAL_ARROW_PROFILES = {
+    17322: {
+        "name": "fire_arrow",
+        "element": "FIRE",
+        "subeffect": "FIRE_DAMAGE",
+    },
+    17323: {
+        "name": "ice_arrow",
+        "element": "ICE",
+        "subeffect": "ICE_DAMAGE",
+    },
+    17324: {
+        "name": "lightning_arrow",
+        "element": "THUNDER",
+        "subeffect": "LIGHTNING_DAMAGE",
+    },
+}
+
+ELEMENTAL_ARROW_PROFILE_SOURCE = "scripts/globals/additional_effect_profiles.lua"
+ELEMENTAL_ARROW_EVIDENCE_SOURCE = (
+    "retail_parity/vanilla_zilart/artifacts/"
+    "VZ-COMBAT-001-elemental-arrows-evidence.md"
+)
+
 ISSUE_7899_ITEMS = {
     "poison_arrow",
     "sleep_arrow",
@@ -503,6 +527,47 @@ def profile_fields(config: ItemConfig, family: str) -> dict[str, str]:
     level_adjust = config.value(278)
     dstat = config.value(280)
 
+    if item_id in ELEMENTAL_ARROW_PROFILES:
+        arrow = ELEMENTAL_ARROW_PROFILES[item_id]
+        return {
+            "profile_source": ELEMENTAL_ARROW_PROFILE_SOURCE,
+            "proc_policy": "FIXED_PERCENT_COMPATIBILITY; VERIFY_LIVE",
+            "base_power_policy": (
+                "UNIFORM_INTEGER_RANGE_7_TO_10_COMPATIBILITY; VERIFY_LIVE"
+            ),
+            "mab_policy": "DISABLED_COMPATIBILITY; VERIFY_LIVE",
+            "multiplier_policies": (
+                "GENERAL_MAGIC_DAMAGE=ENABLED_VERIFY_LIVE;"
+                "ELEMENTAL_SDT=ENABLED_VERIFY_LIVE;"
+                "STAFF=ENABLED_VERIFY_LIVE;"
+                "AFFINITY=ENABLED_VERIFY_LIVE;"
+                "DAY_WEATHER=ENABLED_VERIFY_LIVE;"
+                "PHALANX=ENABLED_VERIFY_LIVE;"
+                "ONE_FOR_ALL=ENABLED_VERIFY_LIVE;"
+                "STONESKIN=ENABLED_VERIFY_LIVE;"
+                "NULLIFICATION=ENABLED_FRAMEWORK_CORRECT;"
+                "ABSORPTION=ENABLED_FRAMEWORK_CORRECT"
+            ),
+            "evidence_sources": ELEMENTAL_ARROW_EVIDENCE_SOURCE,
+            "proc_chance": "100",
+            "level_correction": "ITEM_REQUIRED_LEVEL_GATE",
+            "accuracy_or_skill_basis": "LEGACY_A_PLUS; VERIFY_LIVE",
+            "governing_stat_or_dstat": ("NO_STAT_COMPATIBILITY; VERIFY_LIVE"),
+            "resistance_mode": (
+                "MAGICAL_TIERS; LOWEST_0.125_COMPATIBILITY; VERIFY_LIVE"
+            ),
+            "element": arrow["element"],
+            "potency_or_damage": "UNIFORM_INTEGER_7_TO_10; VERIFY_LIVE",
+            "duration": "NOT_APPLICABLE",
+            "status_effect": "NOT_APPLICABLE",
+            "unresolved_questions": (
+                "proc chance and level correction; base power and random range; "
+                "governing stat and dSTAT; magic accuracy and skill rank; MAB, "
+                "staff, affinity, and day/weather multipliers; resist tiers and "
+                "lowest tier; defensive mitigation and absorption details"
+            ),
+        }
+
     accuracy = "N/A"
     governing_stat = "N/A"
     resistance = "NONE_OR_HANDLER_SPECIFIC"
@@ -549,6 +614,12 @@ def profile_fields(config: ItemConfig, family: str) -> dict[str, str]:
         unresolved.append("item-specific retail numerics")
 
     return {
+        "profile_source": "",
+        "proc_policy": "",
+        "base_power_policy": "",
+        "mab_policy": "",
+        "multiplier_policies": "",
+        "evidence_sources": "",
         "proc_chance": "" if chance is None else str(chance),
         "level_correction": "" if level_adjust is None else str(level_adjust),
         "accuracy_or_skill_basis": accuracy,
@@ -582,13 +653,18 @@ COLUMNS = [
     "era_evidence",
     "configuration_source",
     "modifier_or_script_source",
+    "profile_source",
     "active_call_path",
     "proc_type",
     "subeffect",
     "proc_chance",
+    "proc_policy",
     "level_correction",
+    "base_power_policy",
     "accuracy_or_skill_basis",
     "governing_stat_or_dstat",
+    "mab_policy",
+    "multiplier_policies",
     "resistance_mode",
     "element",
     "damage_type",
@@ -604,6 +680,7 @@ COLUMNS = [
     "current_handler",
     "handler_reachable",
     "automated_test_reference",
+    "evidence_sources",
     "evidence_confidence",
     "current_classification",
     "unresolved_questions",
@@ -660,6 +737,8 @@ def build_rows(root: Path) -> tuple[list[dict[str, str]], list[str]]:
             source_kinds.append("SQL_LATENTS")
         if config.script_paths:
             source_kinds.append("ITEM_SCRIPT")
+        if item_id in ELEMENTAL_ARROW_PROFILES:
+            source_kinds.append("SCRIPTED_PROFILE")
         if not source_kinds and item_id in ISSUE_7899_ITEM_IDS:
             source_kinds.append("ISSUE_EVIDENCE_ONLY")
             script_source = "LandSandBoat issue #7899"
@@ -670,10 +749,17 @@ def build_rows(root: Path) -> tuple[list[dict[str, str]], list[str]]:
                 "luautils::additionalEffectAttack -> xi.additionalEffect.attack"
             )
         elif handler == "PER_ITEM_LUA":
-            call_path = (
-                "melee HandleEnspell or ranged OnRangedAttack -> "
-                "luautils::OnItemAdditionalEffect -> onItemAdditionalEffect"
-            )
+            if item_id in ELEMENTAL_ARROW_PROFILES:
+                call_path = (
+                    "successful ranged OnRangedAttack -> "
+                    "luautils::OnItemAdditionalEffect -> onItemAdditionalEffect -> "
+                    "executeScriptedDamageProfile -> executeAddEffectDamage"
+                )
+            else:
+                call_path = (
+                    "melee HandleEnspell or ranged OnRangedAttack -> "
+                    "luautils::OnItemAdditionalEffect -> onItemAdditionalEffect"
+                )
         elif handler == "CXX_EQUIPMENT_SPIKES":
             call_path = (
                 "melee reaction -> battleutils::HandleSpikesDamage -> HandleSpikesEquip"
@@ -691,6 +777,13 @@ def build_rows(root: Path) -> tuple[list[dict[str, str]], list[str]]:
             test_reference = (
                 "scripts/tests/systems/combat/item_additional_effects_nm.lua"
             )
+        elif item_id in ELEMENTAL_ARROW_PROFILES:
+            test_reference = (
+                "scripts/tests/systems/combat/"
+                "item_additional_effects_elemental_arrows.lua;"
+                "scripts/tests/systems/combat/"
+                "item_additional_effects_elemental_arrow_profiles.lua"
+            )
 
         unresolved = profile["unresolved_questions"]
         if issues:
@@ -706,33 +799,65 @@ def build_rows(root: Path) -> tuple[list[dict[str, str]], list[str]]:
             "era_evidence": era_evidence,
             "configuration_source": "+".join(source_kinds),
             "modifier_or_script_source": ";".join(
-                value for value in (modifier_source, script_source) if value
+                value
+                for value in (
+                    modifier_source,
+                    script_source,
+                    (
+                        ELEMENTAL_ARROW_PROFILE_SOURCE
+                        if item_id in ELEMENTAL_ARROW_PROFILES
+                        else ""
+                    ),
+                )
+                if value
             ),
             "active_call_path": call_path,
             "proc_type": family,
             "subeffect": (
-                ""
-                if config.value(499) is None
-                else SUBEFFECTS.get(config.value(499), f"SUBEFFECT_{config.value(499)}")
+                ELEMENTAL_ARROW_PROFILES[item_id]["subeffect"]
+                if item_id in ELEMENTAL_ARROW_PROFILES
+                else (
+                    ""
+                    if config.value(499) is None
+                    else SUBEFFECTS.get(
+                        config.value(499), f"SUBEFFECT_{config.value(499)}"
+                    )
+                )
             ),
             **profile,
-            "damage_type": damage_type(item_id, weapon, family),
+            "damage_type": (
+                "ELEMENTAL_BY_PROFILE; FRAMEWORK_CORRECT_LEGACY_NUMERICS"
+                if item_id in ELEMENTAL_ARROW_PROFILES
+                else damage_type(item_id, weapon, family)
+            ),
             "immunity_handling": (
                 "STATUS_HELPERS"
                 if family == "DEBUFF"
                 else ("UNDEAD_GUARD" if "DRAIN" in family else "HANDLER_SPECIFIC")
             ),
             "nullification_handling": (
-                "DAMAGE_PROFILE_SINGLE_PASS"
-                if family in {"DAMAGE", "PHYS_DAMAGE"}
-                else "HANDLER_SPECIFIC"
+                "SCRIPTED_PROFILE_SINGLE_PASS"
+                if item_id in ELEMENTAL_ARROW_PROFILES
+                else (
+                    "DAMAGE_PROFILE_SINGLE_PASS"
+                    if family in {"DAMAGE", "PHYS_DAMAGE"}
+                    else "HANDLER_SPECIFIC"
+                )
             ),
             "absorb_handling": (
-                "DAMAGE_PROFILE_SINGLE_PASS"
-                if family in {"DAMAGE", "PHYS_DAMAGE"}
-                else "HANDLER_SPECIFIC"
+                "SCRIPTED_PROFILE_SINGLE_PASS"
+                if item_id in ELEMENTAL_ARROW_PROFILES
+                else (
+                    "DAMAGE_PROFILE_SINGLE_PASS"
+                    if family in {"DAMAGE", "PHYS_DAMAGE"}
+                    else "HANDLER_SPECIFIC"
+                )
             ),
-            "message_id": "FAMILY_DEFAULT_OR_SCRIPT_RETURN",
+            "message_id": (
+                "ADD_EFFECT_DMG_OR_HEAL; ACTUAL_APPLIED_AMOUNT"
+                if item_id in ELEMENTAL_ARROW_PROFILES
+                else "FAMILY_DEFAULT_OR_SCRIPT_RETURN"
+            ),
             "special_target_or_nm_rule": (
                 "NM_NAME_AND_REQUIRED_ITEM"
                 if family == "NM_SPECIFIC"
@@ -743,7 +868,11 @@ def build_rows(root: Path) -> tuple[list[dict[str, str]], list[str]]:
                 if handler in {"GLOBAL_ADDITIONAL_EFFECT", "PER_ITEM_LUA"}
                 else "GetScaledItemModifier returns zero for unsupported synced mods"
             ),
-            "current_handler": handler,
+            "current_handler": (
+                "PER_ITEM_LUA_PROFILE"
+                if item_id in ELEMENTAL_ARROW_PROFILES
+                else handler
+            ),
             "handler_reachable": "YES" if reachable else "NO",
             "automated_test_reference": test_reference,
             "evidence_confidence": (

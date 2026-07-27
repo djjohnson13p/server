@@ -37,7 +37,8 @@ The inventory intentionally includes every item found in active additional-effec
 - ISSUE_EVIDENCE_ONLY: 2
 - ITEM_SCRIPT: 1
 - SQL_MODIFIERS: 387
-- SQL_MODIFIERS+ITEM_SCRIPT: 25
+- SQL_MODIFIERS+ITEM_SCRIPT: 22
+- SQL_MODIFIERS+ITEM_SCRIPT+SCRIPTED_PROFILE: 3
 - SQL_MODIFIERS+SQL_LATENTS: 5
 
 ### Classification
@@ -565,9 +566,9 @@ The inventory intentionally includes every item found in active additional-effec
 | 17314 | quake_grenade | 32 | AMMO | DAMAGE | GLOBAL_ADDITIONAL_EFFECT | ERA_UNRESOLVED | ERA_UNRESOLVED | YES | item-specific retail numerics |
 | 17315 | riot_grenade | 40 | AMMO | DAMAGE | GLOBAL_ADDITIONAL_EFFECT | ERA_UNRESOLVED | ERA_UNRESOLVED | YES | item-specific retail numerics |
 | 17316 | bomb_arm | 5 | AMMO | DAMAGE | GLOBAL_ADDITIONAL_EFFECT | ERA_UNRESOLVED | ERA_UNRESOLVED | YES | item-specific retail numerics |
-| 17322 | fire_arrow | 45 | AMMO | SCRIPTED | PER_ITEM_LUA | VANILLA_OR_ZILART | VERIFY_LIVE | YES | item-specific retail numerics |
-| 17323 | ice_arrow | 45 | AMMO | SCRIPTED | PER_ITEM_LUA | VANILLA_OR_ZILART | VERIFY_LIVE | YES | item-specific retail numerics |
-| 17324 | lightning_arrow | 45 | AMMO | SCRIPTED | PER_ITEM_LUA | VANILLA_OR_ZILART | VERIFY_LIVE | YES | item-specific retail numerics |
+| 17322 | fire_arrow | 45 | AMMO | SCRIPTED | PER_ITEM_LUA_PROFILE | VANILLA_OR_ZILART | VERIFY_LIVE | YES | proc chance and level correction; base power and random range; governing stat and dSTAT; magic accuracy and skill rank; MAB, staff, affinity, and day/weather multipliers; resist tiers and lowest tier; defensive mitigation and absorption details |
+| 17323 | ice_arrow | 45 | AMMO | SCRIPTED | PER_ITEM_LUA_PROFILE | VANILLA_OR_ZILART | VERIFY_LIVE | YES | proc chance and level correction; base power and random range; governing stat and dSTAT; magic accuracy and skill rank; MAB, staff, affinity, and day/weather multipliers; resist tiers and lowest tier; defensive mitigation and absorption details |
+| 17324 | lightning_arrow | 45 | AMMO | SCRIPTED | PER_ITEM_LUA_PROFILE | VANILLA_OR_ZILART | VERIFY_LIVE | YES | proc chance and level correction; base power and random range; governing stat and dSTAT; magic accuracy and skill rank; MAB, staff, affinity, and day/weather multipliers; resist tiers and lowest tier; defensive mitigation and absorption details |
 | 17325 | kabura_arrow | 70 | AMMO | DEBUFF | GLOBAL_ADDITIONAL_EFFECT | VANILLA_OR_ZILART | FRAMEWORK_CORRECT_LEGACY_NUMERICS | YES | item-specific retail numerics |
 | 17327 | grand_knights_arrow | 60 | AMMO | SCRIPTED | PER_ITEM_LUA | ERA_UNRESOLVED | VERIFY_LIVE | YES | item-specific retail numerics |
 | 17329 | patriarch_protectors_arrow | 60 | AMMO | DEBUFF | GLOBAL_ADDITIONAL_EFFECT | VANILLA_OR_ZILART | FRAMEWORK_CORRECT_LEGACY_NUMERICS | YES | item-specific retail numerics |
