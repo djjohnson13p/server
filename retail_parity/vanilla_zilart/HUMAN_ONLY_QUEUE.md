@@ -54,6 +54,15 @@ These items may become human-only after all remaining AI-capable engineering and
   spikes behavior, and exact combat presentation. Acid/Sleep item-native
   A-rank is already represented; their governing-stat question and any
   extension to other ammunition remain unresolved.
+- For Fire Arrow (17322), Ice Arrow (17323), and Lightning Arrow (17324),
+  capture each item separately with actor/target level and INT, actor MAB and
+  magic accuracy, equipped weapon/staff/affinity, distance, day/weather,
+  target elemental resistance, every physical hit/miss, proc/no-proc, raw
+  0x028 subeffect/message/value, and actual HP delta. Isolate nullification,
+  absorption, Phalanx, Stoneskin, and One for All where available. The
+  current 100% proc, uniform 7-10 power, A+ rank, no-stat/zero-macc, disabled
+  MAB, 1/8 floor, staff/affinity/day-weather, and defense rules are explicit
+  compatibility behavior, not retail conclusions.
 - Measure Elemental Spirit HP/MP/stat/weapon-damage scaling and Light Spirit decision behavior.
 - Capture Ballista packet fields, current schedules/rules, and client-visible match behavior.
 

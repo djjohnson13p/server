@@ -6,24 +6,30 @@ Status: BOUNDED_PASS_COMPLETE_PROJECT_IN_PROGRESS
 
 - Repository: `djjohnson13p/server`
 - Work branch: `retail-parity/codex-vanilla-zilart`
-- Current bounded-pass starting commit: `8f956bb13e2781eaf51873f621bc07d47735ce7c`
+- Current bounded-pass starting commit: `27192abe552cca8223d4be9637b774e25113f73f`
 - Pinned upstream baseline: `242ab0d055dfb80396e7398b0dd7361b750c74e2`
 - Upstream pull requests: none; prohibited
 - Upstream push: disabled/prohibited
 
-The bounded `VZ-COMBAT-001` Phase A pass is complete. A generated conservative
-inventory covers every active or issue-scoped item, SQL remains the numeric
-source, and an explicit profile layer separates proc, accuracy/resistance,
-outcome, and presentation. Deterministic double-application and flag defects
-are corrected and real melee/ranged/NM paths are test-backed.
+The bounded `VZ-COMBAT-001` Phase B1 pass is complete. Fire Arrow, Ice Arrow,
+and Lightning Arrow now use one exact-scope scripted profile registry with
+real ranged-state, packet, ammunition, mitigation, and validation coverage.
+Element identity is evidence-backed and packet amount now follows actual HP
+change at caps.
 
-The overall finding remains partial: item-specific retail numerics, several
-family formulas, many introduction eras, and client presentation still need
-bounded Phase B evidence work. Seven findings are fully implemented and
-test-backed; Shadowbind and item additional effects are deliberately partial.
+The overall finding remains partial. No controlled retail formula was found,
+so the inherited 100% proc, uniform 7-10 power, A+ rank, no-stat model,
+resistance floor, and multipliers remain explicit compatibility/
+`VERIFY_LIVE`, not retail conclusions. Seven findings are fully implemented
+and test-backed; Shadowbind and item additional effects remain deliberately
+partial where evidence is insufficient.
 
 ## Commits created
 
+- `2ea1af27a86c2852bf3760e47301139fe91a99f1` —
+  `feat(retail-parity): profile elemental arrow effects`
+- `9ec608cbfc61686bfebcb4ae1cee53ac4407f24e` —
+  `docs(retail-parity): inventory elemental arrow evidence`
 - `2f3d6fe5c33f1ac0eceba0b8efc7bedc51a38a00` —
   `fix(retail-parity): correct item additional-effect framework`
 - `1684e6fd9a836db206e7d3504edca27aa3735e73` —
@@ -649,6 +655,130 @@ spikes, item-specific damage/status formulas, and 402 unresolved era
 classifications remain Phase B work. Controlled retail datasets and client
 captures are required where repository evidence cannot resolve them. Phase A
 does not classify the overall finding as corrected.
+
+## VZ-COMBAT-001 Phase B1 — Fire/Ice/Lightning Arrow profiles
+
+### Evidence and selected policy
+
+The tracked elemental-arrow ledger records every required field separately
+for Fire Arrow 17322, Ice Arrow 17323, and Lightning Arrow 17324. The strongest
+accessible evidence is:
+
+- a January 2004 Ranger guide listing all three arrows and their elements;
+- Japanese community references preserving their original-era identity;
+- a March 2004 uncontrolled report of roughly 5-10 damage and less-than-
+  every-hit activation.
+
+No controlled retail packet capture, damage dataset, or official formula was
+found. The last report conflicts with the inherited 100%/7-10 behavior and is
+not strong enough to replace it. Modern INT and later INT/MAB claims also lack
+controlled comparisons. The exact item element is `EVIDENCE_BACKED`; every
+unsupported numeric/stat/resistance/multiplier field remains compatibility or
+`VERIFY_LIVE`.
+
+### Architecture and corrected defect
+
+- Exactly three registry entries own item identity, level gate, proc and
+  uniform-power policy, A+ and no-stat compatibility, explicit macc/MAB,
+  item-specific element/subeffect, resistance floor, mandatory multipliers,
+  defenses, result ownership, presentation, and unresolved evidence.
+- Registry construction and runtime application validate the profile.
+  Duplicate IDs, missing/malformed fields, wrong element/presentation,
+  unsupported policy, and later-arrow migration fail visibly.
+- Each item wrapper calls `executeScriptedDamageProfile` once and contains no
+  duplicate numeric table.
+- The executor uses one proc, power, resistance, nullification, absorption,
+  and HP-application path. The existing ranged subsystem remains the sole
+  owner of physical validation, range, level eligibility, priority, ammo,
+  Recycle, and Unlimited Shot.
+- Pre-correction reproduction showed that planned damage/healing could be
+  serialized when current/max HP clamped the actual change. The scoped
+  executor now returns actual applied HP damage/healing without changing
+  unrelated item scripts.
+
+### Tests
+
+The two new files contain 47 cases:
+
+- 20 real ranged-state cases cover all three correct elemental 0x028 results,
+  actual HP value, one ammo consumption, ordinary miss, initial/mid-shot
+  range rejection, item-level gate, despawn, longer valid range, Recycle,
+  Unlimited Shot, and Enspell priority;
+- 27 direct executor/profile cases cover exact scope, malformed/duplicate
+  profiles, a synthetic configured proc pass/fail boundary with one roll,
+  both 7-10 endpoints, no-INT/no-MAB compatibility, full/half/quarter/eighth/
+  below-floor resistance, per-item skill/stat/element transport, every
+  retained multiplier/defense, per-element null/absorb, and HP cap amounts.
+
+Post-build regressions passed:
+
+- Phase B1 focused group: 47/47;
+- Phase A framework plus Acid/Sleep ranged and NM group: 39/39;
+- battle-action packet suite: 65/65 `0x028` cases;
+- Catch2: 19/19 cases and 9,007,079 assertions on every xi_test invocation.
+
+### Exact validation commands
+
+All Windows configure/build commands initialized:
+
+```text
+call "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\Common7\Tools\VsDevCmd.bat" -no_logo -arch=x64 -host_arch=x64
+```
+
+Commands and results:
+
+```text
+cmake -G Ninja -S . -B build-codex-phase-b1 -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_COMPILER=cl -DCMAKE_CXX_COMPILER=cl -DENABLE_CLANG_TIDY=OFF -DTRACY_ENABLE=OFF -DPCH_ENABLE=OFF -DCACHE_OPTION=sccache
+# exit 0
+
+cmake --build build-codex-phase-b1 --target xi_test
+# exit 0, 906/906
+
+cmake --build build-codex-phase-b1
+# exit 0, 148/148 remaining steps
+
+xi_test.exe --keep-going --file item_additional_effects_elemental_arrow
+# exit 0, 47/47
+
+xi_test.exe --keep-going --file "item_additional_effects\.lua" --file "item_additional_effects_ranged\.lua" --file "item_additional_effects_nm\.lua"
+# exit 0, 39/39
+
+xi_test.exe --keep-going --file 0x028_battle2
+# exit 0, 65/65
+
+python tools/retail_parity/generate_item_additional_effect_inventory.py
+python tools/retail_parity/generate_item_additional_effect_inventory.py --check
+python tools/retail_parity/check_item_additional_effect_profiles.py
+python -m black --check tools/retail_parity/generate_item_additional_effect_inventory.py tools/retail_parity/check_item_additional_effect_profiles.py
+python -m pylint --errors-only tools/retail_parity/generate_item_additional_effect_inventory.py tools/retail_parity/check_item_additional_effect_profiles.py
+tools/ci/sanity_checks/lua.sh <all changed Lua files>
+git diff --check
+# all exit 0
+```
+
+Two consecutive inventory writes produced identical SHA-256 hashes:
+
+- CSV:
+  `6EEFA0CBB629FBA92A6CDCA759B9B6CAE8F63849BE88D1E56255B325D4F60ED3`;
+- Markdown:
+  `6A6E7EC619C166F48C5C8B5B08C87925F5EDA3D517D2540BA91BDA1A11221A60`.
+
+No SQL source changed. A disposable current-SQL database was used for tests,
+then the schema and its two explicit grants were removed and confirmed absent.
+The build directory, five root executables, five PDBs, and temporary logs were
+removed. The owner's working `xidb` was not modified.
+
+### Phase result and remaining evidence
+
+Phase B1 is complete as an engineering/profile hardening pass, but the three
+arrows are not claimed retail-formula-correct. A controlled item-separated
+retail dataset must isolate proc versus resist, 7-10 distribution, actor and
+target INT, skill/macc, MAB, staff/affinity, day/weather, level/distance,
+defenses, elemental null/absorb, and raw client presentation.
+
+Phase B2 must select another bounded family or configuration group. It must
+not copy this compatibility profile to Earth/Water/Wind or later elemental
+arrows without separate evidence.
 
 ## Findings now fully test-backed
 

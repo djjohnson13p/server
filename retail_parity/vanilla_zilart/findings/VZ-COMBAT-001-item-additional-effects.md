@@ -6,12 +6,14 @@
 - **Expansion scope:** Shared core, inventoried for Vanilla/Rise of the Zilart
 - **Area:** Combat / equipment / ammunition / additional effects
 - **Baseline status:** `INACCURATE`
-- **Current status:** `PARTIALLY_CORRECTED_PHASE_A`
+- **Current status:** `PARTIALLY_CORRECTED_PHASE_B1`
 - **Severity:** `MAJOR`
 - **Confidence:** `HIGH` for the Phase A inventory, call paths, and corrected deterministic defects; item-specific retail numerics remain mixed
-- **Disposition:** `PHASE_B_AND_CONTROLLED_RETAIL_EVIDENCE_REQUIRED`
+- **Disposition:** `PHASE_B2_AND_CONTROLLED_RETAIL_EVIDENCE_REQUIRED`
 
-Phase A is complete. It does not classify the full finding as corrected.
+Phase A and the bounded Fire/Ice/Lightning Arrow Phase B1 implementation are
+complete. The three arrows are hardened and explicitly profiled, not declared
+retail-correct. The full finding remains partial.
 
 ## Phase A inventory
 
@@ -87,7 +89,8 @@ spikes path. Its formulas remain unimplemented and are not guessed in Phase A.
 ## Profile architecture
 
 `scripts/globals/additional_effect_profiles.lua` keeps SQL modifiers as the
-numeric source of truth and separates:
+numeric source for modifier-driven families and owns explicit policy for
+scripted families. It separates:
 
 - proc chance, level correction, triggering attack, distance inheritance,
   and target restriction;
@@ -98,10 +101,12 @@ numeric source of truth and separates:
   undead, and exactly-once application policy;
 - subeffect, success/no-effect/absorption message policy and parameter shape.
 
-Item overrides do not duplicate SQL potency/chance/duration. Unsupported
-families resolve to named `VERIFY_LIVE` compatibility policy. The combined
-drain branches explicitly preserve `LEGACY_RANDOM_VERIFY_LIVE` selection
-instead of presenting that selection as retail-correct.
+Modifier-driven item overrides do not duplicate SQL potency/chance/duration.
+Scripted profiles keep their numerics in one registry rather than three
+anonymous item tables. Unsupported families resolve to named `VERIFY_LIVE`
+compatibility policy. The combined drain branches explicitly preserve
+`LEGACY_RANDOM_VERIFY_LIVE` selection instead of presenting that selection as
+retail-correct.
 
 ## Deterministic defects reproduced and corrected
 
@@ -137,9 +142,9 @@ recorded.
 
 ### `VERIFY_LIVE`
 
-Fire Arrow, Ice Arrow, and Lightning Arrow remain in their existing per-item
-Lua damage paths. The scripts are reachable and inventoried, but their exact
-item-specific damage/accuracy formulas are not promoted to retail-correct.
+Fire Arrow, Ice Arrow, and Lightning Arrow use the Phase B1 scripted profile
+path described below. Their exact proc, damage, stat, accuracy, resistance,
+and multiplier formulas remain `VERIFY_LIVE`.
 
 HP/MP/TP drains, combined drains, Dispel, absorb-status, self-buff, Death,
 equipment spikes, and other unsupported families are isolated by explicit
@@ -231,10 +236,152 @@ proc-versus-resist datasets, exact client presentation, and the named
 unverified item families. Phase A intentionally preserves those questions
 instead of replacing them with a new guess.
 
-## Completion assessment
+## Phase A completion assessment
 
 `VZ-COMBAT-001` is **partially corrected**. Phase A's complete conservative
 inventory, testable profile seam, deterministic shared corrections, maintained
 profile classifications, and regression coverage are complete. Retail parity
 for every item and unsupported family is not complete and belongs to bounded
 Phase B work plus controlled retail evidence.
+
+## Phase B1 — Fire, Ice, and Lightning Arrow
+
+### Retail evidence and conflict
+
+The item-specific ledger is:
+
+- `retail_parity/vanilla_zilart/artifacts/VZ-COMBAT-001-elemental-arrows-evidence.md`
+
+The strongest accessible era evidence is a January 2004 Ranger guide listing
+all three level-45 arrows and their Fire, Ice, and Lightning additional
+damage. Modern Japanese references independently preserve the three elements
+and describe them as original elemental arrows.
+
+No controlled packet log, damage dataset, or official formula was found. A
+March 2004 player report says elemental arrows dealt roughly 5-10 effect
+damage and did not activate every hit. That conflicts with the inherited
+uniform 7-10 roll and implicit 100% chance. A modern uncited Fire Arrow page
+calls the damage INT-based, while a 2013 player report says high INT plus some
+MAB still left Ice Arrow weak. Neither isolates actor INT, target INT/dINT,
+magic accuracy, MAB, or another multiplier.
+
+Those claims remain low-confidence hypotheses. Phase B1 does not change
+numeric behavior from them.
+
+### Authoritative scripted profile
+
+The three item scripts now contain only their normal
+`onItemAdditionalEffect` bridge to `executeScriptedDamageProfile`. A single
+registry owns exactly these identities:
+
+| Item | ID | Element | Subeffect |
+|---|---:|---|---|
+| Fire Arrow | 17322 | Fire | Fire damage |
+| Ice Arrow | 17323 | Ice | Ice damage |
+| Lightning Arrow | 17324 | Thunder | Lightning damage |
+
+Registry construction validates every profile and rejects duplicate IDs.
+Runtime resolution validates again before application and raises a visible
+configuration error for a missing or malformed profile. The repository sanity
+tool proves that each item has one `ITEM_ADDEFFECT_SCRIPTED` marker, one
+wrapper call, one registry entry, the correct element/subeffect, and both real
+test references. Earth, Water, Wind, Grand Knight's, and Temple Knight's
+arrows are explicitly checked as unmigrated.
+
+### Effective production policy
+
+| Parameter | Effective policy | Evidence classification |
+|---|---|---|
+| Proc | One fixed 100% compatibility roll after a successful physical ranged hit | `VERIFY_LIVE` |
+| Level | Existing item-required-level gate; no extra correction | Gate framework-correct; formula `VERIFY_LIVE` |
+| Base power | One uniform integer roll from 7 through 10 | `VERIFY_LIVE` |
+| Skill/stat/macc | Legacy A+; actor stat 0; target stat 0; explicit macc 0 | `VERIFY_LIVE` |
+| MAB | Disabled | `VERIFY_LIVE` |
+| Element | Fire, Ice, or Thunder by item | `EVIDENCE_BACKED` |
+| Attack/damage type | Magical; elemental damage type by item | `FRAMEWORK_CORRECT_LEGACY_NUMERICS` |
+| Resistance | Existing magical tiers through 1/8 | `VERIFY_LIVE` |
+| Multipliers | General magic adjustment, elemental SDT, staff, affinity, and day/weather enabled | `VERIFY_LIVE` |
+| Defenses | Phalanx, One for All, and Stoneskin retained once | `VERIFY_LIVE` |
+| Null/absorb | One existing elemental nullification and absorption resolution | `FRAMEWORK_CORRECT_LEGACY_NUMERICS` |
+| Distance | Inherit the successful physical ranged action; no second magical distance pass | `FRAMEWORK_CORRECT_LEGACY_NUMERICS` |
+| Presentation | Matching elemental subeffect and normal damage/heal message | `FRAMEWORK_CORRECT_LEGACY_NUMERICS` |
+
+The executor rolls power once, passes one complete table into the existing
+damage helper, and performs no second proc, resistance, nullification,
+absorption, or HP mutation. The ordinary ranged subsystem continues to own
+physical hit validation, range, item-level eligibility, ammo priority,
+consumption, Recycle, and Unlimited Shot.
+
+### Deterministic packet-amount correction
+
+The Phase B1 pre-correction test reproduced an inherited scripted-path defect:
+the helper returned planned damage or healing even when remaining HP/max HP
+clamped the amount actually applied. This could make the 0x028 additional
+effect value disagree with the target's HP delta.
+
+`executeScriptedDamageProfile` now snapshots the target HP and returns the
+actual damage or healing delta for these three profiles. It does not alter the
+shared legacy helper or unrelated scripted items.
+
+### Behavioral coverage
+
+Real ranged-state tests for all three arrows prove:
+
+- successful physical hit, correct elemental subeffect/message/value, one
+  ranged-finish action, matching total HP delta, and one consumed arrow;
+- ordinary physical miss, target leaving range mid-shot, initial out-of-range
+  rejection, target despawn, and below-item-level suppression;
+- a longer valid physical range with no additional magical distance pass;
+- Recycle and Unlimited Shot ammo preservation through the ordinary ranged
+  subsystem;
+- one arrow result when an Enspell is also active;
+- no script/global double handling and no element cross-wiring.
+
+Direct production-executor tests prove:
+
+- registry validity, exact three-item scope, malformed-policy rejection, and
+  duplicate rejection;
+- one proc roll and one 7-10 power roll, including both boundaries, plus a
+  synthetic configured 50% pass/fail boundary without a second proc roll;
+- no actor-INT, target-INT, or MAB contribution as compatibility behavior,
+  without calling that behavior retail-correct;
+- full, half, quarter, eighth, and below-floor resistance outcomes;
+- A+ rank, per-item element, no-stat, and zero-macc transport;
+- general magic adjustment, elemental SDT, staff, affinity, day/weather,
+  Phalanx, One for All, and Stoneskin compatibility behavior;
+- one nullification and absorption resolution for each element;
+- actual damage/healing amount at HP caps.
+
+Existing Phase A tests remain the regression authority for Acid/Sleep Bolt,
+generic item additional effects, NM hooks, and ordinary 0x028 behavior.
+
+### Phase B1 validation
+
+- Fresh MSVC 19.44/Ninja Debug configure: exit `0`.
+- Fresh `xi_test` target build: exit `0` (`906/906`).
+- Complete all-target Debug build: exit `0` (`148/148` remaining steps);
+  `xi_connect`, `xi_map`, `xi_search`, `xi_world`, and `xi_test` linked.
+- Final elemental-arrow/profile run: exit `0` (47/47).
+- Final Phase A framework, Acid/Sleep Bolt ranged, and NM regression group:
+  exit `0` (39/39).
+- Final battle-action packet regression: exit `0` (65/65 `0x028` cases).
+- Inventory generation twice produced identical CSV and Markdown SHA-256
+  hashes; write, `--check`, and exact-profile sanity all exited `0`.
+- Changed Lua passed the repository `luacheck`, style, binding-usage, and
+  mob-skill-purity wrapper. Changed Python passed Black and pylint.
+- Changed C++ was formatted, and `git diff --check` passed.
+- The isolated current-SQL database, its two grants, the disposable build,
+  staged executables/PDBs, and temporary logs were removed. The owner's
+  working `xidb` was not modified.
+
+### Phase B1 assessment
+
+The bounded Phase B1 engineering pass is complete. Fire, Ice, and Lightning
+Arrow are **hardened and profiled but not retail-formula-corrected**. Element
+identity and deterministic framework ownership are supported; proc chance,
+7-10 power, stat/accuracy model, resist floor, MAB, staff/affinity/day-weather,
+and defensive interactions remain compatibility behavior or `VERIFY_LIVE`.
+
+Phase B2 must select another bounded family or obtain a controlled retail
+dataset for these parameters. It must not generalize this profile to later
+elemental arrows without separate evidence.

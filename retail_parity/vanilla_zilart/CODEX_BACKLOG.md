@@ -100,9 +100,31 @@ Completed on 2026-07-25.
 - Combined drains, other unsupported drain/scaling behavior, self-buffs,
   Death, spikes, and item-specific formulas remain explicit Phase B work.
 
+### `VZ-COMBAT-001` Phase B1 — Fire/Ice/Lightning Arrow
+
+Completed on 2026-07-26.
+
+- The three level-45 elemental arrows now resolve through exactly one
+  validated scripted profile registry while preserving Fire, Ice, and Thunder
+  identity.
+- The evidence ledger records January/March 2004 community evidence and the
+  unresolved conflict between a not-always/roughly-5-10 report and inherited
+  implicit-100%/uniform-7-10 behavior.
+- No controlled retail formula was found. Proc, power, A+ rank, no-stat/zero
+  macc, disabled MAB, resist floor, staff/affinity/day-weather, and defensive
+  interactions remain tested compatibility or `VERIFY_LIVE`.
+- The executor guarantees one proc/power/resist/null/absorb/application path
+  and reports actual HP damage/healing at caps.
+- Forty-seven focused Lua cases cover real ranged 0x028 hits, ordinary misses,
+  range/despawn/level gates, consumption, Recycle, Unlimited Shot, Enspell
+  priority, profile validation, formula boundaries, stats, tiers,
+  multipliers, defenses, null/absorb, and HP caps.
+- Inventory sanity proves exact three-item scope and prevents later elemental
+  arrows from being migrated accidentally.
+
 ## Priority 1 — Remaining known implementation findings
 
-### `VZ-COMBAT-001` Phase B — Evidence-backed family migrations
+### `VZ-COMBAT-001` Phase B2 — Evidence-backed family migrations
 
 - Use the generated inventory to select one bounded effect family or
   configuration-error group at a time.
@@ -112,6 +134,8 @@ Completed on 2026-07-25.
   supports it.
 - Preserve compatibility/`VERIFY_LIVE` behavior when evidence is still
   insufficient; do not generalize the Acid/Sleep A-rank result.
+- Do not generalize the Fire/Ice/Lightning Arrow compatibility profile to
+  Earth/Water/Wind or other elemental ammunition without separate evidence.
 - Add real melee/ranged/reaction packet tests for each migrated group.
 
 ### `VZ-JOB-001` — Summoner Elemental Spirits

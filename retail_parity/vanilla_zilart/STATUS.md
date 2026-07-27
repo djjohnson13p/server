@@ -11,7 +11,7 @@
 - **Assistant source-accessible stage:** Complete
 - **Codex handoff:** Ready
 - **Local Codex environment:** Validated
-- **Current project state:** `VZ_COMBAT_001_PHASE_A_VALIDATED`
+- **Current project state:** `VZ_COMBAT_001_PHASE_B1_VALIDATED`
 - **Upstream pull requests:** None; prohibited
 
 ## Baseline finding counts
@@ -44,7 +44,7 @@ coefficients and formulas were deliberately not invented.
 | ID | Area | Baseline status | Current fork state |
 |---|---|---|---|
 | `VZ-SYS-001` | Ballista | `MISSING` | Not implemented; largest remaining system |
-| `VZ-COMBAT-001` | Item additional effects | `INACCURATE` | Phase A complete: 420-row generated inventory, explicit profiles, deterministic framework fixes, and maintained-item tests; retail formulas remain Phase B |
+| `VZ-COMBAT-001` | Item additional effects | `INACCURATE` | Phase B1 complete: Phase A framework plus explicit tested Fire/Ice/Lightning Arrow compatibility profiles; their unsupported retail numerics remain `VERIFY_LIVE` |
 | `VZ-ZONE-001` | Temple of Uggalepih door keys | `INACCURATE` | Implemented and interaction-test-backed |
 | `VZ-JOB-001` | Summoner Elemental Spirits | `INACCURATE` | Not implemented; data/formula work remains |
 | `VZ-CORE-001` | Call for Help scope | `INACCURATE` | Hardened claim/CE/VE/boundary rules; Lua and C++ tests pass |
@@ -98,6 +98,12 @@ Completed:
   flag mismatch, and false status success presentation. Real melee/ranged
   packets, Acid/Sleep ammunition, level eligibility, status guards, physical
   flags, and all five maintained NM interactions are covered.
+- Fire/Ice/Lightning Arrow Phase B1 moves exactly three scripted items to a
+  validated profile registry. Forty-seven focused Lua cases cover real ranged
+  hits, misses, range/despawn/level gates, ammo consumption/preservation,
+  element and packet presentation, 7-10 boundaries, stat/resistance/
+  multiplier compatibility, null/absorb, defenses, and actual HP-capped
+  amounts. Numeric retail claims remain `VERIFY_LIVE`.
 - Lua style checks and `git diff --check` passed.
 - Fresh-directory MSVC/Ninja Debug configuration and all-target build passed.
 - Disposable build outputs and isolated test database were removed without
@@ -124,6 +130,7 @@ Still required:
 - [x] Complete `VZ-CORE-002` safe attack-while-fishing transition
 - [x] Complete `VZ-BF-001` engine-owned ready-message behavior
 - [x] Complete `VZ-COMBAT-001` Phase A inventory/framework pass
+- [x] Complete `VZ-COMBAT-001` Phase B1 elemental-arrow profile pass
 - [ ] Complete `VZ-COMBAT-001` Phase B evidence/formula passes
 - [ ] Complete the remaining two unimplemented known findings
 - [ ] Continue the exhaustive local-repository Vanilla/Zilart audit
@@ -133,10 +140,11 @@ Still required:
 
 Use the latest head of `retail-parity/codex-vanilla-zilart`. Fetch `origin`,
 read `CODEX_STATE.md`, `CODEX_BACKLOG.md`, `LOCAL_CODEX_ENVIRONMENT.md`, the
-worklog, completion report, generated VZ-COMBAT-001 inventory, and finding
-files. Begin a bounded VZ-COMBAT-001 Phase B pass around one evidence-backed
-family or configuration-error group, then continue the remaining known
-findings and exhaustive audit.
+worklog, completion report, generated VZ-COMBAT-001 inventory, elemental-arrow
+ledger, and finding files. Begin Phase B2 around one bounded evidence-backed
+family or configuration-error group; do not extend the three-arrow profile to
+later elemental arrows without separate evidence. Then continue the remaining
+known findings and exhaustive audit.
 
 ## Guardrails
 

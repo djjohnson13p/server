@@ -532,3 +532,79 @@ drain accuracy/scaling/order, self-buff/Death/spikes formulas, and many item
 introduction eras remain unresolved. These are now visible and classifiable,
 but Phase A does not guess them or classify the complete finding as
 corrected.
+
+## 2026-07-26 — VZ-COMBAT-001 Phase B1 elemental arrows
+
+### Evidence result
+
+- Added a separate ledger for Fire Arrow 17322, Ice Arrow 17323, and
+  Lightning Arrow 17324.
+- A January 2004 Ranger guide and Japanese historical references support the
+  item era and Fire/Ice/Thunder identities.
+- No controlled retail packet log, damage dataset, or official formula was
+  found. A March 2004 anecdote says roughly 5-10 damage and not every hit,
+  conflicting with the inherited uniform 7-10 and implicit 100% behavior.
+- An uncited Fire Arrow INT claim and a later Ice Arrow INT/MAB anecdote do
+  not isolate INT, dINT, accuracy, MAB, or any multiplier. All unsupported
+  numeric fields remain compatibility or `VERIFY_LIVE`.
+
+### Profile architecture and production correction
+
+- Added one validated scripted-damage registry for exactly the three Phase B1
+  items. Each item retains explicit identity, element, subeffect, evidence
+  classifications, proc/power/stat/resistance policy, multiplier policy, and
+  unresolved fields.
+- The three item scripts now contain only their real
+  `onItemAdditionalEffect` bridge to the profile executor; numeric tables are
+  not duplicated.
+- Validation rejects missing/malformed policy, duplicate item IDs, wrong
+  elements, unsupported later arrows, and unsupported proc/multiplier modes.
+- The executor performs one compatibility proc path, one power roll, one
+  resistance/nullification/absorption path, and one final HP mutation.
+- A pre-correction reproduction found that the helper's returned amount could
+  exceed the HP actually removed or restored at an HP cap. The Phase B1
+  executor now reports the actual HP delta without altering unrelated
+  scripted items.
+
+### Behavioral coverage
+
+- Twenty real ranged-state tests cover all three successful elemental packet
+  results; ordinary miss; initial and mid-shot range failure; item-level
+  suppression; target despawn; valid longer range; normal consumption;
+  Recycle; Unlimited Shot; and Enspell priority.
+- Twenty-seven direct profile tests cover exact scope and validation,
+  duplicate registration, proc pass/fail boundary, 7-10 boundaries,
+  actor/target INT and MAB compatibility, all configured resist tiers and the
+  floor, skill/stat/macc transport, general/elemental/staff/affinity/
+  day-weather multipliers, defenses, per-element null/absorb, and exact
+  damage/healing at HP caps.
+- The existing Phase A group passed 39/39 after the clean build, including
+  Acid/Sleep Bolt and all maintained NM hooks. The complete `0x028` packet
+  regression passed 65/65.
+
+### Validation and cleanup
+
+- Fresh MSVC/Ninja Debug configure: exit `0`.
+- Clean `xi_test` build: exit `0` (`906/906`).
+- Remaining all-target build: exit `0` (`148/148`); all five executables
+  linked.
+- Final Phase B1 focused run: exit `0` (47/47).
+- Inventory generation/check/profile sanity, deterministic two-run hashes,
+  Lua sanity/style, Black, pylint, C++ formatting, and `git diff --check`
+  passed.
+- Production/tests commit:
+  `2ea1af27a86c2852bf3760e47301139fe91a99f1`.
+- Evidence/inventory commit:
+  `9ec608cbfc61686bfebcb4ae1cee53ac4407f24e`.
+- Removed the disposable build, ten staged executables/PDBs, isolated
+  `xidb_codex_vz_combat_001_b1_20260726`, both grants, and temporary logs.
+  The owner's working `xidb` was not modified.
+
+### Remaining boundary
+
+Fire/Ice/Lightning Arrow are hardened and profiled, not claimed
+retail-formula-correct. Proc rate, 7-10 distribution, governing stats,
+accuracy/rank, resistance tiers, MAB, staff/affinity/day-weather, defense
+interactions, and exact client presentation need controlled live evidence.
+Phase B2 must remain a separate bounded family/configuration pass and must not
+copy this compatibility policy to later elemental arrows without evidence.
