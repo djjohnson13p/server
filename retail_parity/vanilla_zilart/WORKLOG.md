@@ -654,3 +654,6 @@ copy this compatibility policy to later elemental arrows without evidence.
 The host crash interrupted only disposable compilation and did not alter the
 branch, tracked diff, isolated database, or test evidence. No C++, Python,
 SQL, inventory, profile numeric, or human-only evidence file changed.
+Credential and process-environment values remained in process memory: no
+environment dump, credential value, token, password, connection string, or
+secret-bearing command argument was printed or persisted.

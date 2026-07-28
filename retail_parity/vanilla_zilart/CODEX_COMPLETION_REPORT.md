@@ -844,7 +844,10 @@ git diff --check
 No C++, header, Python, SQL, inventory, numeric profile, or human-only queue
 content changed. The isolated database and build products were disposable;
 the owner's working `xidb` was not modified. The three arrows remain hardened
-compatibility profiles, not retail-formula-correct claims.
+compatibility profiles, not retail-formula-correct claims. Credential and
+process-environment values remained process-local; no environment dump,
+credential value, token, password, connection string, or secret-bearing
+command argument was printed or recorded.
 
 ## Findings now fully test-backed
 
