@@ -1,7 +1,7 @@
 # Codex State — Vanilla + Rise of the Zilart
 
-Status: VZ_COMBAT_001_PHASE_B1_RNG_HARDENED
-Pass: 8
+Status: VZ_COMBAT_001_PHASE_B2_STATUS_AMMUNITION_PROFILED
+Pass: 9
 Last updated: 2026-07-28
 
 ## Local Codex environment
@@ -46,6 +46,11 @@ The earlier `FAILED_INFRASTRUCTURE` state applied only to the assistant's networ
     compatibility/`VERIFY_LIVE`. A follow-up makes base power lazy so failed
     proc, full-nullification, and below-floor resistance paths do not advance
     power RNG; numeric callers and successful outcomes remain unchanged.
+11. `VZ-COMBAT-001` Phase B2 — eight maintained status-ammunition items now
+    resolve through one explicit SQL-backed policy registry. The status
+    application path removes an opposing boost only after authoritative
+    success. Exact numerics and the known-missing Spartan cooldown remain
+    `VERIFY_LIVE`.
 
 ## Validation completed
 
@@ -91,6 +96,15 @@ The earlier `FAILED_INFRASTRUCTURE` state applied only to the assistant's networ
   nullification, absorption, defenses, HP caps, and real ranged hit/miss/
   range/despawn/level/ammo/priority paths. Inventory generation and
   exact-scope sanity pass.
+- `VZ-COMBAT-001` Phase B2: 49 new focused Lua cases cover exactly eight
+  status-ammunition profiles, every real successful ranged result, every
+  physical miss, range/despawn/level/ammo-preservation paths, malformed/
+  duplicate/later-item rejection, Acid/Sleep separation, proc and resist
+  boundaries, all eight guard/resist paths, rank/stat/element transport,
+  power/duration/tick, authoritative
+  application rejection, and post-success opposing-boost removal. The Phase
+  A regression file adds one caller-path rejection case. Inventory generation
+  and exact-scope sanity pass.
 - Lua style/purity, SQL sanity, C++ formatting, and `git diff --check` passed.
 - A fresh-directory MSVC/Ninja Debug configuration passed.
 - The complete all-target MSVC/Ninja Debug build passed and linked
@@ -101,25 +115,25 @@ The earlier `FAILED_INFRASTRUCTURE` state applied only to the assistant's networ
 
 ## Current work
 
-The bounded `VZ-COMBAT-001` Phase B1 pass and RNG lifecycle follow-up are
-complete. Modifier-driven families retain SQL numeric ownership; Fire/Ice/
-Lightning Arrow now share an explicit scripted-family profile without losing
-item identity. Failed proc and earlier deterministic rejection paths no
-longer consume an unused power roll. The evidence ledger found no controlled
-retail formula and preserves the contemporary not-always/roughly-5-10 claim
-in conflict with the inherited 100%/7-10 behavior. Existing numerics are
-therefore compatibility, not a parity claim.
+The bounded `VZ-COMBAT-001` Phase B2 pass is complete as a profile/framework
+hardening pass. Eight maintained status-ammunition items retain SQL numeric
+ownership behind explicit item identities and field classifications.
+Authoritative status rejection can no longer cause premature opposing-boost
+removal. Evidence supports effect identity but not a complete formula; the
+Spartan sources conflict on cooldown duration and ownership. Existing
+numerics and the missing cooldown are therefore explicit compatibility, not
+a parity claim.
 
 Seven findings are implemented and test-backed. `VZ-JOB-002` and
 `VZ-COMBAT-001` remain partial where evidence is insufficient. Fire/Ice/
-Lightning Arrow are hardened/profiled, not retail-formula-corrected. The item
-framework's combined-drain, other drain, self-buff, Death, spikes, and
-item-specific damage/status numerics are explicit `VERIFY_LIVE` or
-compatibility work, not claimed retail-correct.
+Lightning Arrow and the eight Phase B2 status items are hardened/profiled,
+not retail-formula-corrected. The item framework's combined-drain, other
+drain, self-buff, Death, spikes, and item-specific damage/status numerics are
+explicit `VERIFY_LIVE` or compatibility work, not claimed retail-correct.
 
 ## Remaining AI-capable work
 
-- Continue `VZ-COMBAT-001` Phase B2 in bounded, evidence-backed family or
+- Continue `VZ-COMBAT-001` Phase B3 in bounded, evidence-backed family or
   configuration groups.
 - Complete `VZ-JOB-001` Elemental Spirit data, spell-selection, and scaling work.
 - Implement `VZ-SYS-001` Ballista.
@@ -145,6 +159,11 @@ candidates remain:
   affinity, day/weather, distance, defenses, elemental null/absorb, and 0x028
   presentation; plus other-family damage/scaling, drain ordering/accuracy,
   self-buff/Death/spikes formulas, and client presentation.
+- controlled per-item status-ammunition datasets splitting proc from resist,
+  rank/stat/element, power/duration/overwrite, and 0x028 presentation; plus a
+  two-shooter/two-target Spartan Bullet dataset that brackets cooldown,
+  distinguishes target/source ownership, covers ranged weapon skills, and
+  interleaves unrelated Stun sources.
 
 ## Exact next-pass instructions
 
@@ -152,9 +171,9 @@ candidates remain:
    inherited-validation pass.
 2. Read `AGENTS.md`, `CODEX_MASTER_TASK.md`, `CODEX_BACKLOG.md`, `LOCAL_CODEX_ENVIRONMENT.md`, the status/worklog, completion report, and all finding files.
 3. Confirm the worktree is clean and remain on `retail-parity/codex-vanilla-zilart`.
-4. Begin one bounded `VZ-COMBAT-001` Phase B2 family/configuration pass using
-   the generated inventory and evidence ledgers. Do not silently extend the
-   Phase B1 compatibility policy to later elemental arrows.
+4. Begin one bounded `VZ-COMBAT-001` Phase B3 family/configuration pass using
+   the generated inventory and evidence ledgers, preferably maintained
+   drains. Do not silently extend the Phase B1/B2 compatibility policies.
 5. Initialize MSVC through `VsDevCmd.bat` for all Windows configure/build commands.
 6. Run narrow tests first, then the full MSVC/Ninja Debug build.
 7. Fix failures caused by the fork changes; do not hide failures or weaken unrelated assertions.

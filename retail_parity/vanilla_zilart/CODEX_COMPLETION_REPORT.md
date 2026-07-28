@@ -883,6 +883,176 @@ retail numerics, unsupported family formulas, unresolved era classifications,
 and client presentation. Its inventory, profile ownership, and deterministic
 framework corrections are complete and test-backed.
 
+## VZ-COMBAT-001 Phase B2 status-ammunition pass
+
+Starting from `13762583a85d7e3c078f4445b3c7096d213690c0`, this bounded pass
+profiled exactly eight maintained Vanilla/Zilart status-ammunition items:
+Kabura Arrow 17325, Patriarch Protector's Arrow 17329, Blind Bolt 18150,
+Venom Bolt 18152, Poison Arrow 18157, Sleep Arrow 18158, Demon Arrow 18159,
+and Spartan Bullet 18160.
+
+The production policy remains the current SQL behavior, made explicit and
+machine-readable rather than relabeled as retail-correct:
+
+| Item | Status / effective element | Proc / level | Power / duration | Classification |
+|---|---|---|---|---|
+| Kabura Arrow | Silence / Wind | 95% / 5 | 1 / 60s | `VERIFY_LIVE`; SQL compatibility |
+| Patriarch Protector's Arrow | Paralysis / Ice | 95% / 5 | 30 / 30s | `VERIFY_LIVE`; SQL compatibility |
+| Blind Bolt | Blind / Dark | 100% / 5 | 10 / 30s | `VERIFY_LIVE`; SQL compatibility |
+| Venom Bolt | Poison / Water | 100% / 5 | 4 per 3s / 30s | `VERIFY_LIVE`; SQL compatibility |
+| Poison Arrow | Poison / Water fallback | 95% / 5 | 4 per 3s / 30s | `VERIFY_LIVE`; SQL compatibility |
+| Sleep Arrow | Sleep / None | 95% / 5 | 0 / 25s | `VERIFY_LIVE`; SQL compatibility |
+| Demon Arrow | Attack Down / Water fallback | 95% / 5 | 12 / 60s | `VERIFY_LIVE`; SQL compatibility |
+| Spartan Bullet | Stun / Thunder fallback | 10% / 5 | 10 / 5s | `VERIFY_LIVE`; known incomplete without cooldown |
+
+All eight retain the active A-rank/INT accuracy inputs, status immunity and
+nullification guards, full/half-duration compatibility floor, successful
+physical ranged-hit trigger, ordinary ammunition ownership, and normal
+0x028 additional-effect presentation. These are tested compatibility
+contracts, not retail formula claims. The issue-#7899 controlled A-rank
+dataset remains owned only by Acid Bolt and Sleep Bolt.
+
+The ranked evidence ledger records issue #7899 and all public comments,
+seven attached retail images/logs, Japanese historical/mechanics summaries,
+dated FFXIAH comments, modern item references, and inaccessible-source
+limits. Effect identities are supported. No controlled dataset establishes
+the eight items' proc, level correction, rank/stat, action element, power,
+duration, overwrite, or resist distribution. Kabura's qualitative
+low-activation claim conflicts with current 95% SQL. Spartan sources support
+a missing target-side lockout but conflict between roughly 10-20, 20-30,
+and 30 seconds and do not fully establish ownership or weapon-skill
+interaction. No cooldown or alternate numeric formula was guessed.
+
+### Architecture and deterministic correction
+
+`additional_effect_profiles.lua` now owns one validated
+`VZ_STATUS_AMMUNITION` registry with exactly eight item identities,
+field-level evidence classifications, SQL compatibility expectations,
+item-specific status/subeffect/element data, and an explicit unresolved
+Spartan policy. Validation rejects malformed or duplicate entries, SQL
+drift, Acid/Sleep migration, and later Gashing/Abrasion/Oxidant ammunition.
+
+The inherited DEBUFF handler removed an opposing Defense/Evasion/Attack
+Boost before asking the authoritative status container to add the Down
+effect. A caller-path regression forced the earlier guards to pass and the
+container to reject the add; before correction it failed 29/30 because the
+opposing boost was still removed. Status lookup is now pure, the handler
+applies once, returns no result on rejection, and removes an opposing boost
+exactly once only after successful application.
+
+No SQL, proc, level, rank/stat, element, power, duration, resist, overwrite,
+packet, or Spartan cooldown value changed.
+
+### Behavioral coverage
+
+The 49 Phase B2 cases comprise 22 real ranged-action tests and 27 direct
+profile tests:
+
+- all eight successful shots emit exactly one matching status result and
+  consume one ordinary ammunition unit;
+- all eight physical misses perform no status work;
+- out-of-range start, mid-shot target despawn, below-level suppression,
+  longer valid range, Recycle, and Unlimited Shot use the ordinary ranged
+  path;
+- exact eight-item registration, Acid/Sleep separation, malformed,
+  duplicate, and later-item rejection are enforced;
+- one proc roll, every configured pass/fail boundary, level correction, and
+  zero downstream work after proc failure are covered;
+- every item runs immunity, trait-resistance, nullification, full, half, and
+  below-floor behavior; representative quarter, eighth, and zero resist
+  results preserve no-effect behavior below the compatibility half floor;
+- A-rank/INT/effective-element transport, all eight status powers,
+  durations/ticks, authoritative rejection, and post-success opposing-boost
+  removal are covered.
+
+The shared framework file adds the real caller-path rejection regression.
+The Acid/Sleep ranged fixture now seeds the physical hit immediately before
+the player state tick, eliminating unrelated world-RNG consumption without
+changing the production path or expected results. The Phase B2 target-
+despawn fixture makes its otherwise unkillable target killable immediately
+before despawn so the test exercises genuine invalidation deterministically.
+
+### Exact validation
+
+Every test invocation used the isolated database
+`xidb_codex_vz_combat_001_b2_20260728` on a disposable local MariaDB 10.6
+server. The owner's working `xidb` was not modified.
+
+```text
+call "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\Common7\Tools\VsDevCmd.bat" -no_logo -arch=x64 -host_arch=x64
+cmake -G Ninja -S . -B build-codex-phase-b2 -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_COMPILER=cl -DCMAKE_CXX_COMPILER=cl -DENABLE_CLANG_TIDY=OFF -DTRACY_ENABLE=OFF -DPCH_ENABLE=OFF -DCACHE_OPTION=sccache
+# exit 0
+
+cmake --build build-codex-phase-b2 --target xi_test
+# exit 0 (906/906)
+
+xi_test.exe --keep-going --file item_additional_effects_status_ammunition
+# exit 0 (49/49)
+
+xi_test.exe --keep-going --file "item_additional_effects\.lua" --file "item_additional_effects_ranged\.lua" --file "item_additional_effects_nm\.lua"
+# exit 0 (40/40)
+
+xi_test.exe --keep-going --file item_additional_effects_elemental_arrow
+# exit 0 (51/51)
+
+xi_test.exe --keep-going --file 0x028_battle2
+# exit 0 (65/65)
+
+cmake --build build-codex-phase-b2
+# exit 0 (148/148 remaining all-target steps)
+
+xi_test.exe --keep-going --file "item_additional_effects\.lua" --file item_additional_effects_status_ammunition
+# final post-format/post-build exit 0 (79/79)
+
+python tools/retail_parity/generate_item_additional_effect_inventory.py
+python tools/retail_parity/generate_item_additional_effect_inventory.py
+python tools/retail_parity/generate_item_additional_effect_inventory.py --check
+python tools/retail_parity/check_item_additional_effect_profiles.py
+# all exit 0; 420 rows, 18 maintained profiles, 341 unchanged repository diagnostics
+
+python -m black --check tools/retail_parity/generate_item_additional_effect_inventory.py tools/retail_parity/check_item_additional_effect_profiles.py
+python -m pylint --errors-only tools/retail_parity/generate_item_additional_effect_inventory.py tools/retail_parity/check_item_additional_effect_profiles.py
+tools/ci/sanity_checks/lua.sh <all seven changed Lua files>
+git diff --check
+# all exit 0
+```
+
+Catch2 passed 19/19 with 9,007,079 assertions on every `xi_test`
+invocation. No C++, header, or SQL source changed, so clang-format and SQL
+source migration checks were not applicable. Two inventory writes were
+identical:
+
+- CSV SHA-256:
+  `6B1FC13D5090DC3F0B09F2592AB3BE7B243EC163225E1C37A23A3F38B193B16D`;
+- Markdown SHA-256:
+  `26CEC1575F390103C43AB4A6B4E64D10D6C1F9037EB2B28211C5FE873F1A6F53`.
+
+An immediate second Windows/Python inventory rewrite once returned transient
+`OSError 22` after the first write succeeded; `--check` passed immediately,
+and the controlled two-write repeat with a two-second file-handle interval
+produced the identical hashes above. Two pre-final test runs exposed the
+fixture issues described above (48/49 on the unkillable despawn case and
+39/40 on Sleep Bolt RNG); both corrected suites and the combined final
+79-case repeat pass.
+
+The disposable build directory, five generated root executables and PDBs,
+isolated MariaDB process/data directory, and downloaded evidence cache were
+removed. The owner's `xidb` was untouched. Changed-file scanning found no
+PAT, JWT, signed query, assigned secret, or embedded remote credential.
+Shell commands printed environment-variable names only, never their values.
+The GitHub connector did return short-lived signed attachment parameters in
+its transient evidence-retrieval response; they were not echoed to shell,
+written to the repository, committed, or retained after cache deletion.
+
+Phase B2 result is `PARTIAL`: profile ownership, deterministic status
+application, real ranged lifecycle, inventory, and evidence boundaries are
+complete and test-backed, but the eight items are not claimed
+retail-formula-correct. Spartan's missing cooldown and every listed
+`VERIFY_LIVE` field require the controlled capture plan in
+`HUMAN_ONLY_QUEUE.md`. Phase B3 should select a separate bounded family,
+preferably maintained drains, without mixing Dispel, Death, self-buffs,
+spikes, or another audit area.
+
 ## Client/live-retail-only candidates
 
 - Temple door rendered timing and complete mission-route traversal.

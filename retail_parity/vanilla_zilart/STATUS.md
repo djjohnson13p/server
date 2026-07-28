@@ -11,7 +11,7 @@
 - **Assistant source-accessible stage:** Complete
 - **Codex handoff:** Ready
 - **Local Codex environment:** Validated
-- **Current project state:** `VZ_COMBAT_001_PHASE_B1_RNG_HARDENED`
+- **Current project state:** `VZ_COMBAT_001_PHASE_B2_STATUS_AMMUNITION_PROFILED`
 - **Upstream pull requests:** None; prohibited
 
 ## Baseline finding counts
@@ -44,7 +44,7 @@ coefficients and formulas were deliberately not invented.
 | ID | Area | Baseline status | Current fork state |
 |---|---|---|---|
 | `VZ-SYS-001` | Ballista | `MISSING` | Not implemented; largest remaining system |
-| `VZ-COMBAT-001` | Item additional effects | `INACCURATE` | Phase B1 complete and RNG-hardened: Phase A framework plus explicit tested Fire/Ice/Lightning Arrow compatibility profiles; proc now precedes lazy power resolution, while unsupported retail numerics remain `VERIFY_LIVE` |
+| `VZ-COMBAT-001` | Item additional effects | `INACCURATE` | Phase B2 partial: Phase A framework, Phase B1 elemental arrows, and eight explicit status-ammunition profiles are test-backed; unsupported numerics and the Spartan cooldown remain `VERIFY_LIVE` |
 | `VZ-ZONE-001` | Temple of Uggalepih door keys | `INACCURATE` | Implemented and interaction-test-backed |
 | `VZ-JOB-001` | Summoner Elemental Spirits | `INACCURATE` | Not implemented; data/formula work remains |
 | `VZ-CORE-001` | Call for Help scope | `INACCURATE` | Hardened claim/CE/VE/boundary rules; Lua and C++ tests pass |
@@ -107,6 +107,15 @@ Completed:
   presentation, 7-10 boundaries, stat/resistance/multiplier compatibility,
   null/absorb, defenses, and actual HP-capped amounts remain covered. Numeric
   retail claims remain `VERIFY_LIVE`.
+- Status-ammunition Phase B2 moves exactly eight maintained ammo items into
+  a validated SQL-backed profile boundary. Real ranged shots cover every
+  successful effect and every physical miss; direct cases cover exact scope,
+  validation, proc/resist/application ordering, power/duration/tick,
+  rejection, and opposing-boost removal only after successful application.
+  Inventory generation and exact-scope sanity pass. The accessible evidence
+  conflicts on Spartan Bullet cooldown duration/ownership, so the active
+  no-cooldown behavior is explicitly known-incomplete compatibility rather
+  than a guessed correction.
 - Lua style checks and `git diff --check` passed.
 - Fresh-directory MSVC/Ninja Debug configuration and all-target build passed.
 - Disposable build outputs and isolated test database were removed without
@@ -134,6 +143,7 @@ Still required:
 - [x] Complete `VZ-BF-001` engine-owned ready-message behavior
 - [x] Complete `VZ-COMBAT-001` Phase A inventory/framework pass
 - [x] Complete `VZ-COMBAT-001` Phase B1 elemental-arrow profile pass
+- [x] Complete `VZ-COMBAT-001` Phase B2 status-ammunition profile pass
 - [ ] Complete `VZ-COMBAT-001` Phase B evidence/formula passes
 - [ ] Complete the remaining two unimplemented known findings
 - [ ] Continue the exhaustive local-repository Vanilla/Zilart audit
@@ -143,11 +153,11 @@ Still required:
 
 Use the latest head of `retail-parity/codex-vanilla-zilart`. Fetch `origin`,
 read `CODEX_STATE.md`, `CODEX_BACKLOG.md`, `LOCAL_CODEX_ENVIRONMENT.md`, the
-worklog, completion report, generated VZ-COMBAT-001 inventory, elemental-arrow
-ledger, and finding files. Begin Phase B2 around one bounded evidence-backed
-family or configuration-error group; do not extend the three-arrow profile to
-later elemental arrows without separate evidence. Then continue the remaining
-known findings and exhaustive audit.
+worklog, completion report, generated VZ-COMBAT-001 inventory, both Phase B
+evidence ledgers, and finding files. Begin Phase B3 around one bounded family,
+preferably maintained drains. Do not extend the elemental-arrow or
+status-ammunition compatibility profiles without separate evidence. Then
+continue the remaining known findings and exhaustive audit.
 
 ## Guardrails
 

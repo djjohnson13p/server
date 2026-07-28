@@ -124,12 +124,41 @@ Completed on 2026-07-26.
 - Inventory sanity proves exact three-item scope and prevents later elemental
   arrows from being migrated accidentally.
 
+### `VZ-COMBAT-001` Phase B2 — Maintained status ammunition
+
+Completed on 2026-07-28 as a partial engineering/profile pass.
+
+- Kabura Arrow, Patriarch Protector's Arrow, Blind Bolt, Venom Bolt, Poison
+  Arrow, Sleep Arrow, Demon Arrow, and Spartan Bullet now resolve through
+  exactly one validated SQL-backed item-policy registry.
+- Effect identity is evidence-backed. Proc, level correction, rank/stat,
+  element, power, duration, resistance, overwrite, and exact presentation
+  remain explicit compatibility or `VERIFY_LIVE`; Acid/Sleep item-native
+  A-rank evidence was not generalized.
+- A ranked ledger records accessible public evidence and every field
+  classification. It preserves conflicts instead of selecting unsupported
+  numerics.
+- The DEBUFF handler now performs one authoritative status application and
+  removes Defense/Evasion/Attack Boost only after success. Rejection returns
+  no result and leaves the opposing boost untouched.
+- Forty-nine new focused cases cover all eight real successful ranged results,
+  every physical miss, range/despawn/level/resource paths, exact scope,
+  validation, proc/resist/application ordering, and status parameters.
+- Inventory generation and sanity verify one handler per item, exact
+  element/status/subeffect mappings, both test references, and no migration
+  of Acid/Sleep or later Gashing/Abrasion/Oxidant ammunition.
+- Spartan evidence supports a missing target-side cooldown but conflicts on
+  its exact interval/ownership. The active 10%/five-second/no-cooldown policy
+  is retained as known-incomplete compatibility pending controlled captures.
+
 ## Priority 1 — Remaining known implementation findings
 
-### `VZ-COMBAT-001` Phase B2 — Evidence-backed family migrations
+### `VZ-COMBAT-001` Phase B3 — Evidence-backed family migrations
 
 - Use the generated inventory to select one bounded effect family or
   configuration-error group at a time.
+- Prefer a maintained drain family for the next bounded pass; do not mix
+  drains with Dispel, Death, self-buffs, or spikes.
 - Establish item/era evidence before changing classifications or numerics.
 - Resolve damage type/MAB/dSTAT, drain accuracy/scaling/order, Dispel,
   self-buff, Death, and equipment-spikes behavior only where evidence
@@ -138,6 +167,8 @@ Completed on 2026-07-26.
   insufficient; do not generalize the Acid/Sleep A-rank result.
 - Do not generalize the Fire/Ice/Lightning Arrow compatibility profile to
   Earth/Water/Wind or other elemental ammunition without separate evidence.
+- Do not generalize the status-ammunition profile or Acid/Sleep accuracy
+  evidence to later bolts or another item family without separate evidence.
 - Add real melee/ranged/reaction packet tests for each migrated group.
 
 ### `VZ-JOB-001` — Summoner Elemental Spirits

@@ -6,14 +6,15 @@
 - **Expansion scope:** Shared core, inventoried for Vanilla/Rise of the Zilart
 - **Area:** Combat / equipment / ammunition / additional effects
 - **Baseline status:** `INACCURATE`
-- **Current status:** `PARTIALLY_CORRECTED_PHASE_B1`
+- **Current status:** `PARTIALLY_CORRECTED_PHASE_B2`
 - **Severity:** `MAJOR`
 - **Confidence:** `HIGH` for the Phase A inventory, call paths, and corrected deterministic defects; item-specific retail numerics remain mixed
-- **Disposition:** `PHASE_B2_AND_CONTROLLED_RETAIL_EVIDENCE_REQUIRED`
+- **Disposition:** `PHASE_B3_AND_CONTROLLED_RETAIL_EVIDENCE_REQUIRED`
 
-Phase A and the bounded Fire/Ice/Lightning Arrow Phase B1 implementation are
-complete. The three arrows are hardened and explicitly profiled, not declared
-retail-correct. The full finding remains partial.
+Phase A, the bounded Fire/Ice/Lightning Arrow Phase B1 implementation, and the
+eight-item status-ammunition Phase B2 implementation are complete engineering
+passes. The item families are hardened and explicitly profiled, not declared
+retail-formula-correct. The full finding remains partial.
 
 ## Phase A inventory
 
@@ -32,9 +33,10 @@ Stable regeneration currently produces:
 - 183 damage, 124 debuff, 46 equipment-spikes, 27 scripted, 13 HP-drain,
   five Dispel, six NM-specific, four TP-drain, two MP-drain, two Death, two
   HP/MP/TP-drain, and the smaller remaining families recorded in the artifact;
-- 387 SQL-only, 25 SQL-plus-item-script, five SQL-plus-latent, one
-  script-only, and two issue-evidence-only rows;
-- 122 configuration-error, 185 era-unresolved, 98 `VERIFY_LIVE`, ten
+- 379 SQL-only, 22 SQL-plus-item-script, eight SQL-plus-status-profile, five
+  SQL-plus-latent, three SQL-plus-scripted-profile, one script-only, and two
+  issue-evidence-only rows;
+- 122 configuration-error, 185 era-unresolved, 106 `VERIFY_LIVE`, two
   framework-correct/legacy-numerics, and five special-case-test-backed rows.
 
 The 341 repository-wide configuration findings are individual diagnostics,
@@ -134,17 +136,18 @@ when application fails.
 
 ### Framework-correct with legacy numerics
 
-Kabura Arrow, Patriarch Protector's Arrow, Acid Bolt, Sleep Bolt, Blind Bolt,
-Venom Bolt, Poison Arrow, Sleep Arrow, Demon Arrow, and Spartan Bullet use
-the validated generic status framework. Their configured proc/power/duration
-values remain compatibility numerics unless item-specific evidence is
-recorded.
+Acid Bolt and Sleep Bolt use the validated generic status framework with the
+item-native A-rank evidence boundary recorded below. Their governing stat and
+configured proc/power/duration remain compatibility numerics.
 
 ### `VERIFY_LIVE`
 
 Fire Arrow, Ice Arrow, and Lightning Arrow use the Phase B1 scripted profile
-path described below. Their exact proc, damage, stat, accuracy, resistance,
-and multiplier formulas remain `VERIFY_LIVE`.
+path described below. Kabura Arrow, Patriarch Protector's Arrow, Blind Bolt,
+Venom Bolt, Poison Arrow, Sleep Arrow, Demon Arrow, and Spartan Bullet use the
+Phase B2 status-ammunition profile described below. Their exact proc, level,
+stat, accuracy, element, power/duration, resistance, and presentation formulas
+remain compatibility behavior or `VERIFY_LIVE`.
 
 HP/MP/TP drains, combined drains, Dispel, absorb-status, self-buff, Death,
 equipment spikes, and other unsupported families are isolated by explicit
@@ -414,6 +417,126 @@ identity and deterministic framework ownership are supported; proc chance,
 7-10 power, stat/accuracy model, resist floor, MAB, staff/affinity/day-weather,
 and defensive interactions remain compatibility behavior or `VERIFY_LIVE`.
 
-Phase B2 must select another bounded family or obtain a controlled retail
-dataset for these parameters. It must not generalize this profile to later
-elemental arrows without separate evidence.
+Phase B2 selected the bounded maintained status-ammunition family below. It
+does not generalize the Phase B1 profile to later elemental arrows.
+
+## Phase B2 — Maintained status ammunition
+
+### Evidence and bounded scope
+
+The item-specific ledger is:
+
+- `retail_parity/vanilla_zilart/artifacts/VZ-COMBAT-001-status-ammunition-evidence.md`
+
+It records every required field separately for Kabura Arrow 17325, Patriarch
+Protector's Arrow 17329, Blind Bolt 18150, Venom Bolt 18152, Poison Arrow
+18157, Sleep Arrow 18158, Demon Arrow 18159, and Spartan Bullet 18160.
+Effect identities are supported by historical/community item references.
+No controlled eight-item retail dataset was found for proc, level correction,
+rank/stat, action element, power, duration, or resistance distribution.
+
+Issue #7899 and all public attachments were reviewed. Its controlled A-rank
+dataset belongs to Acid/Sleep Bolt and was not generalized. Its Spartan logs
+support a cooldown and roughly four-to-five-second visible Stun but do not
+resolve a safe complete model. Japanese summaries describe an approximately
+30-second target-wide Spartan-only lockout; dated FFXIAH comments conflict
+between a 55/132 count and a first-eligible-shot/10-20-second model. The
+active 10%/five-second/no-cooldown behavior is therefore recorded as known
+incomplete compatibility, not silently presented as retail.
+
+### Authoritative status-ammunition profile
+
+A validated `VZ_STATUS_AMMUNITION` registry owns exactly the eight item
+identities and machine-readable field classifications. SQL remains the sole
+numeric source. Runtime resolution exposes and validates:
+
+- successful-ranged-hit trigger and inherited distance;
+- compatibility proc chance and level correction;
+- legacy A-rank/INT accuracy input, with dSTAT explicitly unused by status
+  application;
+- configured and effective action element;
+- status, power, duration, resist floor, guard, overwrite, and application
+  policy;
+- subeffect/message presentation and unresolved-evidence fields;
+- explicit `NOT_IMPLEMENTED_VERIFY_LIVE` Spartan cooldown policy.
+
+Validation rejects malformed or duplicate profiles, SQL/profile drift, later
+Gashing/Abrasion/Oxidant ammunition, and accidental Acid/Sleep migration.
+The inventory generator emits exact profile source, profile family, field
+classifications, effective policy, both test references, and precise
+subeffect names for the eight scoped items while retaining a shared label for
+other subeffect-18 statuses.
+
+### Deterministic status-application correction
+
+The inherited status helper selected and removed Defense/Evasion/Attack Boost
+before the authoritative `addStatusEffect` call. A late status-container
+rejection could therefore mutate an unrelated boost while returning no
+effect. A valid regression models the authoritative rejection after every
+earlier guard and proves the pre-correction caller removes the boost.
+
+The status helper is now pure policy lookup. The DEBUFF handler:
+
+1. runs the existing immunity, trait, nullification, and one resist check;
+2. computes tick and prospective opposing boost;
+3. calls the authoritative status container exactly once;
+4. returns no presentation and removes nothing on rejection;
+5. removes the opposing boost exactly once only after successful application;
+6. returns one ordinary status additional-effect result.
+
+No status overwrite rule, SQL numeric, resist tier, proc rate, element, or
+Spartan cooldown was changed.
+
+### Effective compatibility policies
+
+| Item | Proc / level | Effective element | Status power / duration | Classification |
+|---|---|---|---|---|
+| Kabura Arrow | 95%, adjustment 5 | Wind-associated | Silence 1 / 60 s | `VERIFY_LIVE` |
+| Patriarch Protector's Arrow | 95%, adjustment 5 | Ice-associated | Paralysis 30 / 30 s | `VERIFY_LIVE` |
+| Blind Bolt | 100%, adjustment 5 | Explicit Dark | Blind 10 / 30 s | `VERIFY_LIVE` |
+| Venom Bolt | 100%, adjustment 5 | Explicit Water | Poison 4, 3 s tick / 30 s | `VERIFY_LIVE` |
+| Poison Arrow | 95%, adjustment 5 | Water-associated | Poison 4, 3 s tick / 30 s | `VERIFY_LIVE` |
+| Sleep Arrow | 95%, adjustment 5 | `NONE` compatibility | Sleep 0 / 25 s | `VERIFY_LIVE` |
+| Demon Arrow | 95%, adjustment 5 | Water-associated | Attack Down 12 / 60 s | `VERIFY_LIVE` |
+| Spartan Bullet | 10%, adjustment 5 | Thunder-associated | Stun 10 / 5 s, no cooldown | `VERIFY_LIVE`, known incomplete |
+
+All use legacy A-rank/INT status accuracy, full or half duration only, status
+guards, and the status container. Those values are test-backed current
+contracts, not retail conclusions.
+
+### Behavioral coverage
+
+Real ranged-action cases prove, for all eight items:
+
+- one successful physical hit reaches exactly one validated item profile;
+- one matching status subeffect/message/effect ID is serialized in one
+  `RANGED_FINISH` action;
+- one status application and one normal ammunition consumption occur;
+- each physical miss consumes the ordinary shot but performs no status work.
+
+Representative real-state cases additionally cover initial out-of-range
+rejection, target despawn, level restriction, longer valid range, Recycle,
+and Unlimited Shot. Direct profile cases cover exact scope, duplicate/
+malformed/later-item rejection, Acid/Sleep separation, one proc roll, zero
+downstream work on failure, every per-item proc boundary, every item's
+full/half/below-floor outcome, every immunity/trait/nullification guard, all
+active resist tiers and the half-duration floor, rank/stat/element/effect
+transport, all eight power/duration/tick values, application rejection, and
+post-success opposing-boost removal.
+
+Existing Acid/Sleep, Phase B1, NM, and complete 0x028 packet groups remain
+regression authorities. Ranged weapon-skill effect behavior and exact Spartan
+cooldown ownership are not claimed test-backed by this pass.
+
+### Phase B2 assessment
+
+Phase B2 is `PARTIAL`: the eight maintained items now have explicit validated
+policy, real ranged coverage, deterministic application ownership, generated
+inventory fields, and a ranked evidence ledger. They are not
+retail-formula-correct. Controlled captures must resolve proc versus resist,
+rank/stat/element, power/duration/overwrite, exact presentation, ranged
+weapon-skill behavior, and the Spartan target/source cooldown contract.
+
+Phase B3 should select one new bounded family, preferably the maintained
+drain items, without beginning Dispel, Death, self-buffs, spikes, Elemental
+Spirits, or Ballista in the same pass.

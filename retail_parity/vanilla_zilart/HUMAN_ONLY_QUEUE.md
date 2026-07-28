@@ -63,6 +63,19 @@ These items may become human-only after all remaining AI-capable engineering and
   current 100% proc, uniform 7-10 power, A+ rank, no-stat/zero-macc, disabled
   MAB, 1/8 floor, staff/affinity/day-weather, and defense rules are explicit
   compatibility behavior, not retail conclusions.
+- For Kabura Arrow 17325, Patriarch Protector's Arrow 17329, Blind Bolt
+  18150, Venom Bolt 18152, Poison Arrow 18157, Sleep Arrow 18158, Demon Arrow
+  18159, and Spartan Bullet 18160, capture each physical hit/miss and 0x028
+  effect separately while varying level, rank/stat, magic evasion, associated
+  element resistance, overwrite state, and elapsed status duration. Current
+  proc/level/A-rank/INT/element/power/duration/half-tier behavior is explicit
+  compatibility, not retail proof.
+- For Spartan Bullet specifically, use two shooters and two targets to bracket
+  the post-Stun interval at one-second resolution; distinguish target,
+  shooter, and global ownership; compare ordinary shots with ranged weapon
+  skills; and interleave spell Stun plus a different Stun additional-effect
+  source. Accessible evidence supports a missing cooldown but conflicts
+  between approximately 10-20, 20-30, and 30 seconds.
 - Measure Elemental Spirit HP/MP/stat/weapon-damage scaling and Light Spirit decision behavior.
 - Capture Ballista packet fields, current schedules/rules, and client-visible match behavior.
 

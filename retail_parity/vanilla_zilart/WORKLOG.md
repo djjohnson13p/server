@@ -657,3 +657,91 @@ SQL, inventory, profile numeric, or human-only evidence file changed.
 Credential and process-environment values remained in process memory: no
 environment dump, credential value, token, password, connection string, or
 secret-bearing command argument was printed or persisted.
+
+## 2026-07-28 — VZ-COMBAT-001 Phase B2 status ammunition
+
+### Evidence and scope
+
+- Bounded production scope: Kabura Arrow 17325, Patriarch Protector's Arrow
+  17329, Blind Bolt 18150, Venom Bolt 18152, Poison Arrow 18157, Sleep Arrow
+  18158, Demon Arrow 18159, and Spartan Bullet 18160.
+- Read issue #7899 and all comments through the public GitHub CLI, reviewed
+  all seven public image/log attachments, searched accessible historical,
+  Japanese, and modern community references, and added a ranked per-item
+  evidence ledger.
+- Effect identities are supported. No controlled eight-item dataset resolves
+  proc, level correction, rank/stat, action element, power, duration, or
+  resist tiers. Acid/Sleep Bolt's controlled A-rank evidence was not copied.
+- Spartan evidence conflicts: Japanese summaries describe an approximately
+  30-second target-wide Spartan-only lockout; dated FFXIAH comments report
+  55/132 or a first-eligible-shot/10-20-second model; issue logs support a
+  modern cooldown hypothesis and roughly four-to-five-second visible Stun.
+  The exact cooldown was not guessed.
+
+### Reproduction and correction
+
+- The inherited DEBUFF handler selected/removes opposing boosts before the
+  authoritative status-container call.
+- A caller-path regression drives every earlier guard successfully, forces
+  authoritative application rejection, and reproduces the pre-correction
+  false removal.
+- Status policy lookup is now pure. The handler performs one application,
+  returns no result/removal on rejection, and removes the opposing boost
+  exactly once only after success.
+- No SQL, proc, level, rank/stat, element, power, duration, resist, overwrite,
+  presentation, or Spartan cooldown value changed.
+
+### Profile, tests, and inventory
+
+- Added a validated `VZ_STATUS_AMMUNITION` registry with exactly eight item
+  identities, SQL-compatibility fields, field-level evidence
+  classifications, and an explicit unresolved Spartan policy.
+- Validation rejects duplicates, malformed/drifted entries, Acid/Sleep
+  migration, and later Gashing/Abrasion/Oxidant ammunition.
+- Added 49 focused cases: 22 real ranged cases and 27 direct/profile cases.
+  All eight real successful shots serialize one matching status and consume
+  one ordinary shot; all eight physical misses perform zero status work.
+  Representative range/despawn/level/Recycle/Unlimited Shot cases pass.
+- Direct cases cover exact scope, malformed/duplicate/later IDs, Acid/Sleep
+  separation, one proc roll, every configured proc boundary, zero
+  post-failure work, every item's guards and full/half/below-floor outcome,
+  full/half/quarter/eighth/zero representative resist results,
+  A-rank/INT/element transport, all eight power/duration/tick values,
+  authoritative rejection, and one post-success boost removal.
+- The generated inventory now records profile family and machine-readable
+  field classifications. The eight scoped rows use precise status-owned
+  subeffect names; unrelated subeffect-18 rows retain an explicit shared
+  label. Generation/check and exact-profile sanity report 420 rows, 18
+  maintained V/Z profiles, and the unchanged 341 repository-wide diagnostics.
+
+### Validation and cleanup
+
+- The focused Phase B2 group passed 49/49; the final shared-framework plus
+  Phase B2 repeat passed 79/79. Phase A/Acid/Sleep/NM passed 40/40, Phase B1
+  passed 51/51, and the complete 0x028 group passed 65/65. Catch2 passed
+  19/19 with 9,007,079 assertions on every invocation.
+- Lua sanity for all seven changed Lua files, Python Black/pylint, inventory
+  generation/check, profile sanity, and `git diff --check` passed.
+- Fresh MSVC/Ninja Debug configure and `xi_test` build passed; the complete
+  all-target build finished its remaining 148/148 steps.
+- Two inventory writes were deterministic:
+  CSV `6B1FC13D5090DC3F0B09F2592AB3BE7B243EC163225E1C37A23A3F38B193B16D`
+  and Markdown
+  `26CEC1575F390103C43AB4A6B4E64D10D6C1F9037EB2B28211C5FE873F1A6F53`.
+- The disposable build, root executables/PDBs, isolated MariaDB process/data,
+  and downloaded public-evidence cache were removed. The owner's `xidb` was
+  untouched.
+- Changed-file secret-pattern scanning found no PAT, JWT, signed query,
+  assigned secret, or embedded remote credential. Shell commands printed
+  environment-variable names only, not values. During evidence retrieval the
+  GitHub connector itself returned short-lived signed attachment parameters
+  in a transient tool response; they were not echoed into shell output,
+  written to project files, committed, or retained in the deleted cache.
+
+### Phase assessment
+
+Phase B2 is `PARTIAL`: the framework, profile, real ranged path, inventory,
+and evidence boundary are hardened, but the eight items are not claimed
+retail-formula-correct and Spartan's missing cooldown remains explicit.
+Phase B3 should select a separate bounded family, preferably maintained
+drains.
