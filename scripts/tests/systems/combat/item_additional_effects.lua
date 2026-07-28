@@ -346,6 +346,20 @@ describe('Item additional effect framework', function()
         assert(target:getStatusEffect(xi.effect.DEFENSE_DOWN) == existing)
     end)
 
+    it('does not remove an opposing boost after authoritative status rejection', function()
+        allowStatusResolution(1)
+        target:addStatusEffect(xi.effect.ATTACK_BOOST, { power = 25, duration = 60, origin = player })
+        stub('xi.additionalEffect.applyStatus', false)
+        local remover = spy('xi.additionalEffect.removeOpposingStatus')
+
+        local item = findTestItem(xi.item.DEMON_ARROW)
+        local subEffect, messageId, amount = xi.additionalEffect.attack(player, target, 0, item)
+
+        assert(subEffect == 0 and messageId == 0 and amount == 0)
+        assert(target:hasStatusEffect(xi.effect.ATTACK_BOOST))
+        remover:called(0)
+    end)
+
     it('blocks an item above the effective level before profile resolution', function()
         player:setLevel(1)
         local resolver = spy('xi.additionalEffect.profile.resolve')

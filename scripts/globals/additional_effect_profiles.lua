@@ -109,8 +109,12 @@ local familyPolicy =
     },
 }
 
+local statusAmmunitionRegistry = {}
+
 local function resolveClassification(itemId, procType)
-    if procType == 14 then
+    if statusAmmunitionRegistry[itemId] then
+        return xi.additionalEffect.profile.classification.VERIFY_LIVE
+    elseif procType == 14 then
         return xi.additionalEffect.profile.classification.SPECIAL_CASE_TEST_BACKED
     elseif familyPolicy[procType] then
         return familyPolicy[procType].classification
@@ -126,18 +130,41 @@ xi.additionalEffect.profile.resolve = function(item, baseAttackDamage)
     local procType = item:getMod(xi.mod.ITEM_ADDEFFECT_TYPE)
     local policy   = itemPolicy[itemId] or {}
     local family   = familyPolicy[procType] or {}
+    local statusAmmunition = statusAmmunitionRegistry[itemId]
+    local profileFamily = 'SQL_MODIFIER_GENERIC'
+    local evidenceSource
+    local fieldClassifications
+    local triggeringAttack = 'MELEE_OR_RANGED'
+    local chancePolicy = 'SQL_MODIFIER'
+    local levelPolicy = 'SQL_MODIFIER'
+    local effectiveElement
+    if statusAmmunition then
+        profileFamily = 'VZ_STATUS_AMMUNITION'
+        evidenceSource = statusAmmunition.evidenceSource
+        fieldClassifications = statusAmmunition.fieldClassifications
+        triggeringAttack = 'SUCCESSFUL_RANGED_HIT'
+        chancePolicy = 'SQL_MODIFIER_COMPATIBILITY'
+        levelPolicy = 'SQL_MODIFIER_COMPATIBILITY'
+        effectiveElement = statusAmmunition.effectiveElement
+    end
 
     local profile =
     {
-        itemId         = itemId,
-        classification = resolveClassification(itemId, procType),
-        evidence       = policy.evidence or 'LEGACY_UNVERIFIED',
+        itemId            = itemId,
+        profileFamily     = profileFamily,
+        classification    = resolveClassification(itemId, procType),
+        evidence          = policy.evidence or 'LEGACY_UNVERIFIED',
+        evidenceSource    = evidenceSource,
+        statusAmmunition  = statusAmmunition,
+        fieldClassifications = fieldClassifications,
 
         proc =
         {
             chance              = item:getMod(xi.mod.ITEM_ADDEFFECT_CHANCE),
             levelCorrection     = item:getMod(xi.mod.ITEM_ADDEFFECT_LVADJUST),
-            triggeringAttack    = 'MELEE_OR_RANGED',
+            chancePolicy        = chancePolicy,
+            levelPolicy         = levelPolicy,
+            triggeringAttack    = triggeringAttack,
             distanceBandPolicy  = 'INHERIT_TRIGGERING_ATTACK_HIT',
             targetRestriction   = procType == 14 and 'NAMED_NM_CONFIG' or 'ATTACK_TARGET',
         },
@@ -152,6 +179,7 @@ xi.additionalEffect.profile.resolve = function(item, baseAttackDamage)
             governingStat         = policy.governingStat or xi.mod.INT,
             governingStatEvidence = policy.governingStatEvidence or 'LEGACY_UNVERIFIED',
             element               = item:getMod(xi.mod.ITEM_ADDEFFECT_ELEMENT),
+            effectiveElement      = effectiveElement,
             resistancePolicy      = procType == 2 and 'STATUS_MAGIC_TIER' or 'FAMILY_HANDLER',
             immunityPolicy        = procType == 2 and 'STATUS_HELPERS' or 'FAMILY_HANDLER',
             nullificationPolicy   = procType == 1 and 'MAGICAL_ONCE' or 'FAMILY_HANDLER',
@@ -221,6 +249,16 @@ xi.additionalEffect.profile.validate = function(profile)
 
         if profile.outcome.duration <= 0 then
             table.insert(errors, 'status profile requires positive duration')
+        end
+    end
+
+    if profile.statusAmmunition then
+        local validStatusAmmunition, statusAmmunitionErrors =
+            xi.additionalEffect.profile.validateStatusAmmunition(profile)
+        if not validStatusAmmunition then
+            for _, validationError in ipairs(statusAmmunitionErrors) do
+                table.insert(errors, validationError)
+            end
         end
     end
 
@@ -709,6 +747,385 @@ xi.additionalEffect.profile.scriptedDamageProfileCount = function()
     end
 
     return count
+end
+
+local function statusAmmunitionProfile(
+    itemId,
+    itemName,
+    ammunitionCategory,
+    effectId,
+    subEffect,
+    configuredElement,
+    effectiveElement,
+    chance,
+    levelCorrection,
+    power,
+    duration)
+    local evidence = xi.additionalEffect.profile.classification
+
+    return
+    {
+        itemId              = itemId,
+        itemName            = itemName,
+        profileFamily       = 'VZ_STATUS_AMMUNITION',
+        profileSource       = 'scripts/globals/additional_effect_profiles.lua',
+        evidenceSource      =
+            'retail_parity/vanilla_zilart/artifacts/' ..
+            'VZ-COMBAT-001-status-ammunition-evidence.md',
+        classification      = evidence.VERIFY_LIVE,
+        ammunitionCategory  = ammunitionCategory,
+        triggeringAttack    = 'SUCCESSFUL_RANGED_HIT',
+        distancePolicy      = 'INHERIT_TRIGGERING_ATTACK',
+        procChancePolicy    = 'SQL_MODIFIER_COMPATIBILITY',
+        levelPolicy         = 'SQL_MODIFIER_COMPATIBILITY',
+        procChance          = chance,
+        levelCorrection     = levelCorrection,
+        skillBasis          = xi.skillRank.A,
+        skillBasisPolicy    = 'LEGACY_A_RANK_COMPATIBILITY',
+        governingStat       = xi.mod.INT,
+        governingStatPolicy = 'LEGACY_INT_ACCURACY_COMPATIBILITY',
+        dStatPolicy         = 'NOT_USED_BY_STATUS_HANDLER',
+        configuredElement   = configuredElement,
+        effectiveElement    = effectiveElement,
+        elementPolicy       = 'SQL_OR_ASSOCIATED_STATUS_COMPATIBILITY',
+        statusEffect        = effectId,
+        power               = power,
+        powerPolicy         = 'SQL_MODIFIER_COMPATIBILITY',
+        duration            = duration,
+        durationPolicy      = 'SQL_MODIFIER_COMPATIBILITY',
+        resistancePolicy    = 'STATUS_MAGIC_TIER_MIN_HALF',
+        defensivePolicy     = 'STATUS_GUARDS_AND_CONTAINER',
+        applicationPolicy   = 'APPLY_ONCE_THEN_REMOVE_OPPOSING_BOOST',
+        overwritePolicy     = 'STATUS_CONTAINER_COMPATIBILITY',
+        presentationSubEffect = subEffect,
+        presentationMessage = xi.msg.basic.ADD_EFFECT_STATUS_2,
+        presentationPolicy  = 'NORMAL_RANGED_ADDITIONAL_EFFECT',
+        spartanCooldownPolicy =
+            itemId == xi.item.SPARTAN_BULLET and 'NOT_IMPLEMENTED_VERIFY_LIVE' or 'NOT_APPLICABLE',
+
+        fieldClassifications =
+        {
+            identity          = evidence.EVIDENCE_BACKED,
+            introductionEra   = evidence.EVIDENCE_BACKED,
+            statusEffect      = evidence.EVIDENCE_BACKED,
+            procChance        = evidence.VERIFY_LIVE,
+            levelCorrection   = evidence.VERIFY_LIVE,
+            skillBasis        = evidence.VERIFY_LIVE,
+            governingStat     = evidence.VERIFY_LIVE,
+            dStat             = evidence.NOT_APPLICABLE,
+            element           = evidence.VERIFY_LIVE,
+            power             = evidence.VERIFY_LIVE,
+            duration          = evidence.VERIFY_LIVE,
+            resistance        = evidence.VERIFY_LIVE,
+            immunity          = evidence.FRAMEWORK_CORRECT_LEGACY_NUMERICS,
+            traitResistance   = evidence.FRAMEWORK_CORRECT_LEGACY_NUMERICS,
+            nullification     = evidence.FRAMEWORK_CORRECT_LEGACY_NUMERICS,
+            overwrite         = evidence.VERIFY_LIVE,
+            opposingBoost     = evidence.FRAMEWORK_CORRECT_LEGACY_NUMERICS,
+            distance          = evidence.FRAMEWORK_CORRECT_LEGACY_NUMERICS,
+            ammunitionUse     = evidence.FRAMEWORK_CORRECT_LEGACY_NUMERICS,
+            presentation      = evidence.FRAMEWORK_CORRECT_LEGACY_NUMERICS,
+            spartanCooldown   =
+                itemId == xi.item.SPARTAN_BULLET and evidence.VERIFY_LIVE or evidence.NOT_APPLICABLE,
+        },
+
+        unresolvedEvidence =
+        {
+            'proc chance and level correction',
+            'magic accuracy, skill basis, and governing stat',
+            'action element and resistance tiers',
+            'power, duration, overwrite, and status-removal semantics',
+            'exact client presentation',
+        },
+    }
+end
+
+local statusAmmunitionDefinitions =
+{
+    statusAmmunitionProfile(
+        xi.item.KABURA_ARROW,
+        'kabura_arrow',
+        'ARCHERY',
+        xi.effect.SILENCE,
+        xi.subEffect.SILENCE,
+        xi.element.NONE,
+        xi.element.WIND,
+        95,
+        5,
+        1,
+        60),
+    statusAmmunitionProfile(
+        xi.item.PATRIARCH_PROTECTORS_ARROW,
+        'patriarch_protectors_arrow',
+        'ARCHERY',
+        xi.effect.PARALYSIS,
+        xi.subEffect.PARALYSIS,
+        xi.element.NONE,
+        xi.element.ICE,
+        95,
+        5,
+        30,
+        30),
+    statusAmmunitionProfile(
+        xi.item.BLIND_BOLT,
+        'blind_bolt',
+        'MARKSMANSHIP_BOLT',
+        xi.effect.BLINDNESS,
+        xi.subEffect.BLIND,
+        xi.element.DARK,
+        xi.element.DARK,
+        100,
+        5,
+        10,
+        30),
+    statusAmmunitionProfile(
+        xi.item.VENOM_BOLT,
+        'venom_bolt',
+        'MARKSMANSHIP_BOLT',
+        xi.effect.POISON,
+        xi.subEffect.POISON,
+        xi.element.WATER,
+        xi.element.WATER,
+        100,
+        5,
+        4,
+        30),
+    statusAmmunitionProfile(
+        xi.item.POISON_ARROW,
+        'poison_arrow',
+        'ARCHERY',
+        xi.effect.POISON,
+        xi.subEffect.POISON,
+        xi.element.NONE,
+        xi.element.WATER,
+        95,
+        5,
+        4,
+        30),
+    statusAmmunitionProfile(
+        xi.item.SLEEP_ARROW,
+        'sleep_arrow',
+        'ARCHERY',
+        xi.effect.SLEEP_I,
+        xi.subEffect.SLEEP,
+        xi.element.NONE,
+        xi.element.NONE,
+        95,
+        5,
+        0,
+        25),
+    statusAmmunitionProfile(
+        xi.item.DEMON_ARROW,
+        'demon_arrow',
+        'ARCHERY',
+        xi.effect.ATTACK_DOWN,
+        xi.subEffect.ATTACK_DOWN,
+        xi.element.NONE,
+        xi.element.WATER,
+        95,
+        5,
+        12,
+        60),
+    statusAmmunitionProfile(
+        xi.item.SPARTAN_BULLET,
+        'spartan_bullet',
+        'MARKSMANSHIP_BULLET',
+        xi.effect.STUN,
+        xi.subEffect.STUN,
+        xi.element.NONE,
+        xi.element.THUNDER,
+        10,
+        5,
+        10,
+        5),
+}
+
+local expectedStatusAmmunition = {}
+for _, definition in ipairs(statusAmmunitionDefinitions) do
+    expectedStatusAmmunition[definition.itemId] = definition
+end
+
+local function validateStatusAmmunitionDefinition(definition)
+    local errors = {}
+    if type(definition) ~= 'table' then
+        return false, { 'status-ammunition profile must be a table' }
+    end
+
+    local expected = expectedStatusAmmunition[definition.itemId]
+    if not expected then
+        table.insert(errors, string.format(
+            'unsupported status-ammunition item ID %s',
+            tostring(definition.itemId)))
+
+        return false, errors
+    end
+
+    for _, field in ipairs({
+        'itemName',
+        'profileFamily',
+        'ammunitionCategory',
+        'triggeringAttack',
+        'distancePolicy',
+        'procChancePolicy',
+        'levelPolicy',
+        'skillBasis',
+        'skillBasisPolicy',
+        'governingStat',
+        'governingStatPolicy',
+        'dStatPolicy',
+        'configuredElement',
+        'effectiveElement',
+        'elementPolicy',
+        'statusEffect',
+        'power',
+        'powerPolicy',
+        'duration',
+        'durationPolicy',
+        'resistancePolicy',
+        'defensivePolicy',
+        'applicationPolicy',
+        'overwritePolicy',
+        'presentationSubEffect',
+        'presentationMessage',
+        'presentationPolicy',
+        'spartanCooldownPolicy',
+    }) do
+        if definition[field] ~= expected[field] then
+            table.insert(errors, string.format(
+                'item %u has invalid %s %s',
+                definition.itemId,
+                field,
+                tostring(definition[field])))
+        end
+    end
+
+    for _, field in ipairs({ 'procChance', 'levelCorrection' }) do
+        if not isInteger(definition[field]) or definition[field] ~= expected[field] then
+            table.insert(errors, string.format(
+                'item %u has invalid %s %s',
+                definition.itemId,
+                field,
+                tostring(definition[field])))
+        end
+    end
+
+    if
+        definition.classification ~= xi.additionalEffect.profile.classification.VERIFY_LIVE or
+        type(definition.fieldClassifications) ~= 'table'
+    then
+        table.insert(errors, string.format(
+            'item %u must retain explicit VERIFY_LIVE field classifications',
+            definition.itemId))
+    end
+
+    return #errors == 0, errors
+end
+
+xi.additionalEffect.profile.buildStatusAmmunitionRegistry = function(definitions)
+    local registry = {}
+    local errors = {}
+
+    for index, definition in ipairs(definitions) do
+        local valid, validationErrors = validateStatusAmmunitionDefinition(definition)
+        for _, validationError in ipairs(validationErrors) do
+            table.insert(errors, string.format('definition %u: %s', index, validationError))
+        end
+
+        if valid then
+            if registry[definition.itemId] then
+                table.insert(errors, string.format(
+                    'duplicate status-ammunition item profile %u',
+                    definition.itemId))
+            else
+                registry[definition.itemId] = definition
+            end
+        end
+    end
+
+    if #errors > 0 then
+        return nil, errors
+    end
+
+    return registry, errors
+end
+
+local statusAmmunitionRegistryErrors
+statusAmmunitionRegistry, statusAmmunitionRegistryErrors =
+    xi.additionalEffect.profile.buildStatusAmmunitionRegistry(statusAmmunitionDefinitions)
+if not statusAmmunitionRegistry then
+    error(table.concat(statusAmmunitionRegistryErrors, '; '))
+end
+
+xi.additionalEffect.profile.resolveStatusAmmunition = function(item)
+    if item == nil then
+        return nil
+    end
+
+    local itemId = type(item) == 'number' and item or item:getID()
+
+    return statusAmmunitionRegistry[itemId]
+end
+
+xi.additionalEffect.profile.statusAmmunitionProfileCount = function()
+    local count = 0
+    for _ in pairs(statusAmmunitionRegistry) do
+        count = count + 1
+    end
+
+    return count
+end
+
+xi.additionalEffect.profile.validateStatusAmmunition = function(profile)
+    local errors = {}
+    local policy = profile and profile.statusAmmunition
+    local validPolicy, policyErrors = validateStatusAmmunitionDefinition(policy)
+    if not validPolicy then
+        return false, policyErrors
+    end
+
+    if
+        profile.profileFamily ~= 'VZ_STATUS_AMMUNITION' or
+        profile.classification ~= xi.additionalEffect.profile.classification.VERIFY_LIVE
+    then
+        table.insert(errors, 'status-ammunition profile must retain explicit VERIFY_LIVE scope')
+    end
+
+    local actualFields =
+    {
+        { 'proc chance', profile.proc.chance, policy.procChance },
+        { 'level correction', profile.proc.levelCorrection, policy.levelCorrection },
+        { 'skill basis', profile.accuracy.skillRank, policy.skillBasis },
+        { 'governing stat', profile.accuracy.governingStat, policy.governingStat },
+        { 'configured element', profile.accuracy.element, policy.configuredElement },
+        { 'effective element', profile.accuracy.effectiveElement, policy.effectiveElement },
+        { 'status effect', profile.outcome.statusEffect, policy.statusEffect },
+        { 'power', profile.outcome.power, policy.power },
+        { 'duration', profile.outcome.duration, policy.duration },
+        { 'subeffect', profile.presentation.subEffect, policy.presentationSubEffect },
+    }
+
+    for _, field in ipairs(actualFields) do
+        if field[2] ~= field[3] then
+            table.insert(errors, string.format(
+                'status-ammunition %s drifted: expected %s, got %s',
+                field[1],
+                tostring(field[3]),
+                tostring(field[2])))
+        end
+    end
+
+    if
+        profile.outcome.family ~= 2 or
+        profile.proc.triggeringAttack ~= policy.triggeringAttack or
+        profile.proc.chancePolicy ~= policy.procChancePolicy or
+        profile.proc.levelPolicy ~= policy.levelPolicy or
+        profile.accuracy.resistancePolicy ~= 'STATUS_MAGIC_TIER' or
+        profile.accuracy.partialResistPolicy ~= 'DURATION_SCALED_MIN_HALF'
+    then
+        table.insert(errors, 'status-ammunition execution policy drifted')
+    end
+
+    return #errors == 0, errors
 end
 
 return xi.additionalEffect.profile

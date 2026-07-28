@@ -21,7 +21,10 @@ describe('Ranged item additional effects', function()
         player.packets:clear()
         player.actions:engage(target)
         player.actions:rangedAttack(target)
-        xi.test.world:skipTime(10)
+        xi.test.world:advanceTime(10)
+        xi.test.world:setSeed(1)
+        xi.test.world:tickEntity(player)
+        xi.test.world:processClientUpdates()
     end
 
     local function findRangedFinish()

@@ -55,7 +55,7 @@ xi.additionalEffect.levelCorrectRates = function(dLV, aLV, chance, lvCorrect)
     return chance
 end
 
-xi.additionalEffect.statusAttack = function(addStatus, defender)
+xi.additionalEffect.statusAttack = function(addStatus)
     local effectList =
     {
         [xi.effect.DEFENSE_DOWN] = { tick = 0, strip = xi.effect.DEFENSE_BOOST },
@@ -67,14 +67,18 @@ xi.additionalEffect.statusAttack = function(addStatus, defender)
 
     local effect = effectList[addStatus]
     if effect then
-        if effect.strip then
-            defender:delStatusEffect(effect.strip)
-        end
-
-        return effect.tick
+        return effect.tick, effect.strip
     end
 
-    return 0
+    return 0, nil
+end
+
+xi.additionalEffect.applyStatus = function(target, effectId, params)
+    return target:addStatusEffect(effectId, params)
+end
+
+xi.additionalEffect.removeOpposingStatus = function(target, effectId)
+    target:delStatusEffect(effectId)
 end
 
 -- Pure damage calculation. The outcome is applied exactly once by the
@@ -286,12 +290,20 @@ xi.additionalEffect.procFunctions[xi.additionalEffect.procType.DEBUFF] = functio
     end
 
     -- Apply status effect.
-    local power    = params.power
-    local tick     = xi.additionalEffect.statusAttack(effectId, target)
+    local power = params.power
+    local tick, opposingBoost = xi.additionalEffect.statusAttack(effectId)
     local duration = math.floor(params.duration * resistRate)
 
-    if not target:addStatusEffect(effectId, { power = power, duration = duration, origin = actor, tick = tick }) then
+    local statusApplied = xi.additionalEffect.applyStatus(
+        target,
+        effectId,
+        { power = power, duration = duration, origin = actor, tick = tick })
+    if not statusApplied then
         return 0, 0, 0
+    end
+
+    if opposingBoost then
+        xi.additionalEffect.removeOpposingStatus(target, opposingBoost)
     end
 
     return subEffect, xi.msg.basic.ADD_EFFECT_STATUS_2, effectId
