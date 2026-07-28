@@ -608,3 +608,49 @@ accuracy/rank, resistance tiers, MAB, staff/affinity/day-weather, defense
 interactions, and exact client presentation need controlled live evidence.
 Phase B2 must remain a separate bounded family/configuration pass and must not
 copy this compatibility policy to later elemental arrows without evidence.
+
+## 2026-07-28 — VZ-COMBAT-001 Phase B1 RNG lifecycle hardening
+
+### Reproduction
+
+- Added lifecycle counters around the real scripted profile executor before
+  changing production.
+- The pre-correction focused run exited `1` with 48/51 passing. Exactly three
+  cases failed: failed proc, full nullification, and below-floor resistance
+  each consumed the eagerly evaluated 7-10 power roll.
+- Successful resolution, direct numeric base-power handling, and all 20 real
+  ranged arrow cases already passed, isolating the defect to power-roll
+  ordering.
+
+### Correction
+
+- `executeAddEffectDamage` now accepts either its existing numeric base power
+  or a zero-argument resolver and invokes the resolver once at the existing
+  damage-calculation point.
+- `executeScriptedDamageProfile` supplies the existing uniform 7-10 roll as
+  that resolver. Proc chance remains owned by the shared helper and is not
+  bypassed or replaced with 100%.
+- The resulting order is: parameter validation, existing preconditions, one
+  proc roll, nullification, resistance-floor rejection, absorption
+  classification, one power roll when needed, and one outcome application.
+- No proc chance, power range, stat, accuracy, resistance, multiplier,
+  defense, element, presentation, or ammunition policy changed.
+
+### Validation
+
+- Pre-correction focused reproduction: expected exit `1` (48/51).
+- Corrected focused run and final post-format/post-build repeat: exit `0`
+  (51/51 each).
+- Phase A/Acid/Sleep/NM regression group: exit `0` (39/39).
+- Complete `0x028` battle-action packet group: exit `0` (65/65).
+- Catch2 on every `xi_test` invocation: 19/19 and 9,007,079 assertions.
+- Fresh MSVC/Ninja Debug configure: exit `0`.
+- Resumed clean `xi_test` target build after a host crash: exit `0`
+  (263 remaining steps); the complete target linked successfully.
+- Complete remaining all-target Debug build: exit `0` (148/148).
+- Changed Lua passed repository binding, purity, `luacheck`, and style checks;
+  `git diff --check` passed.
+
+The host crash interrupted only disposable compilation and did not alter the
+branch, tracked diff, isolated database, or test evidence. No C++, Python,
+SQL, inventory, profile numeric, or human-only evidence file changed.

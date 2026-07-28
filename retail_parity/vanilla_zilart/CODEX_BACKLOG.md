@@ -113,12 +113,14 @@ Completed on 2026-07-26.
 - No controlled retail formula was found. Proc, power, A+ rank, no-stat/zero
   macc, disabled MAB, resist floor, staff/affinity/day-weather, and defensive
   interactions remain tested compatibility or `VERIFY_LIVE`.
-- The executor guarantees one proc/power/resist/null/absorb/application path
-  and reports actual HP damage/healing at caps.
-- Forty-seven focused Lua cases cover real ranged 0x028 hits, ordinary misses,
-  range/despawn/level gates, consumption, Recycle, Unlimited Shot, Enspell
-  priority, profile validation, formula boundaries, stats, tiers,
-  multipliers, defenses, null/absorb, and HP caps.
+- The executor guarantees one proc/resist/null/absorb/application path,
+  resolves power once only after proc and deterministic early rejection, and
+  reports actual HP damage/healing at caps. Existing numeric callers remain
+  compatible.
+- Fifty-one focused Lua cases cover proc-before-power ordering, real ranged
+  0x028 hits, ordinary misses, range/despawn/level gates, consumption,
+  Recycle, Unlimited Shot, Enspell priority, profile validation, formula
+  boundaries, stats, tiers, multipliers, defenses, null/absorb, and HP caps.
 - Inventory sanity proves exact three-item scope and prevents later elemental
   arrows from being migrated accidentally.
 

@@ -306,11 +306,15 @@ arrows are explicitly checked as unmigrated.
 | Distance | Inherit the successful physical ranged action; no second magical distance pass | `FRAMEWORK_CORRECT_LEGACY_NUMERICS` |
 | Presentation | Matching elemental subeffect and normal damage/heal message | `FRAMEWORK_CORRECT_LEGACY_NUMERICS` |
 
-The executor rolls power once, passes one complete table into the existing
-damage helper, and performs no second proc, resistance, nullification,
-absorption, or HP mutation. The ordinary ranged subsystem continues to own
-physical hit validation, range, item-level eligibility, ammo priority,
-consumption, Recycle, and Unlimited Shot.
+The executor passes a lazy power resolver into the existing damage helper.
+After profile validation, the helper performs its one proc roll and the
+existing nullification, resistance, and absorption checks. It resolves power
+exactly once only when the effect reaches damage calculation. A failed proc,
+full nullification, or resistance below the configured floor therefore does
+not advance power RNG. The path performs no second proc, resistance,
+nullification, absorption, or HP mutation. The ordinary ranged subsystem
+continues to own physical hit validation, range, item-level eligibility, ammo
+priority, consumption, Recycle, and Unlimited Shot.
 
 ### Deterministic packet-amount correction
 
@@ -322,6 +326,26 @@ effect value disagree with the target's HP delta.
 `executeScriptedDamageProfile` now snapshots the target HP and returns the
 actual damage or healing delta for these three profiles. It does not alter the
 shared legacy helper or unrelated scripted items.
+
+### Proc-before-power RNG correction
+
+A bounded follow-up reproduced an ordering defect in the initial Phase B1
+executor. It eagerly called `math.random(7, 10)` while constructing helper
+parameters, before the helper evaluated the configured proc chance. Failed
+procs therefore consumed a power roll that had no effect and perturbed later
+random outcomes. The same eager evaluation also occurred before full
+nullification and below-floor resistance rejection.
+
+The shared helper now accepts either the existing numeric `basePower` value or
+a zero-argument resolver. Parameter validation preserves that value without
+invoking it. Fire/Ice/Lightning Arrow profiles pass the existing 7-10 roll as
+the resolver; direct numeric callers remain unchanged. The resolver runs after
+proc success, nullification, resistance-floor rejection, and absorption
+classification, immediately before the existing damage formula.
+
+The pre-correction 51-case run exited `1`: 48 cases passed and exactly the
+failed-proc, full-nullification, and below-floor-resistance lazy-power cases
+failed. The corrected and final post-build runs both passed 51/51.
 
 ### Behavioral coverage
 
@@ -341,8 +365,13 @@ Direct production-executor tests prove:
 
 - registry validity, exact three-item scope, malformed-policy rejection, and
   duplicate rejection;
-- one proc roll and one 7-10 power roll, including both boundaries, plus a
-  synthetic configured 50% pass/fail boundary without a second proc roll;
+- failed proc with one proc roll, zero power/nullification/resistance/
+  absorption/application work, and no HP change;
+- successful synthetic 50% proc with exactly one proc, power, nullification,
+  resistance, absorption, and HP-application event;
+- zero power rolls after full nullification or below-floor resistance;
+- unchanged direct numeric-base callers with no resolver or power-RNG call;
+- one 7-10 power roll on successful resolution, including both boundaries;
 - no actor-INT, target-INT, or MAB contribution as compatibility behavior,
   without calling that behavior retail-correct;
 - full, half, quarter, eighth, and below-floor resistance outcomes;
@@ -361,7 +390,10 @@ generic item additional effects, NM hooks, and ordinary 0x028 behavior.
 - Fresh `xi_test` target build: exit `0` (`906/906`).
 - Complete all-target Debug build: exit `0` (`148/148` remaining steps);
   `xi_connect`, `xi_map`, `xi_search`, `xi_world`, and `xi_test` linked.
-- Final elemental-arrow/profile run: exit `0` (47/47).
+- Pre-correction elemental-arrow/profile run: expected exit `1` (48/51);
+  exactly the three lazy-power ordering cases failed.
+- Corrected and final post-build elemental-arrow/profile runs: exit `0`
+  (51/51 each).
 - Final Phase A framework, Acid/Sleep Bolt ranged, and NM regression group:
   exit `0` (39/39).
 - Final battle-action packet regression: exit `0` (65/65 `0x028` cases).

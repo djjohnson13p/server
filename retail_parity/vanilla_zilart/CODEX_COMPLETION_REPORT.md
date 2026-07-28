@@ -780,6 +780,72 @@ Phase B2 must select another bounded family or configuration group. It must
 not copy this compatibility profile to Earth/Water/Wind or later elemental
 arrows without separate evidence.
 
+## VZ-COMBAT-001 Phase B1 RNG lifecycle follow-up
+
+Starting from `72dbd42cb04ed9cca87585b0f69d22bede922ee7`, a bounded follow-up
+reproduced and corrected eager power RNG in the scripted-damage executor.
+Before correction, `executeScriptedDamageProfile` evaluated
+`math.random(7, 10)` while building helper parameters, before the helper's
+configured proc roll. Failed proc, full-nullification, and below-floor
+resistance attempts therefore advanced unused power RNG.
+
+The shared helper now preserves either a numeric base power or a zero-argument
+resolver through validation. It invokes the resolver once only after proc
+success, nullification, resistance-floor rejection, and absorption
+classification. The three arrow profiles pass their unchanged 7-10 roll as
+that resolver. Proc remains owned by the helper; no 100% bypass, second roll,
+numeric, multiplier, packet, or ammunition policy changed.
+
+Regression-first evidence:
+
+- pre-correction focused run: expected exit `1`, 48/51 passed; exactly the
+  three eager-power cases failed;
+- corrected focused run: exit `0`, 51/51;
+- Phase A/Acid/Sleep/NM group: exit `0`, 39/39;
+- complete `0x028` packet group: exit `0`, 65/65;
+- final post-format/post-build focused repeat: exit `0`, 51/51;
+- Catch2 on every invocation: 19/19 and 9,007,079 assertions.
+
+The 31 direct profile cases now prove failed-proc zero downstream work,
+successful exactly-once proc/power/nullification/resistance/absorption/
+application, zero power RNG after full nullification or below-floor resist,
+and unchanged direct numeric base-power callers. The 20 real ranged cases
+continue to prove all three items' ordinary hit/miss/range/level/ammunition/
+packet behavior.
+
+Validation and environment:
+
+```text
+cmake -G Ninja -S . -B build-codex-phase-b1-rng -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_COMPILER=cl -DCMAKE_CXX_COMPILER=cl -DENABLE_CLANG_TIDY=OFF -DTRACY_ENABLE=OFF -DPCH_ENABLE=OFF -DCACHE_OPTION=sccache
+# exit 0
+
+cmake --build build-codex-phase-b1-rng --target xi_test
+# exit 0 after resuming 263 remaining steps following a host crash
+
+xi_test.exe --keep-going --file item_additional_effects_elemental_arrow
+# expected pre-fix exit 1 (48/51); corrected and final exit 0 (51/51)
+
+xi_test.exe --keep-going --file "item_additional_effects\.lua" --file "item_additional_effects_ranged\.lua" --file "item_additional_effects_nm\.lua"
+# exit 0 (39/39)
+
+xi_test.exe --keep-going --file 0x028_battle2
+# exit 0 (65/65)
+
+tools/ci/sanity_checks/lua.sh scripts/combat/action_additional_effect_damage.lua scripts/tests/systems/combat/item_additional_effects_elemental_arrow_profiles.lua
+# exit 0 with the documented Windows UTF-8 and luacheck launcher prerequisites
+
+cmake --build build-codex-phase-b1-rng
+# exit 0 (148/148 remaining targets)
+
+git diff --check
+# exit 0
+```
+
+No C++, header, Python, SQL, inventory, numeric profile, or human-only queue
+content changed. The isolated database and build products were disposable;
+the owner's working `xidb` was not modified. The three arrows remain hardened
+compatibility profiles, not retail-formula-correct claims.
+
 ## Findings now fully test-backed
 
 - `VZ-ZONE-001` — server-side Uggalepih/Prelate door behavior.

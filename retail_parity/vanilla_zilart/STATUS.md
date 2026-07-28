@@ -11,7 +11,7 @@
 - **Assistant source-accessible stage:** Complete
 - **Codex handoff:** Ready
 - **Local Codex environment:** Validated
-- **Current project state:** `VZ_COMBAT_001_PHASE_B1_VALIDATED`
+- **Current project state:** `VZ_COMBAT_001_PHASE_B1_RNG_HARDENED`
 - **Upstream pull requests:** None; prohibited
 
 ## Baseline finding counts
@@ -44,7 +44,7 @@ coefficients and formulas were deliberately not invented.
 | ID | Area | Baseline status | Current fork state |
 |---|---|---|---|
 | `VZ-SYS-001` | Ballista | `MISSING` | Not implemented; largest remaining system |
-| `VZ-COMBAT-001` | Item additional effects | `INACCURATE` | Phase B1 complete: Phase A framework plus explicit tested Fire/Ice/Lightning Arrow compatibility profiles; their unsupported retail numerics remain `VERIFY_LIVE` |
+| `VZ-COMBAT-001` | Item additional effects | `INACCURATE` | Phase B1 complete and RNG-hardened: Phase A framework plus explicit tested Fire/Ice/Lightning Arrow compatibility profiles; proc now precedes lazy power resolution, while unsupported retail numerics remain `VERIFY_LIVE` |
 | `VZ-ZONE-001` | Temple of Uggalepih door keys | `INACCURATE` | Implemented and interaction-test-backed |
 | `VZ-JOB-001` | Summoner Elemental Spirits | `INACCURATE` | Not implemented; data/formula work remains |
 | `VZ-CORE-001` | Call for Help scope | `INACCURATE` | Hardened claim/CE/VE/boundary rules; Lua and C++ tests pass |
@@ -99,11 +99,14 @@ Completed:
   packets, Acid/Sleep ammunition, level eligibility, status guards, physical
   flags, and all five maintained NM interactions are covered.
 - Fire/Ice/Lightning Arrow Phase B1 moves exactly three scripted items to a
-  validated profile registry. Forty-seven focused Lua cases cover real ranged
-  hits, misses, range/despawn/level gates, ammo consumption/preservation,
-  element and packet presentation, 7-10 boundaries, stat/resistance/
-  multiplier compatibility, null/absorb, defenses, and actual HP-capped
-  amounts. Numeric retail claims remain `VERIFY_LIVE`.
+  validated profile registry. Fifty-one focused Lua cases additionally prove
+  that failed proc, full-nullification, and below-floor resistance paths do
+  not advance power RNG; successful and direct numeric paths retain
+  exactly-once lifecycle behavior. Real ranged hits, misses, range/despawn/
+  level gates, ammo consumption/preservation, element and packet
+  presentation, 7-10 boundaries, stat/resistance/multiplier compatibility,
+  null/absorb, defenses, and actual HP-capped amounts remain covered. Numeric
+  retail claims remain `VERIFY_LIVE`.
 - Lua style checks and `git diff --check` passed.
 - Fresh-directory MSVC/Ninja Debug configuration and all-target build passed.
 - Disposable build outputs and isolated test database were removed without

@@ -1,8 +1,8 @@
 # Codex State — Vanilla + Rise of the Zilart
 
-Status: VZ_COMBAT_001_PHASE_B1_VALIDATED
-Pass: 7
-Last updated: 2026-07-26
+Status: VZ_COMBAT_001_PHASE_B1_RNG_HARDENED
+Pass: 8
+Last updated: 2026-07-28
 
 ## Local Codex environment
 
@@ -43,7 +43,9 @@ The earlier `FAILED_INFRASTRUCTURE` state applied only to the assistant's networ
     through one validated item-profile registry. Exact element and
     deterministic result ownership are test-backed; unsupported 7-10/100%,
     stat, accuracy, resistance, and multiplier behavior remains explicit
-    compatibility/`VERIFY_LIVE`.
+    compatibility/`VERIFY_LIVE`. A follow-up makes base power lazy so failed
+    proc, full-nullification, and below-floor resistance paths do not advance
+    power RNG; numeric callers and successful outcomes remain unchanged.
 
 ## Validation completed
 
@@ -82,11 +84,13 @@ The earlier `FAILED_INFRASTRUCTURE` state applied only to the assistant's networ
   proc/resistance separation, exactly-once damage, absorb/nullification,
   physical/ranged/breath flags, level eligibility, status families, and all
   five maintained NM hooks.
-- `VZ-COMBAT-001` Phase B1: 47 focused Lua cases cover exactly three arrow
-  profiles, invalid/duplicate policy rejection, min/max power, stat and
-  multiplier compatibility, all configured resist tiers, nullification,
-  absorption, defenses, HP caps, and real ranged hit/miss/range/despawn/
-  level/ammo/priority paths. Inventory generation and exact-scope sanity pass.
+- `VZ-COMBAT-001` Phase B1: 51 focused Lua cases cover exactly three arrow
+  profiles, invalid/duplicate policy rejection, proc-before-power ordering,
+  early-rejection RNG preservation, direct numeric compatibility, min/max
+  power, stat and multiplier compatibility, all configured resist tiers,
+  nullification, absorption, defenses, HP caps, and real ranged hit/miss/
+  range/despawn/level/ammo/priority paths. Inventory generation and
+  exact-scope sanity pass.
 - Lua style/purity, SQL sanity, C++ formatting, and `git diff --check` passed.
 - A fresh-directory MSVC/Ninja Debug configuration passed.
 - The complete all-target MSVC/Ninja Debug build passed and linked
@@ -97,12 +101,14 @@ The earlier `FAILED_INFRASTRUCTURE` state applied only to the assistant's networ
 
 ## Current work
 
-The bounded `VZ-COMBAT-001` Phase B1 pass is complete. Modifier-driven
-families retain SQL numeric ownership; Fire/Ice/Lightning Arrow now share an
-explicit scripted-family profile without losing item identity. The evidence
-ledger found no controlled retail formula and preserves the contemporary
-not-always/roughly-5-10 claim in conflict with the inherited 100%/7-10
-behavior. Existing numerics are therefore compatibility, not a parity claim.
+The bounded `VZ-COMBAT-001` Phase B1 pass and RNG lifecycle follow-up are
+complete. Modifier-driven families retain SQL numeric ownership; Fire/Ice/
+Lightning Arrow now share an explicit scripted-family profile without losing
+item identity. Failed proc and earlier deterministic rejection paths no
+longer consume an unused power roll. The evidence ledger found no controlled
+retail formula and preserves the contemporary not-always/roughly-5-10 claim
+in conflict with the inherited 100%/7-10 behavior. Existing numerics are
+therefore compatibility, not a parity claim.
 
 Seven findings are implemented and test-backed. `VZ-JOB-002` and
 `VZ-COMBAT-001` remain partial where evidence is insufficient. Fire/Ice/

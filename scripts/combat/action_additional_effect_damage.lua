@@ -100,6 +100,14 @@ local function hasEnspell(actor)
     return false
 end
 
+local function resolveBasePower(basePower)
+    if type(basePower) == 'function' then
+        return basePower()
+    end
+
+    return basePower
+end
+
 -----------------------------------
 -- Global functions called from "emtity.onAdditionalEffect()"
 -----------------------------------
@@ -140,7 +148,8 @@ xi.combat.action.executeAddEffectDamage = function(actor, target, fedData)
     local absorb = xi.spells.damage.calculateAbsorption(params.aeTarget, params.magicalElement, params.attackType == xi.attackType.PHYSICAL, params.attackType == xi.attackType.MAGICAL, params.attackType == xi.attackType.RANGED, params.attackType == xi.attackType.BREATH) < 0
 
     -- Calculate base power.
-    local damage = utils.clamp(params.basePower + actor:getMod(params.actorStat) - params.aeTarget:getMod(params.targetStat), 0, 99999)
+    local basePower = resolveBasePower(params.basePower)
+    local damage    = utils.clamp(basePower + actor:getMod(params.actorStat) - params.aeTarget:getMod(params.targetStat), 0, 99999)
 
     -- Calculate mandatory multipliers.
     local multiplierDamageTypeSDT      = not absorb and xi.combat.damage.calculateDamageAdjustment(params.aeTarget, params.attackType == xi.attackType.PHYSICAL, params.attackType == xi.attackType.MAGICAL, params.attackType == xi.attackType.RANGED, params.attackType == xi.attackType.BREATH) or 1
@@ -226,12 +235,14 @@ xi.combat.action.executeScriptedDamageProfile = function(actor, target, item)
             table.concat(errors, '; ')))
     end
 
-    local basePower = math.random(profile.power.minimum, profile.power.maximum)
     local params =
     {
         chance         = profile.proc.chance,
         ignoreEnSpell  = true,
-        basePower      = basePower,
+        basePower      = function()
+            return math.random(profile.power.minimum, profile.power.maximum)
+        end,
+
         attackType     = profile.outcome.attackType,
         magicalElement = profile.outcome.element,
         actorStat      = profile.accuracy.actorStat,

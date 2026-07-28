@@ -42,9 +42,14 @@ describe('Elemental Arrow scripted damage profiles', function()
         return item
     end
 
-    local function isolateProfileFormula(basePower, resistRate, procResult)
-        local procRolls = 0
-        local powerRolls = 0
+    local function isolateProfileFormula(basePower, resistRate, procResult, lifecycle)
+        local procRolls          = 0
+        local powerRolls         = 0
+        local resistanceChecks   = 0
+        local nullificationChecks = 0
+        local absorptionChecks   = 0
+
+        lifecycle = lifecycle or {}
 
         stub('math.randomInt', function(minimum, maximum)
             assert(minimum == 1 and maximum == 100)
@@ -53,7 +58,7 @@ describe('Elemental Arrow scripted damage profiles', function()
                 return procResult()
             end
 
-            return procResult or 100
+            return procResult == nil and 100 or procResult
         end)
 
         stub('math.random', function(minimum, maximum)
@@ -62,9 +67,25 @@ describe('Elemental Arrow scripted damage profiles', function()
             return basePower
         end)
 
-        stub('xi.combat.magicHitRate.calculateResistRate', resistRate or 1)
-        stub('xi.spells.damage.calculateNullification', 1)
-        stub('xi.spells.damage.calculateAbsorption', 1)
+        stub('xi.combat.magicHitRate.calculateResistRate', function()
+            resistanceChecks = resistanceChecks + 1
+            if type(resistRate) == 'function' then
+                return resistRate()
+            end
+
+            return resistRate or 1
+        end)
+
+        stub('xi.spells.damage.calculateNullification', function()
+            nullificationChecks = nullificationChecks + 1
+            return lifecycle.nullification == nil and 1 or lifecycle.nullification
+        end)
+
+        stub('xi.spells.damage.calculateAbsorption', function()
+            absorptionChecks = absorptionChecks + 1
+            return lifecycle.absorption == nil and 1 or lifecycle.absorption
+        end)
+
         stub('xi.combat.damage.calculateDamageAdjustment', 1)
         stub('xi.combat.damage.physicalElementSDT', 1)
         stub('xi.combat.damage.magicalElementSDT', 1)
@@ -84,7 +105,12 @@ describe('Elemental Arrow scripted damage profiles', function()
         end)
 
         return function()
-            return procRolls, powerRolls
+            return
+                procRolls,
+                powerRolls,
+                resistanceChecks,
+                nullificationChecks,
+                absorptionChecks
         end
     end
 
@@ -213,33 +239,135 @@ describe('Elemental Arrow scripted damage profiles', function()
         end)
     end
 
-    it('honors a configured compatibility proc boundary with one roll per attempt', function()
+    it('does not advance power RNG or downstream resolution after a failed proc', function()
         local profile = copyTable(
             xi.additionalEffect.profile.resolveScriptedDamage(xi.item.FIRE_ARROW))
         profile.proc.chance = 50
         stub('xi.additionalEffect.profile.resolveScriptedDamage', profile)
 
-        local results = { 50, 51 }
-        local index = 0
-        local rollCounts = isolateProfileFormula(7, 1, function()
-            index = index + 1
-            return results[index]
+        local rollCounts = isolateProfileFormula(7, 1, 51)
+        local item = findItem(xi.item.FIRE_ARROW)
+        local applications = 0
+        target:addListener('TAKE_DAMAGE', 'TEST_FAILED_PROC_APPLICATION', function()
+            applications = applications + 1
         end)
 
+        local startingHP = target:getHP()
+
+        local subEffect, messageId, amount =
+            xi.combat.action.executeScriptedDamageProfile(player, target, item)
+        local procRolls, powerRolls, resistanceChecks, nullificationChecks, absorptionChecks =
+            rollCounts()
+
+        assert(subEffect == 0 and messageId == 0 and amount == 0)
+        assert(target:getHP() == startingHP)
+        assert(procRolls == 1)
+        assert(powerRolls == 0)
+        assert(resistanceChecks == 0)
+        assert(nullificationChecks == 0)
+        assert(absorptionChecks == 0)
+        assert(applications == 0)
+    end)
+
+    it('resolves a successful configured proc through each lifecycle stage exactly once', function()
+        local profile = copyTable(
+            xi.additionalEffect.profile.resolveScriptedDamage(xi.item.FIRE_ARROW))
+        profile.proc.chance = 50
+        stub('xi.additionalEffect.profile.resolveScriptedDamage', profile)
+
+        local rollCounts = isolateProfileFormula(7, 1, 50)
         local item = findItem(xi.item.FIRE_ARROW)
+        local applications = 0
+        target:addListener('TAKE_DAMAGE', 'TEST_SUCCESSFUL_PROC_APPLICATION', function()
+            applications = applications + 1
+        end)
 
-        local _, passMessage, passAmount =
-            xi.combat.action.executeScriptedDamageProfile(player, target, item)
-        local afterPassHP = target:getHP()
-        local failSubEffect, failMessage, failAmount =
-            xi.combat.action.executeScriptedDamageProfile(player, target, item)
-        local procRolls, powerRolls = rollCounts()
+        local startingHP = target:getHP()
 
-        assert(passMessage == xi.msg.basic.ADD_EFFECT_DMG and passAmount == 7)
-        assert(failSubEffect == 0 and failMessage == 0 and failAmount == 0)
-        assert(target:getHP() == afterPassHP)
-        assert(procRolls == 2)
-        assert(powerRolls == 2)
+        local subEffect, messageId, amount =
+            xi.combat.action.executeScriptedDamageProfile(player, target, item)
+        local procRolls, powerRolls, resistanceChecks, nullificationChecks, absorptionChecks =
+            rollCounts()
+
+        assert(subEffect == xi.subEffect.FIRE_DAMAGE)
+        assert(messageId == xi.msg.basic.ADD_EFFECT_DMG and amount == 7)
+        assert(startingHP - target:getHP() == amount)
+        assert(procRolls == 1)
+        assert(powerRolls == 1)
+        assert(resistanceChecks == 1)
+        assert(nullificationChecks == 1)
+        assert(absorptionChecks == 1)
+        assert(applications == 1)
+    end)
+
+    it('does not resolve power after full nullification', function()
+        local rollCounts = isolateProfileFormula(7, 1, 1, { nullification = 0 })
+        local item = findItem(xi.item.FIRE_ARROW)
+        local startingHP = target:getHP()
+
+        local subEffect, messageId, amount =
+            xi.combat.action.executeScriptedDamageProfile(player, target, item)
+        local procRolls, powerRolls, resistanceChecks, nullificationChecks, absorptionChecks =
+            rollCounts()
+
+        assert(subEffect == 0 and messageId == 0 and amount == 0)
+        assert(target:getHP() == startingHP)
+        assert(procRolls == 1)
+        assert(powerRolls == 0)
+        assert(resistanceChecks == 0)
+        assert(nullificationChecks == 1)
+        assert(absorptionChecks == 0)
+    end)
+
+    it('does not resolve power below the configured resist floor', function()
+        local rollCounts = isolateProfileFormula(7, 0.0625, 1)
+        local item = findItem(xi.item.FIRE_ARROW)
+        local startingHP = target:getHP()
+
+        local subEffect, messageId, amount =
+            xi.combat.action.executeScriptedDamageProfile(player, target, item)
+        local procRolls, powerRolls, resistanceChecks, nullificationChecks, absorptionChecks =
+            rollCounts()
+
+        assert(subEffect == 0 and messageId == 0 and amount == 0)
+        assert(target:getHP() == startingHP)
+        assert(procRolls == 1)
+        assert(powerRolls == 0)
+        assert(resistanceChecks == 1)
+        assert(nullificationChecks == 1)
+        assert(absorptionChecks == 0)
+    end)
+
+    it('preserves direct numeric base-power callers without a resolver invocation', function()
+        local rollCounts = isolateProfileFormula(7)
+        local applications = 0
+        target:addListener('TAKE_DAMAGE', 'TEST_NUMERIC_POWER_APPLICATION', function()
+            applications = applications + 1
+        end)
+
+        local startingHP = target:getHP()
+
+        local subEffect, messageId, amount =
+            xi.combat.action.executeAddEffectDamage(player, target, {
+                chance         = 100,
+                ignoreEnSpell  = true,
+                basePower      = 9,
+                attackType     = xi.attackType.MAGICAL,
+                magicalElement = xi.element.FIRE,
+                canResist      = true,
+            })
+        local procRolls, powerRolls, resistanceChecks, nullificationChecks, absorptionChecks =
+            rollCounts()
+
+        assert(subEffect == xi.subEffect.FIRE_DAMAGE)
+        assert(messageId == xi.msg.basic.ADD_EFFECT_DMG and amount == 9)
+        assert(startingHP - target:getHP() == amount)
+        assert(procRolls == 1)
+        assert(powerRolls == 0)
+        assert(resistanceChecks == 1)
+        assert(nullificationChecks == 1)
+        assert(absorptionChecks == 1)
+        assert(applications == 1)
     end)
 
     it('retains no-INT and no-MAB behavior only as a compatibility contract', function()
