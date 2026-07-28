@@ -36,18 +36,19 @@ The inventory intentionally includes every item found in active additional-effec
 
 - ISSUE_EVIDENCE_ONLY: 2
 - ITEM_SCRIPT: 1
-- SQL_MODIFIERS: 387
+- SQL_MODIFIERS: 379
 - SQL_MODIFIERS+ITEM_SCRIPT: 22
 - SQL_MODIFIERS+ITEM_SCRIPT+SCRIPTED_PROFILE: 3
 - SQL_MODIFIERS+SQL_LATENTS: 5
+- SQL_MODIFIERS+STATUS_AMMUNITION_PROFILE: 8
 
 ### Classification
 
 - CONFIGURATION_ERROR: 122
 - ERA_UNRESOLVED: 185
-- FRAMEWORK_CORRECT_LEGACY_NUMERICS: 10
+- FRAMEWORK_CORRECT_LEGACY_NUMERICS: 2
 - SPECIAL_CASE_TEST_BACKED: 5
-- VERIFY_LIVE: 98
+- VERIFY_LIVE: 106
 
 ## Configuration findings
 
@@ -569,9 +570,9 @@ The inventory intentionally includes every item found in active additional-effec
 | 17322 | fire_arrow | 45 | AMMO | SCRIPTED | PER_ITEM_LUA_PROFILE | VANILLA_OR_ZILART | VERIFY_LIVE | YES | proc chance and level correction; base power and random range; governing stat and dSTAT; magic accuracy and skill rank; MAB, staff, affinity, and day/weather multipliers; resist tiers and lowest tier; defensive mitigation and absorption details |
 | 17323 | ice_arrow | 45 | AMMO | SCRIPTED | PER_ITEM_LUA_PROFILE | VANILLA_OR_ZILART | VERIFY_LIVE | YES | proc chance and level correction; base power and random range; governing stat and dSTAT; magic accuracy and skill rank; MAB, staff, affinity, and day/weather multipliers; resist tiers and lowest tier; defensive mitigation and absorption details |
 | 17324 | lightning_arrow | 45 | AMMO | SCRIPTED | PER_ITEM_LUA_PROFILE | VANILLA_OR_ZILART | VERIFY_LIVE | YES | proc chance and level correction; base power and random range; governing stat and dSTAT; magic accuracy and skill rank; MAB, staff, affinity, and day/weather multipliers; resist tiers and lowest tier; defensive mitigation and absorption details |
-| 17325 | kabura_arrow | 70 | AMMO | DEBUFF | GLOBAL_ADDITIONAL_EFFECT | VANILLA_OR_ZILART | FRAMEWORK_CORRECT_LEGACY_NUMERICS | YES | item-specific retail numerics |
+| 17325 | kabura_arrow | 70 | AMMO | DEBUFF | GLOBAL_ADDITIONAL_EFFECT_PROFILE | VANILLA_OR_ZILART | VERIFY_LIVE | YES | proc chance and level correction; magic accuracy, skill basis, and governing stat; action element and resistance tiers; power, duration, overwrite, and status-removal semantics; exact client presentation |
 | 17327 | grand_knights_arrow | 60 | AMMO | SCRIPTED | PER_ITEM_LUA | ERA_UNRESOLVED | VERIFY_LIVE | YES | item-specific retail numerics |
-| 17329 | patriarch_protectors_arrow | 60 | AMMO | DEBUFF | GLOBAL_ADDITIONAL_EFFECT | VANILLA_OR_ZILART | FRAMEWORK_CORRECT_LEGACY_NUMERICS | YES | item-specific retail numerics |
+| 17329 | patriarch_protectors_arrow | 60 | AMMO | DEBUFF | GLOBAL_ADDITIONAL_EFFECT_PROFILE | VANILLA_OR_ZILART | VERIFY_LIVE | YES | proc chance and level correction; magic accuracy, skill basis, and governing stat; action element and resistance tiers; power, duration, overwrite, and status-removal semantics; exact client presentation |
 | 17411 | holy_mace_+1 | 43 | MAIN\|SUB | DAMAGE | GLOBAL_ADDITIONAL_EFFECT | ERA_UNRESOLVED | ERA_UNRESOLVED | YES | item-specific retail numerics |
 | 17414 | pixie_mace | 24 | MAIN\|SUB | DAMAGE | GLOBAL_ADDITIONAL_EFFECT | ERA_UNRESOLVED | ERA_UNRESOLVED | YES | item-specific retail numerics |
 | 17464 | purgatory_mace | 70 | MAIN\|SUB | DEBUFF | GLOBAL_ADDITIONAL_EFFECT | ERA_UNRESOLVED | ERA_UNRESOLVED | YES | item-specific retail numerics |
@@ -622,14 +623,14 @@ The inventory intentionally includes every item found in active additional-effec
 | 18124 | thalassocrat_+1 | 75 | MAIN | DEBUFF | GLOBAL_ADDITIONAL_EFFECT | ERA_UNRESOLVED | ERA_UNRESOLVED | YES | item-specific retail numerics |
 | 18148 | acid_bolt | 15 | AMMO | DEBUFF | GLOBAL_ADDITIONAL_EFFECT | VANILLA_OR_ZILART | FRAMEWORK_CORRECT_LEGACY_NUMERICS | YES | governing dSTAT/no-dSTAT behavior; item-specific proc/potency/duration retail confirmation |
 | 18149 | sleep_bolt | 20 | AMMO | DEBUFF | GLOBAL_ADDITIONAL_EFFECT | VANILLA_OR_ZILART | FRAMEWORK_CORRECT_LEGACY_NUMERICS | YES | governing dSTAT/no-dSTAT behavior; item-specific proc/potency/duration retail confirmation |
-| 18150 | blind_bolt | 10 | AMMO | DEBUFF | GLOBAL_ADDITIONAL_EFFECT | VANILLA_OR_ZILART | FRAMEWORK_CORRECT_LEGACY_NUMERICS | YES | item-specific retail numerics |
+| 18150 | blind_bolt | 10 | AMMO | DEBUFF | GLOBAL_ADDITIONAL_EFFECT_PROFILE | VANILLA_OR_ZILART | VERIFY_LIVE | YES | proc chance and level correction; magic accuracy, skill basis, and governing stat; action element and resistance tiers; power, duration, overwrite, and status-removal semantics; exact client presentation |
 | 18151 | bloody_bolt | 25 | AMMO | SCRIPTED | PER_ITEM_LUA | ERA_UNRESOLVED | VERIFY_LIVE | YES | item-specific retail numerics |
-| 18152 | venom_bolt | 25 | AMMO | DEBUFF | GLOBAL_ADDITIONAL_EFFECT | VANILLA_OR_ZILART | FRAMEWORK_CORRECT_LEGACY_NUMERICS | YES | item-specific retail numerics |
+| 18152 | venom_bolt | 25 | AMMO | DEBUFF | GLOBAL_ADDITIONAL_EFFECT_PROFILE | VANILLA_OR_ZILART | VERIFY_LIVE | YES | proc chance and level correction; magic accuracy, skill basis, and governing stat; action element and resistance tiers; power, duration, overwrite, and status-removal semantics; exact client presentation |
 | 18153 | holy_bolt | 30 | AMMO | SCRIPTED | PER_ITEM_LUA | ERA_UNRESOLVED | VERIFY_LIVE | YES | item-specific retail numerics |
-| 18157 | poison_arrow | 19 | AMMO | DEBUFF | GLOBAL_ADDITIONAL_EFFECT | VANILLA_OR_ZILART | FRAMEWORK_CORRECT_LEGACY_NUMERICS | YES | item-specific retail numerics |
-| 18158 | sleep_arrow | 35 | AMMO | DEBUFF | GLOBAL_ADDITIONAL_EFFECT | VANILLA_OR_ZILART | FRAMEWORK_CORRECT_LEGACY_NUMERICS | YES | item-specific retail numerics |
-| 18159 | demon_arrow | 60 | AMMO | DEBUFF | GLOBAL_ADDITIONAL_EFFECT | VANILLA_OR_ZILART | FRAMEWORK_CORRECT_LEGACY_NUMERICS | YES | item-specific retail numerics |
-| 18160 | spartan_bullet | 30 | AMMO | DEBUFF | GLOBAL_ADDITIONAL_EFFECT | VANILLA_OR_ZILART | FRAMEWORK_CORRECT_LEGACY_NUMERICS | YES | item-specific retail numerics |
+| 18157 | poison_arrow | 19 | AMMO | DEBUFF | GLOBAL_ADDITIONAL_EFFECT_PROFILE | VANILLA_OR_ZILART | VERIFY_LIVE | YES | proc chance and level correction; magic accuracy, skill basis, and governing stat; action element and resistance tiers; power, duration, overwrite, and status-removal semantics; exact client presentation |
+| 18158 | sleep_arrow | 35 | AMMO | DEBUFF | GLOBAL_ADDITIONAL_EFFECT_PROFILE | VANILLA_OR_ZILART | VERIFY_LIVE | YES | proc chance and level correction; magic accuracy, skill basis, and governing stat; action element and resistance tiers; power, duration, overwrite, and status-removal semantics; exact client presentation |
+| 18159 | demon_arrow | 60 | AMMO | DEBUFF | GLOBAL_ADDITIONAL_EFFECT_PROFILE | VANILLA_OR_ZILART | VERIFY_LIVE | YES | proc chance and level correction; magic accuracy, skill basis, and governing stat; action element and resistance tiers; power, duration, overwrite, and status-removal semantics; exact client presentation |
+| 18160 | spartan_bullet | 30 | AMMO | DEBUFF | GLOBAL_ADDITIONAL_EFFECT_PROFILE | VANILLA_OR_ZILART | VERIFY_LIVE | YES | proc chance and level correction; magic accuracy, skill basis, and governing stat; action element and resistance tiers; power, duration, overwrite, and status-removal semantics; exact client presentation; Spartan target/source cooldown duration, ownership, weapon-skill eligibility, and unrelated-Stun interaction |
 | 18161 | arctic_wind | 72 | AMMO | NM_SPECIFIC | GLOBAL_ADDITIONAL_EFFECT | VANILLA_OR_ZILART | SPECIAL_CASE_TEST_BACKED | YES | item-specific retail numerics |
 | 18162 | east_wind | 72 | AMMO | NM_SPECIFIC | GLOBAL_ADDITIONAL_EFFECT | VANILLA_OR_ZILART | SPECIAL_CASE_TEST_BACKED | YES | item-specific retail numerics |
 | 18163 | zephyr | 72 | AMMO | NM_SPECIFIC | GLOBAL_ADDITIONAL_EFFECT | VANILLA_OR_ZILART | SPECIAL_CASE_TEST_BACKED | YES | item-specific retail numerics |
