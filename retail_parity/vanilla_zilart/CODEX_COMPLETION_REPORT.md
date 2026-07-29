@@ -6,23 +6,21 @@ Status: BOUNDED_PASS_COMPLETE_PROJECT_IN_PROGRESS
 
 - Repository: `djjohnson13p/server`
 - Work branch: `retail-parity/codex-vanilla-zilart`
-- Current bounded-pass starting commit: `27192abe552cca8223d4be9637b774e25113f73f`
+- Current bounded-pass starting commit: `ceea3840fd780e95dabf41cc0d44df3a83037959`
 - Pinned upstream baseline: `242ab0d055dfb80396e7398b0dd7361b750c74e2`
 - Upstream pull requests: none; prohibited
 - Upstream push: disabled/prohibited
 
-The bounded `VZ-COMBAT-001` Phase B1 pass is complete. Fire Arrow, Ice Arrow,
-and Lightning Arrow now use one exact-scope scripted profile registry with
-real ranged-state, packet, ammunition, mitigation, and validation coverage.
-Element identity is evidence-backed and packet amount now follows actual HP
-change at caps.
+The bounded `VZ-COMBAT-001` Phase B4 pass is complete as a shared-core
+profile/framework pass. Hofud, Vampirism, and Crepuscular Knife now use one
+exact-scope combined-resource registry, one branch-selection owner, and one
+resource-transfer owner with direct and real-melee packet coverage.
 
-The overall finding remains partial. No controlled retail formula was found,
-so the inherited 100% proc, uniform 7-10 power, A+ rank, no-stat model,
-resistance floor, and multipliers remain explicit compatibility/
-`VERIFY_LIVE`, not retail conclusions. Seven findings are fully implemented
-and test-backed; Shadowbind and item additional effects remain deliberately
-partial where evidence is insufficient.
+The overall finding remains partial. All three scoped items are later-
+expansion items, and no controlled retail formula was found. Their configured
+proc/amount values, uniform selection, no-retry policy, Dark calculation,
+eligibility, and presentation remain explicit compatibility/`VERIFY_LIVE`,
+not retail conclusions.
 
 ## Commits created
 
@@ -50,6 +48,10 @@ partial where evidence is insufficient.
   `test(retail-parity): validate Shadowbind behavior`
 - `01bb2d6556df17fcb4e26851b9b9202adb445bdf` —
   `test(retail-parity): validate Uggalepih door keys`
+- `ed17e640af9ea3d133839d9cce651bc89ed8cb31` —
+  `test: restore stacked Lua doubles safely`
+- `4969a50bae343cf21745976ee486d38b053f5372` —
+  `feat: profile combined resource drain effects`
 
 The documentation/state commit follows these source/test commits.
 
@@ -1246,6 +1248,147 @@ Phase B4 should address the maintained combined HP/MP and HP/MP/TP drain
 configuration group as a separate bounded pass. It must not infer branch
 selection/order or generalize Phase B3's compatibility formula without
 separate evidence.
+
+## VZ-COMBAT-001 Phase B4 combined-resource-drain pass
+
+### Scope, era, and evidence boundary
+
+Phase B4 covers exactly Hofud 17745, Vampirism 20706, and Crepuscular Knife
+21585. Independent public sources date them to 2007, 2015, and 2021, so all
+three are `LATER_EXPANSION`; the maintained Vanilla/Zilart profile count
+remains 18.
+
+The evidence ledger records official release evidence where available,
+Japanese and English community summaries, current repository configuration,
+and controlled server tests separately. No controlled retail packet log or
+counted trial dataset was found. Hofud's reported roughly-20-percent rate and
+per-resource maxima are uncited; Vampirism's reported 100-percent behavior
+lacks a denominator; and Crepuscular sources conflict between equal/100-
+percent behavior and approximately 45/45/10 branch behavior. No numeric or
+selection claim was promoted from those reports.
+
+The active configuration remains:
+
+- Hofud: HP/MP family, 15-percent configured proc, fixed 15 amount, no level
+  correction, configured None/effective Dark, Darkness Damage subeffect;
+- Vampirism: HP/MP/TP family, 100-percent configured proc, fixed 20 amount,
+  no level correction, configured None/effective Dark, MP Drain subeffect;
+- Crepuscular Knife: HP/MP/TP family, 15-percent configured proc, fixed 15
+  amount, no level correction, configured None/effective Dark, Darkness
+  Damage subeffect.
+
+These are compatibility facts, not retail-formula conclusions. No SQL
+changed.
+
+### Aggregate-test isolation correction
+
+The mandatory pre-edit six-selector aggregate reproduced the earlier
+unexplained failure as Windows access violation `0xC0000005` at case 76/198.
+Binary splits isolated it to stacked Lua doubles. `MockManager::restoreAll()`
+restored doubles by type and installation order, which could leave a Lua
+global pointing to a freed earlier stub. The test framework now records one
+combined installation order and restores all doubles in reverse before
+freeing them. Stacked stub/stub and stub/spy regressions passed 9/9, and the
+corrected pre-edit aggregate passed 198/198.
+
+This deterministic harness correction was committed separately as
+`ed17e640af test: restore stacked Lua doubles safely`. It does not change
+production item behavior.
+
+### Profile and execution architecture
+
+The exact three-item `VZ_COMBINED_RESOURCE_DRAIN` registry owns item/era/
+resource identity, configured proc and level policies, equip/attack
+eligibility, selection timing and distribution, retry policy, legacy
+calculation policy, caps, packet presentation, field classifications, and
+unresolved evidence. Validation rejects unsupported IDs, duplicates,
+malformed resource/message mappings, SQL drift, handler-family drift,
+element drift, and unsupported policy changes.
+
+The ordinary item layer retains the only overall proc roll. A successful
+Hofud proc selects one uniform integer in 1..2 and maps it to HP/MP. A
+successful Vampirism or Crepuscular proc selects one integer in 1..3 and maps
+it to HP/MP/TP. The selected resource is resolved once and never retried after
+empty, resisted, nullified, absorbed, dead, or undead outcomes. This mapping
+and no-retry behavior are preserved compatibility, not retail claims.
+
+The Phase B3 fixed-resource executor now delegates only its transfer work to
+a shared one-resource primitive; B3 and B4 keep separate registries and
+selection owners. The primitive resolves the legacy calculation once,
+clamps negative absorption to zero, removes no more than the selected target
+resource, credits only that attacker resource, and reports actual target
+removal in one normal 0x028 additional-effect result.
+
+### Behavioral coverage and validation
+
+The 55 focused B4 cases cover:
+
+- exact scope, complete policies, SQL and resource/message consistency,
+  malformed/duplicate/unsupported profiles, and B3/scripted separation;
+- all eight item/resource combinations and invalid selectors;
+- one proc, one selection, one calculation, one transfer, and no retry;
+- below/equal/above/zero target resource, attacker near/full caps, every
+  legacy resistance tier/floor, nullification, absorption, dead/invalid/
+  undead targets, and nonselected-resource isolation;
+- real main/off-hand attacks for all three items, one ordinary result,
+  physical miss, level gate, target despawn, Enspell priority, multi-attack
+  cardinality, and ordinary melee.
+
+The final validation matrix passed:
+
+```text
+# Every Windows configure/build shell first ran:
+call "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\Common7\Tools\VsDevCmd.bat" -no_logo -arch=x64 -host_arch=x64
+
+xi_test.exe --keep-going --file item_additional_effects_combined_resource_drain_profiles --file item_additional_effects_combined_resource_drains
+# exit 0, 55/55 focused and final post-build
+
+xi_test.exe --keep-going --file item_additional_effects_single_resource_drain_profiles --file item_additional_effects_single_resource_drains
+# exit 0, 58/58 Phase B3 and final post-build
+
+xi_test.exe --keep-going --file item_additional_effects_status_ammunition
+# exit 0, 49/49 Phase B2
+
+xi_test.exe --keep-going --file item_additional_effects_elemental_arrow
+# exit 0, 51/51 Phase B1
+
+xi_test.exe --keep-going --file "item_additional_effects\.lua" --file "item_additional_effects_ranged\.lua" --file "item_additional_effects_nm\.lua"
+# exit 0, 40/40 Phase A
+
+xi_test.exe --keep-going --file 0x028_battle2
+# exit 0, 65/65 packet regression
+
+xi_test.exe --keep-going --file "item_additional_effects\.lua" --file "item_additional_effects_ranged\.lua" --file "item_additional_effects_nm\.lua" --file item_additional_effects_elemental_arrow --file item_additional_effects_status_ammunition --file item_additional_effects_single_resource_drain
+# corrected pre-edit, post-edit, and final post-build repeats: exit 0,
+# 198/198 each; final repeat 132.916 seconds
+
+cmake -G Ninja -S . -B build-codex-phase-b4-final -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_COMPILER=cl -DCMAKE_CXX_COMPILER=cl -DENABLE_CLANG_TIDY=OFF -DTRACY_ENABLE=OFF -DPCH_ENABLE=OFF -DCACHE_OPTION=sccache
+# exit 0
+
+cmake --build build-codex-phase-b4-final --target xi_test
+# exit 0, 906/906
+
+cmake --build build-codex-phase-b4-final
+# exit 0, 148/148 remaining all-target steps
+```
+
+Catch2 passed 19/19 with 9,007,079 assertions on every `xi_test`
+invocation. Inventory generation twice, `--check`, profile sanity, changed-
+Lua style/purity, Black, pylint, C++ clang-format, and `git diff --check` all
+passed. There was no SQL change, so SQL/dbtool mutation was not applicable.
+
+The deterministic inventory has 420 rows, 18 maintained Vanilla/Zilart
+profiles, three later-expansion combined profiles, and 341 unchanged
+repository-wide diagnostics. Its SHA-256 values are:
+
+- CSV: `D93DF1289C3A936C5FD0556176DEED9170F38B930548CB4F82E64BEAD205D11F`;
+- Markdown: `9240CA8BC15F540B5FE6CE97F5500FC7A208C4F6F3763EA9EC8CCADFB4D0A174`.
+
+Phase B4 is `COMPLETE_PHASE_B4` as a bounded profile/framework pass. The
+three items are not claimed retail-formula-correct, and `VZ-COMBAT-001`
+remains partial. Phase B5 should take one new bounded family or configuration
+group; it must not combine Dispel, absorb-status, Death, self-buffs, spikes,
+Elemental Spirits, Ballista, or another audit area.
 
 ## Client/live-retail-only candidates
 

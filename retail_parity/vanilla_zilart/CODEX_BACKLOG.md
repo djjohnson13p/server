@@ -167,18 +167,36 @@ Status: `COMPLETE_PHASE_B3` as a bounded framework/profile pass;
   multipliers/defenses, caps/undead/priority, and exact presentation remain
   `VERIFY_LIVE` as listed in the evidence ledger and human-only queue.
 
+### `VZ-COMBAT-001` Phase B4 — Combined-resource drains
+
+Status: `COMPLETE_PHASE_B4` as a bounded shared-core framework/profile pass;
+`VZ-COMBAT-001` remains partial.
+
+- Hofud, Vampirism, and Crepuscular Knife are independently established as
+  2007/2015/2021 `LATER_EXPANSION` items and do not increase the 18-item
+  maintained Vanilla/Zilart count.
+- Exactly three validated profiles own HP/MP or HP/MP/TP identity, selection,
+  no-retry, transfer, presentation, evidence classification, and unresolved
+  policy while keeping SQL as the numeric source.
+- Fifty-five focused cases cover every forced branch, resource/cap boundary,
+  one proc/selection/calculation/transfer, empty/resisted/nullified/absorbed/
+  undead no-retry behavior, isolation, and real main/off-hand 0x028 paths.
+- Uniform selection, SQL chance/amount, no retry, Dark calculation,
+  multi-attack eligibility, caps, and presentation remain compatibility/
+  `VERIFY_LIVE`; conflicting community claims were not promoted to formulas.
+- The mandatory pre-edit aggregate exposed and separately corrected stacked
+  Lua-double restoration order; its regression and the corrected 198/198
+  aggregate protect all completed item suites.
+
 ## Priority 1 — Remaining known implementation findings
 
-### `VZ-COMBAT-001` Phase B4 — Evidence-backed family migrations
+### `VZ-COMBAT-001` Phase B5 — Evidence-backed family migrations
 
 - Use the generated inventory to select one bounded effect family or
   configuration-error group at a time.
-- Prefer the maintained combined HP/MP and HP/MP/TP drain group for the next
-  bounded pass; do not mix it with Dispel, Death, self-buffs, or spikes.
 - Establish item/era evidence before changing classifications or numerics.
-- Resolve combined-branch selection/order, damage type/MAB/dSTAT, drain
-  accuracy/scaling/order, Dispel,
-  self-buff, Death, and equipment-spikes behavior only where evidence
+- Resolve remaining damage type/MAB/dSTAT, other-drain accuracy/scaling,
+  Dispel, self-buff, Death, and equipment-spikes behavior only where evidence
   supports it.
 - Preserve compatibility/`VERIFY_LIVE` behavior when evidence is still
   insufficient; do not generalize the Acid/Sleep A-rank result.
@@ -188,6 +206,8 @@ Status: `COMPLETE_PHASE_B3` as a bounded framework/profile pass;
   evidence to later bolts or another item family without separate evidence.
 - Do not generalize the Phase B3 single-resource compatibility policy to
   combined or scripted drains without separate evidence.
+- Do not generalize the Phase B4 combined-drain compatibility policy to
+  other combined or scripted drains without separate evidence.
 - Add real melee/ranged/reaction packet tests for each migrated group.
 
 ### `VZ-JOB-001` — Summoner Elemental Spirits

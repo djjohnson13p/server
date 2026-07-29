@@ -11,7 +11,7 @@
 - **Assistant source-accessible stage:** Complete
 - **Codex handoff:** Ready
 - **Local Codex environment:** Validated
-- **Current project state:** `VZ_COMBAT_001_PHASE_B3_SINGLE_RESOURCE_DRAINS_PROFILED`
+- **Current project state:** `VZ_COMBAT_001_PHASE_B4_COMBINED_RESOURCE_DRAINS_PROFILED`
 - **Upstream pull requests:** None; prohibited
 
 ## Baseline finding counts
@@ -44,7 +44,7 @@ coefficients and formulas were deliberately not invented.
 | ID | Area | Baseline status | Current fork state |
 |---|---|---|---|
 | `VZ-SYS-001` | Ballista | `MISSING` | Not implemented; largest remaining system |
-| `VZ-COMBAT-001` | Item additional effects | `INACCURATE` | Phase B3 partial: Phase A framework, Phase B1 arrows, Phase B2 status ammunition, and exact Aspir Knife/Bloody Rapier/Shinsoku profiles and transfers are test-backed; unsupported numerics remain `VERIFY_LIVE` |
+| `VZ-COMBAT-001` | Item additional effects | `INACCURATE` | Phase B4 partial: Phase A framework, B1 arrows, B2 status ammunition, B3 single drains, and exact later-expansion Hofud/Vampirism/Crepuscular combined-drain profiles are test-backed; unsupported numerics remain `VERIFY_LIVE` |
 | `VZ-ZONE-001` | Temple of Uggalepih door keys | `INACCURATE` | Implemented and interaction-test-backed |
 | `VZ-JOB-001` | Summoner Elemental Spirits | `INACCURATE` | Not implemented; data/formula work remains |
 | `VZ-CORE-001` | Call for Help scope | `INACCURATE` | Hardened claim/CE/VE/boundary rules; Lua and C++ tests pass |
@@ -125,6 +125,19 @@ Completed:
   scripted, and later drains. Shinsoku now has the missing TP-drain
   subeffect and explicit compatibility element; its active 8%/10 values did
   not change. Retail numerics remain `VERIFY_LIVE`.
+- Combined-resource-drain Phase B4 proves Hofud, Vampirism, and Crepuscular
+  Knife are 2007/2015/2021 `LATER_EXPANSION` items and moves exactly those
+  configurations into a validated combined profile. Fifty-five focused cases
+  cover every HP/MP/TP branch, one proc and selection, no-retry behavior,
+  resource/cap/resist/null/absorb/dead/undead boundaries, and real main/off-
+  hand 0x028 actions. Current uniform selection, SQL numerics, Dark stack,
+  multi-attack eligibility, and presentation remain compatibility/
+  `VERIFY_LIVE`.
+- The previously unexplained 198-case item aggregate exposed a stacked-Lua-
+  double lifetime defect. Reverse installation-order restoration and two
+  framework regressions corrected it; the mandatory pre-B4 aggregate then
+  passed 198/198. The post-edit and final post-build repeats also passed
+  198/198.
 - Lua style checks and `git diff --check` passed.
 - Fresh-directory MSVC/Ninja Debug configuration and all-target build passed.
 - Disposable build outputs and isolated test database were removed without
@@ -154,6 +167,7 @@ Still required:
 - [x] Complete `VZ-COMBAT-001` Phase B1 elemental-arrow profile pass
 - [x] Complete `VZ-COMBAT-001` Phase B2 status-ammunition profile pass
 - [x] Complete `VZ-COMBAT-001` Phase B3 single-resource-drain profile pass
+- [x] Complete `VZ-COMBAT-001` Phase B4 combined-resource-drain profile pass
 - [ ] Complete `VZ-COMBAT-001` Phase B evidence/formula passes
 - [ ] Complete the remaining two unimplemented known findings
 - [ ] Continue the exhaustive local-repository Vanilla/Zilart audit
@@ -164,11 +178,11 @@ Still required:
 Use the latest head of `retail-parity/codex-vanilla-zilart`. Fetch `origin`,
 read `CODEX_STATE.md`, `CODEX_BACKLOG.md`, `LOCAL_CODEX_ENVIRONMENT.md`, the
 worklog, completion report, generated VZ-COMBAT-001 inventory, all Phase B
-evidence ledgers, and finding files. Begin Phase B4 around one separate
-bounded family, preferably maintained combined HP/MP and HP/MP/TP drains.
-Do not extend the elemental-arrow, status-ammunition, or single-resource-
-drain compatibility policies without separate evidence. Then continue the
-remaining known findings and exhaustive audit.
+evidence ledgers, and finding files. Begin one bounded Phase B5 family or
+configuration group. Do not extend elemental-arrow, status-ammunition,
+single-resource-drain, or combined-resource-drain compatibility policy
+without separate evidence. Then continue the remaining known findings and
+exhaustive audit.
 
 ## Guardrails
 

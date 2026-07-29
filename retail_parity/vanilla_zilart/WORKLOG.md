@@ -812,3 +812,97 @@ retail-formula claim. `VZ-COMBAT-001` remains partial. Phase B4 should select
 the maintained combined HP/MP and HP/MP/TP drain group as a separate pass and
 must retain every unresolved field until controlled retail evidence supports
 a correction.
+
+## 2026-07-29 — VZ-COMBAT-001 Phase B4 combined-resource drains
+
+### Starting state and mandatory aggregate
+
+- Synchronized the GitHub Desktop repository at
+  `ceea3840fd780e95dabf41cc0d44df3a83037959` on the required branch; origin
+  was the fork, upstream push was disabled, recursive submodule fetch was
+  disabled, and the worktree was clean.
+- Created a disposable MariaDB database and fresh MSVC/Ninja Debug test
+  build. The owner's working `xidb` and ForgeRaid paths/services were not
+  used.
+- The mandatory six-selector aggregate reproduced the previously unexplained
+  failure as a Windows access violation at case 76/198.
+- Binary splits isolated the trigger to loading the NM file after earlier
+  elemental-arrow profile tests. Stacked Lua doubles on one path were
+  restored by type/in installation order, leaving a Lua global pointing at a
+  freed earlier stub; the extra file changed heap reuse and exposed it.
+- `MockManager` now tracks one combined installation order and restores
+  doubles in reverse before freeing them. Lua framework regressions cover
+  stacked stub/stub and stub/spy paths. Focused framework tests passed 9/9;
+  the corrected mandatory pre-B4 aggregate passed 198/198 in one process.
+- The isolated harness correction was committed separately as
+  `ed17e640af test: restore stacked Lua doubles safely`.
+
+### Evidence and exact scope
+
+- Scoped exactly Hofud 17745, Vampirism 20706, and Crepuscular Knife 21585.
+  No scripted drain, unrelated combined drain, Dispel, absorb-status, Death,
+  self-buff, spikes, Elemental Spirits, Ballista, or other area was migrated.
+- Independent sources establish the three items as 2007, 2015, and 2021
+  `LATER_EXPANSION`; the maintained Vanilla/Zilart count remains 18.
+- Added a ranked evidence ledger with independent item and HP/MP versus
+  HP/MP/TP architecture sections. Public mechanics claims are uncontrolled
+  and conflict materially for Crepuscular selection/proc/amount behavior.
+- No SQL numeric changed. The active 15%/15, 100%/20, and 15%/15 policies,
+  uniform branch selection, no retry, legacy Dark calculation, caps,
+  multi-attack eligibility, and presentation remain compatibility/
+  `VERIFY_LIVE`.
+
+### Architecture and tests
+
+- Added exactly three validated `VZ_COMBINED_RESOURCE_DRAIN` profiles with
+  item/era/resource/proc/level/equip, selection/timing/retry, formula/
+  resistance/null/absorb/undead, amount/caps/defenses, outcome/presentation,
+  field-classification, and unresolved-evidence ownership.
+- Added a single combined selection owner. Proc failure makes zero selection
+  rolls; success maps HPMP 1/2 to HP/MP and HPMPTP 1/2/3 to HP/MP/TP, selects
+  once, and never retries another branch.
+- Factored the B3 one-resource mutation into a shared transfer primitive
+  without combining the B3 and B4 registries. It calculates and transfers
+  one selected resource, reports actual target removal, and clamps negative
+  absorption to zero.
+- Added 55 focused B4 cases covering exact scope/validation, all eight
+  item/branch combinations, proc/selection/calculation cardinality, every
+  resource and attacker boundary, resistance tiers, null/absorb, empty/dead/
+  invalid/undead/no-retry, isolation, and real main/off-hand/miss/level/
+  despawn/Enspell/multi-attack/ordinary-melee 0x028 behavior.
+- The first focused run passed 51/55. One fixture incorrectly mutated
+  Vampirism's authoritative 100% profile, correctly triggering drift
+  validation; three HP assertions assumed a fixed max HP instead of the
+  job-derived value. The corrected focused run passed 55/55. No production
+  defect was hidden.
+- Final review found that a missing resource-message table could raise while
+  validating a malformed profile. Validation now reports the malformed
+  resource mapping cleanly, with a focused regression; valid profile
+  execution is unchanged.
+- The Phase B3 assertion intentionally changed only to recognize the separate
+  combined registry; its complete external regression still passed 58/58.
+- The final post-build repeats passed B4 55/55, B3 58/58, and the mandatory
+  six-selector aggregate 198/198 (132.916 seconds). Earlier focused groups
+  passed B2 49/49, B1 51/51, Phase A 40/40, and 0x028 65/65. Catch2 passed
+  19/19 with 9,007,079 assertions on every invocation.
+
+### Inventory and phase result
+
+- Extended generation and exact-scope sanity with three
+  `LATER_EXPANSION` rows, verified SQL chance/amount/family/subeffect,
+  resource-set mapping, exact handler/test/evidence references, no unrelated
+  migration, and all required unresolved fields.
+- Two consecutive writes were identical: CSV
+  `D93DF1289C3A936C5FD0556176DEED9170F38B930548CB4F82E64BEAD205D11F`
+  and Markdown
+  `9240CA8BC15F540B5FE6CE97F5500FC7A208C4F6F3763EA9EC8CCADFB4D0A174`.
+  Generation/check and profile sanity report 420 rows, 18 maintained V/Z
+  profiles, three later-expansion combined profiles, and the unchanged 341
+  repository-wide diagnostics.
+- Phase B4 is `COMPLETE_PHASE_B4` as a bounded shared-core framework/profile
+  pass. The items are not retail-formula-correct and `VZ-COMBAT-001` remains
+  partial.
+- Fresh MSVC/Ninja Debug configuration passed; `xi_test` built 906/906 and
+  the remaining all-target build passed 148/148. Changed-Lua style/purity,
+  Black, pylint, C++ clang-format, profile sanity, deterministic generation,
+  and `git diff --check` passed. No SQL changed.

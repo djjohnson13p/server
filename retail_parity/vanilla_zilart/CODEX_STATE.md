@@ -1,8 +1,8 @@
 # Codex State — Vanilla + Rise of the Zilart
 
-Status: VZ_COMBAT_001_PHASE_B3_SINGLE_RESOURCE_DRAINS_PROFILED
-Pass: 10
-Last updated: 2026-07-28
+Status: VZ_COMBAT_001_PHASE_B4_COMBINED_RESOURCE_DRAINS_PROFILED
+Pass: 11
+Last updated: 2026-07-29
 
 ## Local Codex environment
 
@@ -55,6 +55,11 @@ The earlier `FAILED_INFRASTRUCTURE` state applied only to the assistant's networ
     resolve through one validated single-resource-drain registry and one
     exact-scope transfer owner. Shinsoku's missing TP-drain presentation data
     is corrected; unsupported retail numerics remain `VERIFY_LIVE`.
+13. `VZ-COMBAT-001` Phase B4 — later-expansion Hofud, Vampirism, and
+    Crepuscular Knife now resolve through one validated combined-resource-
+    drain registry, one branch-selection owner, and the shared one-resource
+    transfer primitive. Uniform/no-retry selection and unsupported retail
+    formulas remain explicit compatibility/`VERIFY_LIVE`.
 
 ## Validation completed
 
@@ -115,6 +120,18 @@ The earlier `FAILED_INFRASTRUCTURE` state applied only to the assistant's networ
   resistance tiers, defense/null/absorb, dead/undead, real main/off-hand
   packets, miss/level/despawn/priority/multi-attack, and ordinary melee.
   Combined, scripted, and later drains are explicitly excluded.
+- `VZ-COMBAT-001` Phase B4: 55 focused Lua cases cover exactly three
+  `LATER_EXPANSION` combined-resource profiles, malformed/duplicate/SQL
+  drift, every HP/MP/TP selector, one proc/selection/calculation/transfer,
+  resource and cap boundaries, compatibility resistance tiers, no retry
+  after empty/resisted/nullified/absorbed/undead branches, resource
+  isolation, and real main/off-hand/miss/level/despawn/priority/multi-
+  attack/ordinary melee paths.
+- The mandatory six-selector aggregate reproduced the prior unexplained
+  failure as a stacked Lua-double lifetime defect. Reverse installation-
+  order restoration is regression-backed; the corrected pre-edit aggregate
+  passed 198/198 in one process. Post-edit and final post-build repeats also
+  passed 198/198.
 - Lua style/purity, SQL sanity, C++ formatting, and `git diff --check` passed.
 - A fresh-directory MSVC/Ninja Debug configuration passed.
 - The complete all-target MSVC/Ninja Debug build passed and linked
@@ -125,27 +142,27 @@ The earlier `FAILED_INFRASTRUCTURE` state applied only to the assistant's networ
 
 ## Current work
 
-The bounded `VZ-COMBAT-001` Phase B3 pass is complete as a profile/framework
-hardening pass. Aspir Knife, Bloody Rapier, and Shinsoku retain SQL numeric
-ownership behind explicit identities and field classifications. Their
-resource transfer is now exact-scope, single-owner, capped to actual target
-resource, and test-backed through real melee actions. Shinsoku's missing
-subeffect/element data is corrected without changing its active 8%/10
-policy. Evidence supports identity and selected era classifications but not
-a complete formula, so unsupported numerics and multipliers remain explicit
-compatibility rather than a parity claim.
+The bounded `VZ-COMBAT-001` Phase B4 pass is complete as a shared-core
+profile/framework hardening pass. Independent evidence classifies Hofud,
+Vampirism, and Crepuscular Knife as 2007, 2015, and 2021
+`LATER_EXPANSION`; the maintained Vanilla/Zilart count remains 18. Their SQL
+numbers, uniform branch choice, no-retry policy, legacy Dark calculation,
+and presentation remain explicit compatibility because no controlled retail
+dataset was found. Deterministic ownership, every branch, real melee packets,
+resource isolation, and B3 regression behavior are automated.
 
 Seven findings are implemented and test-backed. `VZ-JOB-002` and
 `VZ-COMBAT-001` remain partial where evidence is insufficient. Fire/Ice/
 Lightning Arrow, the eight Phase B2 status items, and the three Phase B3
-single-resource drains are hardened/profiled, not retail-formula-corrected.
-The item framework's combined-drain, other drain, self-buff, Death, spikes,
-and item-specific damage/status numerics are explicit `VERIFY_LIVE` or
+single-resource drains plus the three later Phase B4 combined drains are
+hardened/profiled, not retail-formula-corrected. The item framework's
+remaining drains, Dispel, absorb-status, self-buff, Death, spikes, and
+item-specific damage/status numerics are explicit `VERIFY_LIVE` or
 compatibility work, not claimed retail-correct.
 
 ## Remaining AI-capable work
 
-- Continue `VZ-COMBAT-001` Phase B4 in bounded, evidence-backed family or
+- Continue `VZ-COMBAT-001` Phase B5 in bounded, evidence-backed family or
   configuration groups.
 - Complete `VZ-JOB-001` Elemental Spirit data, spell-selection, and scaling work.
 - Implement `VZ-SYS-001` Ballista.
@@ -180,6 +197,10 @@ candidates remain:
   from resist and varying amount/scaling, skill/stat/dSTAT, Dark resistance,
   multiplier/defense/null/absorb/undead paths, empty/full resource caps,
   main/off-hand priority, lethal HP drain, and exact 0x028 presentation.
+- controlled Hofud/Vampirism/Crepuscular datasets separating overall proc,
+  branch selection, resistance, nonuniform-distribution hypotheses,
+  retry/fallback, per-resource amount/scaling, empty/full caps, multi-attack,
+  Dark/null/absorb/undead/defense behavior, and exact 0x028 presentation.
 
 ## Exact next-pass instructions
 
@@ -187,10 +208,9 @@ candidates remain:
    inherited-validation pass.
 2. Read `AGENTS.md`, `CODEX_MASTER_TASK.md`, `CODEX_BACKLOG.md`, `LOCAL_CODEX_ENVIRONMENT.md`, the status/worklog, completion report, and all finding files.
 3. Confirm the worktree is clean and remain on `retail-parity/codex-vanilla-zilart`.
-4. Begin one bounded `VZ-COMBAT-001` Phase B4 family/configuration pass using
-   the generated inventory and evidence ledgers, preferably maintained
-   combined HP/MP and HP/MP/TP drains. Do not silently extend the Phase
-   B1/B2/B3 compatibility policies.
+4. Begin one bounded `VZ-COMBAT-001` Phase B5 family/configuration pass using
+   the generated inventory and evidence ledgers. Do not silently extend the
+   Phase B1/B2/B3/B4 compatibility policies.
 5. Initialize MSVC through `VsDevCmd.bat` for all Windows configure/build commands.
 6. Run narrow tests first, then the full MSVC/Ninja Debug build.
 7. Fix failures caused by the fork changes; do not hide failures or weaken unrelated assertions.

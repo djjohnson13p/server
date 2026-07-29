@@ -11,7 +11,8 @@ The inventory intentionally includes every item found in active additional-effec
 
 ### Era
 
-- ERA_UNRESOLVED: 400
+- ERA_UNRESOLVED: 397
+- LATER_EXPANSION: 3
 - VANILLA: 1
 - VANILLA_OR_ZILART: 18
 - ZILART: 1
@@ -38,7 +39,8 @@ The inventory intentionally includes every item found in active additional-effec
 
 - ISSUE_EVIDENCE_ONLY: 2
 - ITEM_SCRIPT: 1
-- SQL_MODIFIERS: 376
+- SQL_MODIFIERS: 373
+- SQL_MODIFIERS+COMBINED_RESOURCE_DRAIN_PROFILE: 3
 - SQL_MODIFIERS+ITEM_SCRIPT: 22
 - SQL_MODIFIERS+ITEM_SCRIPT+SCRIPTED_PROFILE: 3
 - SQL_MODIFIERS+SINGLE_RESOURCE_DRAIN_PROFILE: 3
@@ -601,7 +603,7 @@ The inventory intentionally includes every item found in active additional-effec
 | 17695 | bayards_sword | 73 | MAIN\|SUB | DEBUFF | GLOBAL_ADDITIONAL_EFFECT | ERA_UNRESOLVED | ERA_UNRESOLVED | YES | item-specific retail numerics |
 | 17704 | vulcan_sword | 18 | MAIN\|SUB | DAMAGE | GLOBAL_ADDITIONAL_EFFECT | ERA_UNRESOLVED | ERA_UNRESOLVED | YES | item-specific retail numerics |
 | 17711 | shivas_shotel | 72 | MAIN\|SUB | DAMAGE | GLOBAL_ADDITIONAL_EFFECT | ERA_UNRESOLVED | ERA_UNRESOLVED | YES | item-specific retail numerics |
-| 17745 | hofud | 75 | MAIN\|SUB | HPMP_DRAIN | GLOBAL_ADDITIONAL_EFFECT | ERA_UNRESOLVED | VERIFY_LIVE | YES | combined-drain resolution ordering |
+| 17745 | hofud | 75 | MAIN\|SUB | HPMP_DRAIN | GLOBAL_COMBINED_RESOURCE_DRAIN_PROFILE | LATER_EXPANSION | VERIFY_LIVE | YES | HP_OR_MP uniform branch distribution, ordering, and retry/fallback; proc chance and level correction; fixed versus random per-resource amount and scaling; skill, accuracy, stat, dSTAT, and Dark element; resistance, nullification, absorption, undead, empty-resource, and defensive behavior; main/off-hand, multi-attack, Enspell priority, resource caps, and exact resource-specific presentation |
 | 17750 | anthos_xiphos | 25 | MAIN\|SUB | DAMAGE | GLOBAL_ADDITIONAL_EFFECT | ERA_UNRESOLVED | CONFIGURATION_ERROR | NO | DAMAGE requires a valid nonzero element; DAMAGE requires positive ITEM_ADDEFFECT_DMG; invalid proc chance None; item-specific retail numerics |
 | 17768 | yoto_+1 | 46 | MAIN\|SUB | DEBUFF | GLOBAL_ADDITIONAL_EFFECT | ERA_UNRESOLVED | ERA_UNRESOLVED | YES | item-specific retail numerics |
 | 17770 | mamushito_+1 | 72 | MAIN\|SUB | DEBUFF | GLOBAL_ADDITIONAL_EFFECT | ERA_UNRESOLVED | ERA_UNRESOLVED | YES | item-specific retail numerics |
@@ -778,7 +780,7 @@ The inventory intentionally includes every item found in active additional-effec
 | 20673 | flametongue | 99 | MAIN\|SUB | DAMAGE | GLOBAL_ADDITIONAL_EFFECT | ERA_UNRESOLVED | CONFIGURATION_ERROR | NO | invalid proc chance None; item-specific retail numerics |
 | 20685 | excalibur_119_iii | 99 | MAIN\|SUB | SCRIPTED | PER_ITEM_LUA | ERA_UNRESOLVED | VERIFY_LIVE | YES | item-specific retail numerics |
 | 20688 | tizona_119_iii | 99 | MAIN\|SUB | DAMAGE | GLOBAL_ADDITIONAL_EFFECT | ERA_UNRESOLVED | CONFIGURATION_ERROR | NO | DAMAGE requires a valid nonzero element; DAMAGE requires positive ITEM_ADDEFFECT_DMG; invalid proc chance None; item-specific retail numerics |
-| 20706 | vampirism | 99 | MAIN\|SUB | HPMPTP_DRAIN | GLOBAL_ADDITIONAL_EFFECT | ERA_UNRESOLVED | VERIFY_LIVE | YES | combined-drain resolution ordering |
+| 20706 | vampirism | 99 | MAIN\|SUB | HPMPTP_DRAIN | GLOBAL_COMBINED_RESOURCE_DRAIN_PROFILE | LATER_EXPANSION | VERIFY_LIVE | YES | HP_OR_MP_OR_TP uniform branch distribution, ordering, and retry/fallback; proc chance and level correction; fixed versus random per-resource amount and scaling; skill, accuracy, stat, dSTAT, and Dark element; resistance, nullification, absorption, undead, empty-resource, and defensive behavior; main/off-hand, multi-attack, Enspell priority, resource caps, and exact resource-specific presentation |
 | 20790 | guttler_119 | 99 | MAIN\|SUB | DAMAGE | GLOBAL_ADDITIONAL_EFFECT | ERA_UNRESOLVED | CONFIGURATION_ERROR | NO | DAMAGE requires a valid nonzero element; DAMAGE requires positive ITEM_ADDEFFECT_DMG; invalid proc chance None; item-specific retail numerics |
 | 20791 | guttler_119_ii | 99 | MAIN\|SUB | DAMAGE | GLOBAL_ADDITIONAL_EFFECT | ERA_UNRESOLVED | CONFIGURATION_ERROR | NO | DAMAGE requires a valid nonzero element; DAMAGE requires positive ITEM_ADDEFFECT_DMG; invalid proc chance None; item-specific retail numerics |
 | 20835 | bravura_119 | 99 | MAIN | DAMAGE | GLOBAL_ADDITIONAL_EFFECT | ERA_UNRESOLVED | CONFIGURATION_ERROR | NO | DAMAGE requires a valid nonzero element; DAMAGE requires positive ITEM_ADDEFFECT_DMG; invalid proc chance None; item-specific retail numerics |
@@ -805,7 +807,7 @@ The inventory intentionally includes every item found in active additional-effec
 | 21315 | righteous_bolt | 99 | AMMO | SCRIPTED | PER_ITEM_LUA | ERA_UNRESOLVED | VERIFY_LIVE | YES | item-specific retail numerics |
 | 21323 | oxidant_bolt | 99 | AMMO | UNSELECTED | NOT_ACTIVE | ERA_UNRESOLVED | CONFIGURATION_ERROR | NO | additional-effect modifiers have no active handler selector; item-specific retail numerics |
 | 21570 | air_knife | 99 | MAIN\|SUB | DAMAGE | GLOBAL_ADDITIONAL_EFFECT | ERA_UNRESOLVED | CONFIGURATION_ERROR | NO | invalid proc chance None; item-specific retail numerics |
-| 21585 | crepuscular_knife | 99 | MAIN\|SUB | HPMPTP_DRAIN | GLOBAL_ADDITIONAL_EFFECT | ERA_UNRESOLVED | VERIFY_LIVE | YES | combined-drain resolution ordering |
+| 21585 | crepuscular_knife | 99 | MAIN\|SUB | HPMPTP_DRAIN | GLOBAL_COMBINED_RESOURCE_DRAIN_PROFILE | LATER_EXPANSION | VERIFY_LIVE | YES | HP_OR_MP_OR_TP uniform branch distribution, ordering, and retry/fallback; proc chance and level correction; fixed versus random per-resource amount and scaling; skill, accuracy, stat, dSTAT, and Dark element; resistance, nullification, absorption, undead, empty-resource, and defensive behavior; main/off-hand, multi-attack, Enspell priority, resource caps, and exact resource-specific presentation |
 | 21750 | guttler_119_iii | 99 | MAIN\|SUB | DAMAGE | GLOBAL_ADDITIONAL_EFFECT | ERA_UNRESOLVED | CONFIGURATION_ERROR | NO | DAMAGE requires a valid nonzero element; DAMAGE requires positive ITEM_ADDEFFECT_DMG; invalid proc chance None; item-specific retail numerics |
 | 21756 | bravura_119_iii | 99 | MAIN | DAMAGE | GLOBAL_ADDITIONAL_EFFECT | ERA_UNRESOLVED | CONFIGURATION_ERROR | NO | DAMAGE requires a valid nonzero element; DAMAGE requires positive ITEM_ADDEFFECT_DMG; invalid proc chance None; item-specific retail numerics |
 | 21808 | apocalypse_119_iii | 99 | MAIN | DAMAGE | GLOBAL_ADDITIONAL_EFFECT | ERA_UNRESOLVED | CONFIGURATION_ERROR | NO | DAMAGE requires a valid nonzero element; DAMAGE requires positive ITEM_ADDEFFECT_DMG; invalid proc chance None; item-specific retail numerics |

@@ -64,6 +64,19 @@ STATUS_AMMUNITION_CONSTANTS = {
     18160: ("SPARTAN_BULLET", "STUN", "STUN", "NONE", "THUNDER"),
 }
 
+COMBINED_RESOURCE_DRAIN_CONSTANTS = {
+    17745: ("HOFUD", "HP_OR_MP", 8, 15, 15, "DARKNESS_DAMAGE"),
+    20706: ("VAMPIRISM", "HP_OR_MP_OR_TP", 9, 100, 20, "MP_DRAIN"),
+    21585: (
+        "CREPUSCULAR_KNIFE",
+        "HP_OR_MP_OR_TP",
+        9,
+        15,
+        15,
+        "DARKNESS_DAMAGE",
+    ),
+}
+
 
 def load_generator(root: Path) -> ModuleType:
     generator_path = (
@@ -322,6 +335,91 @@ def main() -> int:
         row = by_id[later_item]
         if row["profile_family"] == "VZ_STATUS_AMMUNITION":
             errors.append(f"out-of-scope later ammunition migrated: {later_item}")
+
+    if profile_text.count("combinedResourceDrainProfile(") != 4:
+        errors.append(
+            "combined-resource drain registry must contain one constructor and "
+            "exactly three profile definitions"
+        )
+
+    for item_id, (
+        item_constant,
+        resource_set,
+        family,
+        chance,
+        amount,
+        subeffect,
+    ) in COMBINED_RESOURCE_DRAIN_CONSTANTS.items():
+        row = by_id[item_id]
+        if item_constant not in enum_text:
+            errors.append(f"item {item_id}: missing item enum constant {item_constant}")
+
+        profile = generator.COMBINED_RESOURCE_DRAIN_PROFILES[item_id]
+        expected_fragment = (
+            f"xi.item.{item_constant},\n"
+            f"        '{profile['name']}',\n"
+            f"        '{profile['introduction_date']}',"
+        )
+        if expected_fragment not in profile_text:
+            errors.append(f"item {item_id}: combined-drain profile identity drift")
+
+        config = generator.parse_configs(root)[item_id]
+        expected_mods = {
+            431: family,
+            499: profile["subeffect_id"],
+            500: amount,
+            501: chance,
+            950: 0,
+            1181: 0,
+        }
+        for mod_id, expected in expected_mods.items():
+            actual = config.value(mod_id) or 0
+            if actual != expected:
+                errors.append(
+                    f"item {item_id}: modifier {mod_id} was {actual}, "
+                    f"expected {expected}"
+                )
+        if config.script_paths:
+            errors.append(f"item {item_id}: combined drain has a per-item script")
+
+        expected_row_values = {
+            "era": "LATER_EXPANSION",
+            "profile_family": "VZ_COMBINED_RESOURCE_DRAIN",
+            "profile_source": generator.COMBINED_RESOURCE_DRAIN_PROFILE_SOURCE,
+            "current_handler": "GLOBAL_COMBINED_RESOURCE_DRAIN_PROFILE",
+            "proc_policy": "FIXED_PERCENT_SQL_COMPATIBILITY; VERIFY_LIVE",
+            "proc_chance": str(chance),
+            "base_power_policy": (f"FIXED_{amount}_SQL_COMPATIBILITY; VERIFY_LIVE"),
+            "element": ("CONFIGURED_NONE;EFFECTIVE_DARK_COMPATIBILITY;VERIFY_LIVE"),
+            "subeffect": subeffect,
+            "current_classification": "VERIFY_LIVE",
+            "evidence_sources": (generator.COMBINED_RESOURCE_DRAIN_EVIDENCE_SOURCE),
+        }
+        for field, expected in expected_row_values.items():
+            if row[field] != expected:
+                errors.append(
+                    f"item {item_id}: {field} was {row[field]!r}, "
+                    f"expected {expected!r}"
+                )
+
+        for expected_text in (
+            resource_set,
+            "uniform",
+            "retry/fallback",
+        ):
+            if expected_text.lower() not in row["unresolved_questions"].lower():
+                errors.append(
+                    f"item {item_id}: unresolved boundary omits {expected_text}"
+                )
+
+        for test_name in (
+            "item_additional_effects_combined_resource_drains.lua",
+            "item_additional_effects_combined_resource_drain_profiles.lua",
+        ):
+            if test_name not in row["automated_test_reference"]:
+                errors.append(
+                    f"item {item_id}: missing behavioral test reference {test_name}"
+                )
 
     if errors:
         for error in errors:

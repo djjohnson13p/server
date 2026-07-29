@@ -6,15 +6,14 @@
 - **Expansion scope:** Shared core, inventoried for Vanilla/Rise of the Zilart
 - **Area:** Combat / equipment / ammunition / additional effects
 - **Baseline status:** `INACCURATE`
-- **Current status:** `PARTIALLY_CORRECTED_PHASE_B2`
+- **Current status:** `PARTIALLY_CORRECTED_PHASE_B4`
 - **Severity:** `MAJOR`
 - **Confidence:** `HIGH` for the Phase A inventory, call paths, and corrected deterministic defects; item-specific retail numerics remain mixed
-- **Disposition:** `PHASE_B3_AND_CONTROLLED_RETAIL_EVIDENCE_REQUIRED`
+- **Disposition:** `PHASE_B5_AND_CONTROLLED_RETAIL_EVIDENCE_REQUIRED`
 
-Phase A, the bounded Fire/Ice/Lightning Arrow Phase B1 implementation, and the
-eight-item status-ammunition Phase B2 implementation are complete engineering
-passes. The item families are hardened and explicitly profiled, not declared
-retail-formula-correct. The full finding remains partial.
+Phase A and the bounded Phase B1 through B4 implementations are complete
+engineering passes. The item families are hardened and explicitly profiled,
+not declared retail-formula-correct. The full finding remains partial.
 
 ## Phase A inventory
 
@@ -29,11 +28,13 @@ and equipment-spikes sources. It also retains the two issue-#7899 ammunition
 entries that have no active selector, rather than silently omitting them.
 Stable regeneration currently produces:
 
-- 420 total rows: 18 maintained `VANILLA_OR_ZILART`, 402 `ERA_UNRESOLVED`;
+- 420 total rows: 18 maintained `VANILLA_OR_ZILART`, one `VANILLA`, one
+  `ZILART`, three `LATER_EXPANSION`, and 397 `ERA_UNRESOLVED`;
 - 183 damage, 124 debuff, 46 equipment-spikes, 27 scripted, 13 HP-drain,
   five Dispel, six NM-specific, four TP-drain, two MP-drain, two Death, two
   HP/MP/TP-drain, and the smaller remaining families recorded in the artifact;
-- 379 SQL-only, 22 SQL-plus-item-script, eight SQL-plus-status-profile, five
+- 373 SQL-only, 22 SQL-plus-item-script, eight SQL-plus-status-profile, three
+  SQL-plus-single-drain-profile, three SQL-plus-combined-drain-profile, five
   SQL-plus-latent, three SQL-plus-scripted-profile, one script-only, and two
   issue-evidence-only rows;
 - 122 configuration-error, 185 era-unresolved, 106 `VERIFY_LIVE`, two
@@ -667,3 +668,134 @@ Phase B4 should be a separate bounded family, preferably the maintained
 combined HP/MP and HP/MP/TP drain configuration group. It must not begin
 Dispel, Death, self-buffs, spikes, Elemental Spirits, Ballista, or another
 audit area in the same pass.
+
+## Phase B4 — Combined-resource HP/MP and HP/MP/TP drains
+
+### Scope, era, and evidence
+
+Phase B4 covers exactly Hofud 17745, Vampirism 20706, and Crepuscular Knife
+21585. The ranked field-by-field ledger is:
+
+- `retail_parity/vanilla_zilart/artifacts/VZ-COMBAT-001-combined-resource-drains-evidence.md`
+
+Independent era evidence establishes Hofud as 2007 Einherjar content,
+Vampirism as 2015 Sinister Reign content, and Crepuscular Knife as 2021 Wyrm
+God content. All three are `LATER_EXPANSION`; none is added to the 18-item
+maintained Vanilla/Zilart count. This is consequently a shared-core
+framework-hardening pass, not a Vanilla/Zilart item-formula correction.
+
+The public mechanics evidence is insufficient for a numeric correction.
+Hofud's Japanese summary reports roughly 20% and unequal HP/MP maxima without
+a linked dataset. Vampirism's page claims some effect on every eligible hit
+without separating proc, resistance, or branch selection. Contemporary
+Crepuscular discussion conflicts between equal branches and roughly
+45% HP/45% MP/10% TP, while another summary reports HP/MP around 5 and TP
+0–100. No accessible source publishes a controlled counted trial ledger or
+packet capture. Existing SQL numerics and selection therefore remain
+compatibility and `VERIFY_LIVE`.
+
+### Active configurations and authoritative profiles
+
+| Item | Resource set | Active proc / amount | Subeffect | Era | Profile |
+|---|---|---|---|---|---|
+| Hofud 17745 | HP or MP | 15%, fixed 15 | Darkness Damage | 2007, later expansion | `VZ_COMBINED_RESOURCE_DRAIN` |
+| Vampirism 20706 | HP, MP, or TP | 100%, fixed 20 | MP Drain | 2015, later expansion | `VZ_COMBINED_RESOURCE_DRAIN` |
+| Crepuscular Knife 21585 | HP, MP, or TP | 15%, fixed 15 | Darkness Damage | 2021, later expansion | `VZ_COMBINED_RESOURCE_DRAIN` |
+
+SQL remains the sole numeric source. Each independently addressable policy
+records resource set, introduction evidence, trigger/equip, proc/level,
+selection distribution/timing, retry/empty/resisted/nullified behavior,
+skill/stat/dSTAT, configured/effective element, resistance/null/absorb/
+undead, amount/scaling/defenses, target/attacker caps, outcome ownership,
+subeffect/resource message/packet amount, per-field classifications, and
+unresolved evidence.
+
+Registry construction and runtime validation reject unsupported IDs,
+duplicates, malformed fields, resource-set/family mismatches, branch/message
+mismatches, and SQL/profile drift. The B3 single-resource registry, Bloody
+Bolt and other scripts, and every unrelated combined-drain item remain
+outside the registry.
+
+### Selection and transfer architecture
+
+The explicit compatibility policy is:
+
+`UNIFORM_SINGLE_BRANCH_NO_RETRY_COMPATIBILITY`
+
+After normal hit, item, level, target, and profile validation:
+
+1. `xi.additionalEffect.attack` owns exactly one configured item-proc roll.
+2. Proc failure performs no branch selection or resource work.
+3. Success selects once: HPMP maps 1 to HP and 2 to MP; HPMPTP maps 1 to HP,
+   2 to MP, and 3 to TP.
+4. The selected branch runs through one shared transfer primitive also used
+   by B3 after B3 has already selected its fixed resource.
+5. Dead/undead guards, one legacy calculation, negative-result clamp, target
+   cap, one target mutation, and one attacker credit occur in that order.
+6. No other resource is attempted after an empty, resisted, nullified,
+   absorbed, or undead-blocked branch.
+7. One result retains the item-configured subeffect, uses the selected
+   resource message, and reports actual target resource removed.
+
+This refactor does not route combined items through the single-resource item
+registry and does not change the B3 external contract.
+
+### Behavioral coverage
+
+The focused B4 suite contains 55 cases across direct profile/transfer and
+real melee paths:
+
+- exact three-profile scope, complete required fields, SQL consistency,
+  duplicate/malformed/unsupported/resource/message/element drift rejection,
+  and separation from B3/scripted items;
+- every HP/MP and HP/MP/TP selector, invalid selectors, one proc and one
+  selection, Hofud/Crepuscular proc failure, and Vampirism's configured 100%
+  boundary;
+- below/equal/above/zero resources, attacker near/full caps, lethal direct HP
+  boundaries, every configured resistance tier/floor, nullification,
+  absorption, dead/invalid/undead targets, no retry, and complete resource
+  isolation;
+- real main- and off-hand attacks for all three, one ordinary 0x028 result,
+  physical misses, level gates, target despawn, Enspell priority,
+  multi-attack cardinality, and ordinary melee.
+
+The intentional B3 assertion update recognizes that the three items now
+belong to the separate combined registry. Its external resource, packet, and
+selection behavior is unchanged and the complete 58-case B3 group remains a
+regression requirement.
+
+### Aggregate defect found before B4
+
+The mandatory pre-edit 198-test single-process aggregate reproduced a Windows
+access violation only when earlier suites stacked Lua doubles on the same
+path. `MockManager::restoreAll()` restored doubles grouped by type and in
+installation order, so a Lua global could be left pointing at a freed prior
+stub. Loading the NM group changed heap reuse and made the stale pointer
+deterministic.
+
+The test framework now records one combined installation sequence and
+restores all doubles in strict reverse order before freeing them. Lua
+regressions cover stacked stub/stub and stub/spy paths. The corrected
+mandatory aggregate passed 198/198 before Phase B4 production edits. This was
+an isolation defect, not an item-formula change, and is committed separately.
+Post-edit and final post-build aggregate repeats also passed 198/198; the
+final repeat completed in 132.916 seconds.
+
+### Phase B4 assessment
+
+Phase B4 is `COMPLETE_PHASE_B4` as a bounded shared-core profile/framework
+pass. The exact three items have authoritative validated policy, one
+selection owner, one transfer owner, generated inventory/evidence ownership,
+and real packet-path coverage. They remain `LATER_EXPANSION`, and no active
+numeric, branch distribution, retry policy, resistance formula, or client
+presentation is claimed retail-correct.
+
+`VZ-COMBAT-001` remains partially corrected. Controlled captures must still
+resolve every `VERIFY_LIVE` field in the ledger, especially proc versus
+resist, nonuniform branch hypotheses, retry/order, per-resource amounts,
+magic accuracy/stat/element, multi-attack eligibility, empty/full resources,
+undead/null/absorb behavior, and exact 0x028 presentation.
+
+Phase B5 should select one new bounded inventory family or configuration
+group. It must not combine Dispel, absorb-status, Death, self-buffs, equipment
+spikes, Elemental Spirits, Ballista, or another audit area in one pass.

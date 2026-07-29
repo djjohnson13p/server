@@ -86,6 +86,18 @@ These items may become human-only after all remaining AI-capable engineering and
   Enspell priority, multi-attack, and lethal HP-drain boundaries. Current
   10%/3, 5%/10, 8%/10, Dark magical tiers/multipliers, cap behavior, and
   zero-result presentation are compatibility contracts, not retail proof.
+- For later-expansion Hofud 17745, Vampirism 20706, and Crepuscular Knife
+  21585, collect a counted eligible-swing dataset with raw 0x028 results and
+  actual HP/MP/TP deltas. Separate overall proc from resistance; record the
+  selected resource, empty/full target and attacker resources, main/off hand,
+  ordinary versus extra multi-attacks, Enspell priority, dead/undead,
+  nullification/absorption, and every no-effect result. Vary level, magic
+  accuracy/evasion, plausible skill/stat inputs, Dark resistance/SDT, and
+  defenses. The current 15%/15, 100%/20, and 15%/15 values, uniform HP/MP or
+  HP/MP/TP selection, no retry, Dark legacy calculation, shared subeffect,
+  resource-specific message, and cap/overflow behavior are tested server
+  compatibility—not retail proof. Crepuscular evidence specifically conflicts
+  between equal branches and an approximately 45% HP/45% MP/10% TP theory.
 - Measure Elemental Spirit HP/MP/stat/weapon-damage scaling and Light Spirit decision behavior.
 - Capture Ballista packet fields, current schedules/rules, and client-visible match behavior.
 
