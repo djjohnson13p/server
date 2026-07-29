@@ -7,7 +7,7 @@ No gameplay, retail-capture, server-deployment, or manual test task is being ass
 The local Codex desktop environment, GitHub connectivity, MSVC toolchain,
 CMake/Ninja configuration, full Debug build, focused inherited-correction
 tests, `VZ-CORE-002`, `VZ-BF-001`, and the `VZ-COMBAT-001` Phase A
-inventory/framework correction plus Phase B1/B2/B3 profile passes are
+inventory/framework correction plus Phase B1/B2/B3/B4/B5 profile passes are
 validated. The remaining known engineering work is still AI-capable, so it
 does not belong in a final human-only queue yet.
 
@@ -98,6 +98,17 @@ These items may become human-only after all remaining AI-capable engineering and
   resource-specific message, and cap/overflow behavior are tested server
   compatibility—not retail proof. Crepuscular evidence specifically conflicts
   between equal branches and an approximately 45% HP/45% MP/10% TP theory.
+- For Lockheart 16944, Mythril Heart 16950, and Mythril Heart +1 16951,
+  collect counted eligible-swing trials per item with raw 0x028 results.
+  Separate proc from no removable effect; record multi-buff selection,
+  selection distribution, failed-selection retry behavior, undispellable,
+  erase-only, permanent, food, aura, and special-effect protection, and
+  whether level, magic accuracy/skill, resistance, element, or partial resist
+  participates. Include ordinary versus extra multi-attacks and Enspell
+  priority. Confirm the subeffect, message, actual removed effect-ID
+  parameter, and no-effect presentation. Also obtain a dated pre-CoP record
+  directly naming Mythril Heart +1; its current Vanilla/Zilart gate is the
+  documented moderate-confidence shared-recipe inference.
 - Measure Elemental Spirit HP/MP/stat/weapon-damage scaling and Light Spirit decision behavior.
 - Capture Ballista packet fields, current schedules/rules, and client-visible match behavior.
 

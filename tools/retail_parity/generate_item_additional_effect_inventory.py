@@ -144,6 +144,9 @@ STATUS_NAMES = {
 # intentionally left unresolved until independent introduction-date evidence
 # is recorded.
 AUDIT_SCOPE_ITEMS = {
+    16944,
+    16950,
+    16951,
     17322,
     17323,
     17324,
@@ -333,6 +336,39 @@ COMBINED_RESOURCE_DRAIN_PROFILE_SOURCE = (
 COMBINED_RESOURCE_DRAIN_EVIDENCE_SOURCE = (
     "retail_parity/vanilla_zilart/artifacts/"
     "VZ-COMBAT-001-combined-resource-drains-evidence.md"
+)
+
+DISPEL_WEAPON_PROFILES = {
+    16944: {
+        "name": "lockheart",
+        "era": "VANILLA_OR_ZILART",
+        "chance": 5,
+        "level": 64,
+        "subeffect": "DARKNESS_DAMAGE",
+        "subeffect_id": 8,
+    },
+    16950: {
+        "name": "mythril_heart",
+        "era": "VANILLA_OR_ZILART",
+        "chance": 10,
+        "level": 66,
+        "subeffect": "DARKNESS_DAMAGE",
+        "subeffect_id": 8,
+    },
+    16951: {
+        "name": "mythril_heart_+1",
+        "era": "VANILLA_OR_ZILART",
+        "chance": 10,
+        "level": 66,
+        "subeffect": "DARKNESS_DAMAGE",
+        "subeffect_id": 8,
+    },
+}
+
+DISPEL_WEAPON_PROFILE_SOURCE = "scripts/globals/additional_effect_profiles.lua"
+DISPEL_WEAPON_EVIDENCE_SOURCE = (
+    "retail_parity/vanilla_zilart/artifacts/"
+    "VZ-COMBAT-001-lockheart-mythril-heart-dispel-evidence.md"
 )
 
 ISSUE_7899_ITEMS = {
@@ -709,7 +745,52 @@ def validate_combined_resource_drain(config: ItemConfig) -> list[str]:
     return issues
 
 
+def validate_dispel_weapon(config: ItemConfig) -> list[str]:
+    expected = DISPEL_WEAPON_PROFILES.get(config.item_id)
+    if expected is None:
+        return []
+
+    issues: list[str] = []
+    expected_mods = {
+        278: 0,
+        431: 10,
+        499: 0,
+        501: expected["chance"],
+        950: 0,
+        1181: 0,
+    }
+    for mod_id, expected_value in expected_mods.items():
+        actual = config.value(mod_id) or 0
+        if actual != expected_value:
+            issues.append(
+                f"{RELEVANT_MODS[mod_id]} expected {expected_value}, got {actual}"
+            )
+
+    if config.script_paths:
+        issues.append("scoped Dispel weapon must not use a per-item script")
+
+    return issues
+
+
 def era_for(config: ItemConfig, name: str) -> tuple[str, str]:
+    dispel_weapon = DISPEL_WEAPON_PROFILES.get(config.item_id)
+    if dispel_weapon:
+        evidence = {
+            16944: (
+                "Contemporary 2004-05-25 player report describes repeated "
+                "Frostmane kills seeking Lockheart"
+            ),
+            16950: (
+                "Contemporary 2004-05-25 player report records three "
+                "Mythril Heart auction transactions"
+            ),
+            16951: (
+                "Narrow shared-recipe conclusion: the era-established "
+                "Mythril Heart synthesis has Mythril Heart +1 as HQ"
+            ),
+        }
+        return dispel_weapon["era"], evidence[config.item_id]
+
     combined_drain = COMBINED_RESOURCE_DRAIN_PROFILES.get(config.item_id)
     if combined_drain:
         evidence = {
@@ -769,6 +850,51 @@ def profile_fields(config: ItemConfig, family: str) -> dict[str, str]:
     chance = config.value(501)
     level_adjust = config.value(278)
     dstat = config.value(280)
+
+    if item_id in DISPEL_WEAPON_PROFILES:
+        dispel = DISPEL_WEAPON_PROFILES[item_id]
+        return {
+            "profile_family": "VZ_DISPEL_WEAPON",
+            "profile_source": DISPEL_WEAPON_PROFILE_SOURCE,
+            "field_classifications": (
+                "IDENTITY_AND_ERA=EVIDENCE_BACKED;"
+                "TRIGGER_EQUIP_REMOVAL_PRESENTATION="
+                "FRAMEWORK_CORRECT_LEGACY_NUMERICS;"
+                "PROC_LEVEL_SELECTION_PROTECTION_ACCURACY_RESISTANCE=VERIFY_LIVE;"
+                "STAT_DSTAT_ELEMENT=NOT_APPLICABLE"
+            ),
+            "proc_policy": "FIXED_PERCENT_SQL_COMPATIBILITY; VERIFY_LIVE",
+            "base_power_policy": "NOT_APPLICABLE",
+            "mab_policy": "NOT_APPLICABLE",
+            "multiplier_policies": (
+                "STATUS_SELECTION=UNIFORM_DISPELABLE_POSITIVE_DURATION_"
+                "COMPATIBILITY_VERIFY_LIVE;"
+                "REMOVAL=STATUS_CONTAINER_ONCE_FRAMEWORK_CORRECT;"
+                "RETRY=NONE_COMPATIBILITY_VERIFY_LIVE;"
+                "ACCURACY=NONE_COMPATIBILITY_VERIFY_LIVE;"
+                "RESISTANCE=NONE_COMPATIBILITY_VERIFY_LIVE;"
+                "NULLIFICATION=NOT_APPLICABLE;ABSORPTION=NOT_APPLICABLE"
+            ),
+            "evidence_sources": DISPEL_WEAPON_EVIDENCE_SOURCE,
+            "proc_chance": str(dispel["chance"]),
+            "level_correction": "0_SQL_COMPATIBILITY; VERIFY_LIVE",
+            "accuracy_or_skill_basis": (
+                "NO_MAGIC_ACCURACY_OR_SKILL_COMPATIBILITY; VERIFY_LIVE"
+            ),
+            "governing_stat_or_dstat": "NOT_APPLICABLE",
+            "resistance_mode": "NO_RESISTANCE_LAYER_COMPATIBILITY; VERIFY_LIVE",
+            "element": "NOT_APPLICABLE",
+            "potency_or_damage": "NOT_APPLICABLE",
+            "duration": "NOT_APPLICABLE",
+            "status_effect": "ONE_DISPELABLE_POSITIVE_DURATION_EFFECT",
+            "unresolved_questions": (
+                "item-specific proc chance and level correction; multiple-buff "
+                "selection distribution; protected status categories; retry "
+                "and fallback; accuracy, skill, resistance, and immunity; "
+                "multi-attack and Enspell priority; exact subeffect, message "
+                "parameter, client presentation, and direct dated +1 evidence"
+            ),
+        }
 
     if item_id in COMBINED_RESOURCE_DRAIN_PROFILES:
         drain = COMBINED_RESOURCE_DRAIN_PROFILES[item_id]
@@ -1130,6 +1256,7 @@ def build_rows(root: Path) -> tuple[list[dict[str, str]], list[str]]:
         issues.extend(validate_family(config, handler))
         issues.extend(validate_single_resource_drain(config))
         issues.extend(validate_combined_resource_drain(config))
+        issues.extend(validate_dispel_weapon(config))
         if name.startswith("UNKNOWN_ITEM_"):
             issues.append("item ID is absent from item basic/equipment/weapon tables")
 
@@ -1172,11 +1299,19 @@ def build_rows(root: Path) -> tuple[list[dict[str, str]], list[str]]:
             source_kinds.append("SINGLE_RESOURCE_DRAIN_PROFILE")
         if item_id in COMBINED_RESOURCE_DRAIN_PROFILES:
             source_kinds.append("COMBINED_RESOURCE_DRAIN_PROFILE")
+        if item_id in DISPEL_WEAPON_PROFILES:
+            source_kinds.append("DISPEL_WEAPON_PROFILE")
         if not source_kinds and item_id in ISSUE_7899_ITEM_IDS:
             source_kinds.append("ISSUE_EVIDENCE_ONLY")
             script_source = "LandSandBoat issue #7899"
 
-        if item_id in COMBINED_RESOURCE_DRAIN_PROFILES:
+        if item_id in DISPEL_WEAPON_PROFILES:
+            call_path = (
+                "successful melee swing -> HandleEnspell item selection -> "
+                "luautils::additionalEffectAttack -> xi.additionalEffect.attack -> "
+                "executeDispel -> removeOneDispelStatus -> dispelStatusEffect"
+            )
+        elif item_id in COMBINED_RESOURCE_DRAIN_PROFILES:
             call_path = (
                 "successful melee swing -> HandleEnspell item selection -> "
                 "luautils::additionalEffectAttack -> xi.additionalEffect.attack -> "
@@ -1255,6 +1390,13 @@ def build_rows(root: Path) -> tuple[list[dict[str, str]], list[str]]:
                 "scripts/tests/systems/combat/"
                 "item_additional_effects_combined_resource_drain_profiles.lua"
             )
+        elif item_id in DISPEL_WEAPON_PROFILES:
+            test_reference = (
+                "scripts/tests/systems/combat/"
+                "item_additional_effects_dispel_weapons.lua;"
+                "scripts/tests/systems/combat/"
+                "item_additional_effects_dispel_weapon_profiles.lua"
+            )
 
         unresolved = profile["unresolved_questions"]
         if issues:
@@ -1275,18 +1417,22 @@ def build_rows(root: Path) -> tuple[list[dict[str, str]], list[str]]:
                     modifier_source,
                     script_source,
                     (
-                        COMBINED_RESOURCE_DRAIN_PROFILE_SOURCE
-                        if item_id in COMBINED_RESOURCE_DRAIN_PROFILES
+                        DISPEL_WEAPON_PROFILE_SOURCE
+                        if item_id in DISPEL_WEAPON_PROFILES
                         else (
-                            ELEMENTAL_ARROW_PROFILE_SOURCE
-                            if item_id in ELEMENTAL_ARROW_PROFILES
+                            COMBINED_RESOURCE_DRAIN_PROFILE_SOURCE
+                            if item_id in COMBINED_RESOURCE_DRAIN_PROFILES
                             else (
-                                STATUS_AMMUNITION_PROFILE_SOURCE
-                                if item_id in STATUS_AMMUNITION_PROFILES
+                                ELEMENTAL_ARROW_PROFILE_SOURCE
+                                if item_id in ELEMENTAL_ARROW_PROFILES
                                 else (
-                                    SINGLE_RESOURCE_DRAIN_PROFILE_SOURCE
-                                    if item_id in SINGLE_RESOURCE_DRAIN_PROFILES
-                                    else ""
+                                    STATUS_AMMUNITION_PROFILE_SOURCE
+                                    if item_id in STATUS_AMMUNITION_PROFILES
+                                    else (
+                                        SINGLE_RESOURCE_DRAIN_PROFILE_SOURCE
+                                        if item_id in SINGLE_RESOURCE_DRAIN_PROFILES
+                                        else ""
+                                    )
                                 )
                             )
                         )
@@ -1297,23 +1443,27 @@ def build_rows(root: Path) -> tuple[list[dict[str, str]], list[str]]:
             "active_call_path": call_path,
             "proc_type": family,
             "subeffect": (
-                COMBINED_RESOURCE_DRAIN_PROFILES[item_id]["subeffect"]
-                if item_id in COMBINED_RESOURCE_DRAIN_PROFILES
+                DISPEL_WEAPON_PROFILES[item_id]["subeffect"]
+                if item_id in DISPEL_WEAPON_PROFILES
                 else (
-                    SINGLE_RESOURCE_DRAIN_PROFILES[item_id]["subeffect"]
-                    if item_id in SINGLE_RESOURCE_DRAIN_PROFILES
+                    COMBINED_RESOURCE_DRAIN_PROFILES[item_id]["subeffect"]
+                    if item_id in COMBINED_RESOURCE_DRAIN_PROFILES
                     else (
-                        ELEMENTAL_ARROW_PROFILES[item_id]["subeffect"]
-                        if item_id in ELEMENTAL_ARROW_PROFILES
+                        SINGLE_RESOURCE_DRAIN_PROFILES[item_id]["subeffect"]
+                        if item_id in SINGLE_RESOURCE_DRAIN_PROFILES
                         else (
-                            STATUS_AMMUNITION_PROFILES[item_id][3]
-                            if item_id in STATUS_AMMUNITION_PROFILES
+                            ELEMENTAL_ARROW_PROFILES[item_id]["subeffect"]
+                            if item_id in ELEMENTAL_ARROW_PROFILES
                             else (
-                                ""
-                                if config.value(499) is None
-                                else SUBEFFECTS.get(
-                                    config.value(499),
-                                    f"SUBEFFECT_{config.value(499)}",
+                                STATUS_AMMUNITION_PROFILES[item_id][3]
+                                if item_id in STATUS_AMMUNITION_PROFILES
+                                else (
+                                    ""
+                                    if config.value(499) is None
+                                    else SUBEFFECTS.get(
+                                        config.value(499),
+                                        f"SUBEFFECT_{config.value(499)}",
+                                    )
                                 )
                             )
                         )
@@ -1322,97 +1472,117 @@ def build_rows(root: Path) -> tuple[list[dict[str, str]], list[str]]:
             ),
             **profile,
             "damage_type": (
-                "DARK_MAGICAL_COMPATIBILITY; VERIFY_LIVE"
-                if item_id in COMBINED_RESOURCE_DRAIN_PROFILES
+                "NOT_APPLICABLE"
+                if item_id in DISPEL_WEAPON_PROFILES
                 else (
-                    "ELEMENTAL_BY_PROFILE; FRAMEWORK_CORRECT_LEGACY_NUMERICS"
-                    if item_id in ELEMENTAL_ARROW_PROFILES
-                    else damage_type(item_id, weapon, family)
+                    "DARK_MAGICAL_COMPATIBILITY; VERIFY_LIVE"
+                    if item_id in COMBINED_RESOURCE_DRAIN_PROFILES
+                    else (
+                        "ELEMENTAL_BY_PROFILE; FRAMEWORK_CORRECT_LEGACY_NUMERICS"
+                        if item_id in ELEMENTAL_ARROW_PROFILES
+                        else damage_type(item_id, weapon, family)
+                    )
                 )
             ),
             "immunity_handling": (
-                "DEAD_AND_UNDEAD_GUARD_BEFORE_AMOUNT_CALCULATION;"
-                "SELECTED_BRANCH_NO_RETRY; VERIFY_LIVE"
-                if item_id in COMBINED_RESOURCE_DRAIN_PROFILES
+                "DISPELABLE_FLAG_AND_POSITIVE_DURATION_FILTER; VERIFY_LIVE"
+                if item_id in DISPEL_WEAPON_PROFILES
                 else (
-                    "DEAD_AND_UNDEAD_GUARD_BEFORE_AMOUNT_CALCULATION; VERIFY_LIVE"
-                    if item_id in SINGLE_RESOURCE_DRAIN_PROFILES
+                    "DEAD_AND_UNDEAD_GUARD_BEFORE_AMOUNT_CALCULATION;"
+                    "SELECTED_BRANCH_NO_RETRY; VERIFY_LIVE"
+                    if item_id in COMBINED_RESOURCE_DRAIN_PROFILES
                     else (
-                        "STATUS_HELPERS; FRAMEWORK_CORRECT_LEGACY_NUMERICS"
-                        if item_id in STATUS_AMMUNITION_PROFILES
+                        "DEAD_AND_UNDEAD_GUARD_BEFORE_AMOUNT_CALCULATION; VERIFY_LIVE"
+                        if item_id in SINGLE_RESOURCE_DRAIN_PROFILES
                         else (
-                            "STATUS_HELPERS"
-                            if family == "DEBUFF"
+                            "STATUS_HELPERS; FRAMEWORK_CORRECT_LEGACY_NUMERICS"
+                            if item_id in STATUS_AMMUNITION_PROFILES
                             else (
-                                "UNDEAD_GUARD"
-                                if "DRAIN" in family
-                                else "HANDLER_SPECIFIC"
+                                "STATUS_HELPERS"
+                                if family == "DEBUFF"
+                                else (
+                                    "UNDEAD_GUARD"
+                                    if "DRAIN" in family
+                                    else "HANDLER_SPECIFIC"
+                                )
                             )
                         )
                     )
                 )
             ),
             "nullification_handling": (
-                "SCOPED_CALCULATOR_SINGLE_PASS; SELECTED_BRANCH_NO_RETRY; "
-                "VERIFY_LIVE"
-                if item_id in COMBINED_RESOURCE_DRAIN_PROFILES
+                "NOT_APPLICABLE"
+                if item_id in DISPEL_WEAPON_PROFILES
                 else (
-                    "SCOPED_CALCULATOR_SINGLE_PASS; VERIFY_LIVE"
-                    if item_id in SINGLE_RESOURCE_DRAIN_PROFILES
+                    "SCOPED_CALCULATOR_SINGLE_PASS; SELECTED_BRANCH_NO_RETRY; "
+                    "VERIFY_LIVE"
+                    if item_id in COMBINED_RESOURCE_DRAIN_PROFILES
                     else (
-                        "STATUS_HELPERS; FRAMEWORK_CORRECT_LEGACY_NUMERICS"
-                        if item_id in STATUS_AMMUNITION_PROFILES
+                        "SCOPED_CALCULATOR_SINGLE_PASS; VERIFY_LIVE"
+                        if item_id in SINGLE_RESOURCE_DRAIN_PROFILES
                         else (
-                            "SCRIPTED_PROFILE_SINGLE_PASS"
-                            if item_id in ELEMENTAL_ARROW_PROFILES
+                            "STATUS_HELPERS; FRAMEWORK_CORRECT_LEGACY_NUMERICS"
+                            if item_id in STATUS_AMMUNITION_PROFILES
                             else (
-                                "DAMAGE_PROFILE_SINGLE_PASS"
-                                if family in {"DAMAGE", "PHYS_DAMAGE"}
-                                else "HANDLER_SPECIFIC"
+                                "SCRIPTED_PROFILE_SINGLE_PASS"
+                                if item_id in ELEMENTAL_ARROW_PROFILES
+                                else (
+                                    "DAMAGE_PROFILE_SINGLE_PASS"
+                                    if family in {"DAMAGE", "PHYS_DAMAGE"}
+                                    else "HANDLER_SPECIFIC"
+                                )
                             )
                         )
                     )
                 )
             ),
             "absorb_handling": (
-                "NEGATIVE_RESULT_CLAMPED_TO_ZERO; SELECTED_BRANCH_NO_RETRY; "
-                "VERIFY_LIVE"
-                if item_id in COMBINED_RESOURCE_DRAIN_PROFILES
+                "NOT_APPLICABLE"
+                if item_id in DISPEL_WEAPON_PROFILES
                 else (
-                    "NEGATIVE_RESULT_CLAMPED_TO_ZERO; VERIFY_LIVE"
-                    if item_id in SINGLE_RESOURCE_DRAIN_PROFILES
+                    "NEGATIVE_RESULT_CLAMPED_TO_ZERO; SELECTED_BRANCH_NO_RETRY; "
+                    "VERIFY_LIVE"
+                    if item_id in COMBINED_RESOURCE_DRAIN_PROFILES
                     else (
-                        "NOT_APPLICABLE_TO_STATUS"
-                        if item_id in STATUS_AMMUNITION_PROFILES
+                        "NEGATIVE_RESULT_CLAMPED_TO_ZERO; VERIFY_LIVE"
+                        if item_id in SINGLE_RESOURCE_DRAIN_PROFILES
                         else (
-                            "SCRIPTED_PROFILE_SINGLE_PASS"
-                            if item_id in ELEMENTAL_ARROW_PROFILES
+                            "NOT_APPLICABLE_TO_STATUS"
+                            if item_id in STATUS_AMMUNITION_PROFILES
                             else (
-                                "DAMAGE_PROFILE_SINGLE_PASS"
-                                if family in {"DAMAGE", "PHYS_DAMAGE"}
-                                else "HANDLER_SPECIFIC"
+                                "SCRIPTED_PROFILE_SINGLE_PASS"
+                                if item_id in ELEMENTAL_ARROW_PROFILES
+                                else (
+                                    "DAMAGE_PROFILE_SINGLE_PASS"
+                                    if family in {"DAMAGE", "PHYS_DAMAGE"}
+                                    else "HANDLER_SPECIFIC"
+                                )
                             )
                         )
                     )
                 )
             ),
             "message_id": (
-                "SELECTED_RESOURCE_HP_MP_TP_DRAIN_MESSAGE; "
-                "ACTUAL_TARGET_RESOURCE_REMOVED"
-                if item_id in COMBINED_RESOURCE_DRAIN_PROFILES
+                "ADD_EFFECT_DISPEL; ACTUAL_REMOVED_EFFECT_ID"
+                if item_id in DISPEL_WEAPON_PROFILES
                 else (
-                    (
-                        f"{SINGLE_RESOURCE_DRAIN_PROFILES[item_id]['message']}; "
-                        "ACTUAL_TARGET_RESOURCE_REMOVED"
-                    )
-                    if item_id in SINGLE_RESOURCE_DRAIN_PROFILES
+                    "SELECTED_RESOURCE_HP_MP_TP_DRAIN_MESSAGE; "
+                    "ACTUAL_TARGET_RESOURCE_REMOVED"
+                    if item_id in COMBINED_RESOURCE_DRAIN_PROFILES
                     else (
-                        "ADD_EFFECT_STATUS_2; EFFECT_ID"
-                        if item_id in STATUS_AMMUNITION_PROFILES
+                        (
+                            f"{SINGLE_RESOURCE_DRAIN_PROFILES[item_id]['message']}; "
+                            "ACTUAL_TARGET_RESOURCE_REMOVED"
+                        )
+                        if item_id in SINGLE_RESOURCE_DRAIN_PROFILES
                         else (
-                            "ADD_EFFECT_DMG_OR_HEAL; ACTUAL_APPLIED_AMOUNT"
-                            if item_id in ELEMENTAL_ARROW_PROFILES
-                            else "FAMILY_DEFAULT_OR_SCRIPT_RETURN"
+                            "ADD_EFFECT_STATUS_2; EFFECT_ID"
+                            if item_id in STATUS_AMMUNITION_PROFILES
+                            else (
+                                "ADD_EFFECT_DMG_OR_HEAL; ACTUAL_APPLIED_AMOUNT"
+                                if item_id in ELEMENTAL_ARROW_PROFILES
+                                else "FAMILY_DEFAULT_OR_SCRIPT_RETURN"
+                            )
                         )
                     )
                 )
@@ -1432,18 +1602,22 @@ def build_rows(root: Path) -> tuple[list[dict[str, str]], list[str]]:
                 else "GetScaledItemModifier returns zero for unsupported synced mods"
             ),
             "current_handler": (
-                "GLOBAL_COMBINED_RESOURCE_DRAIN_PROFILE"
-                if item_id in COMBINED_RESOURCE_DRAIN_PROFILES
+                "GLOBAL_DISPEL_WEAPON_PROFILE"
+                if item_id in DISPEL_WEAPON_PROFILES
                 else (
-                    "GLOBAL_SINGLE_RESOURCE_DRAIN_PROFILE"
-                    if item_id in SINGLE_RESOURCE_DRAIN_PROFILES
+                    "GLOBAL_COMBINED_RESOURCE_DRAIN_PROFILE"
+                    if item_id in COMBINED_RESOURCE_DRAIN_PROFILES
                     else (
-                        "PER_ITEM_LUA_PROFILE"
-                        if item_id in ELEMENTAL_ARROW_PROFILES
+                        "GLOBAL_SINGLE_RESOURCE_DRAIN_PROFILE"
+                        if item_id in SINGLE_RESOURCE_DRAIN_PROFILES
                         else (
-                            "GLOBAL_ADDITIONAL_EFFECT_PROFILE"
-                            if item_id in STATUS_AMMUNITION_PROFILES
-                            else handler
+                            "PER_ITEM_LUA_PROFILE"
+                            if item_id in ELEMENTAL_ARROW_PROFILES
+                            else (
+                                "GLOBAL_ADDITIONAL_EFFECT_PROFILE"
+                                if item_id in STATUS_AMMUNITION_PROFILES
+                                else handler
+                            )
                         )
                     )
                 )

@@ -906,3 +906,85 @@ a correction.
   the remaining all-target build passed 148/148. Changed-Lua style/purity,
   Black, pylint, C++ clang-format, profile sanity, deterministic generation,
   and `git diff --check` passed. No SQL changed.
+
+## 2026-07-29 — VZ-COMBAT-001 Phase B5 Dispel weapons
+
+### Starting state, scope, and evidence
+
+- Resumed the intentional in-progress checkpoint at
+  `f9ef4966f9487c2c719ca6d7158919ce6c741d1d` on
+  `retail-parity/codex-vanilla-zilart`. The fork origin and disabled upstream
+  push were confirmed without fetching, pulling, checking out, cleaning, or
+  resetting the worktree.
+- Scoped exactly Lockheart 16944, Mythril Heart 16950, and Mythril Heart +1
+  16951. Balmung 16942, Claustrum 18330, Zanmato +1 21966, and every other
+  Dispel configuration remain outside the Phase B5 registry.
+- Dated 2004 evidence directly gates Lockheart and Mythril Heart to
+  `VANILLA_OR_ZILART` with high confidence. Mythril Heart +1 is moderate-
+  confidence through a narrow shared-recipe inference; no direct dated
+  pre-CoP record naming the +1 was found.
+- The evidence ledger distinguishes era/effect identity from formulas.
+  Community records support the Dispel identity, but no controlled retail
+  packet log, counted trial dataset, or reliable formula evidence was found.
+- SQL remains unchanged: Dispel family 10, 5%/10%/10% proc chances, and zero
+  level correction. Selection, protected categories, retry, accuracy,
+  resistance, element/stat non-ownership, and exact presentation remain
+  compatibility/`VERIFY_LIVE`.
+
+### Reproduction, architecture, and tests
+
+- Real pre-correction main-hand tests reproduced a deterministic silent-
+  removal defect for all three weapons: `dispelStatusEffect()` removed
+  Protect, but absent SQL subeffect data caused no normal 0x028 additional
+  result after the target had already been mutated.
+- Added exactly three validated `VZ_DISPEL_WEAPON` profiles. A successful
+  authoritative removal supplies `xi.subEffect.DARKNESS_DAMAGE`,
+  `ADD_EFFECT_DISPEL`, and the actual removed effect ID; no SQL or formula
+  changed.
+- Preserved one uniform status-container selection among positive-duration
+  `Dispelable` effects, exactly one removal, and no retry. False, nil,
+  `xi.effect.NONE`, negative, empty, protected, permanent, dead, and invalid
+  outcomes produce no additional-effect result.
+- Added 31 focused cases covering exact scope/validation and SQL drift, proc
+  boundaries, selection/removal cardinality, effect-ID transport, protected
+  and no-effect paths, and real main-hand/miss/level/despawn/Enspell/multi-
+  attack/ordinary-melee 0x028 behavior.
+- The initial Phase A run after the new profiles passed 39/40 because its
+  explicit compatibility assertion still expected legacy `SINGLE` policy.
+  The test-only expectation was updated for the three Dispel profiles and
+  repeated at 40/40.
+- The mandatory pre-edit aggregate had one intermittent B2 target-despawn
+  failure at 197/198. Its focused retry and full aggregate repeat passed
+  before production edits; no behavior change was made for it.
+
+### Validation, inventory, and phase result
+
+- Fresh MSVC/Ninja Debug validation completed: `xi_test` had already built
+  906/906, and the remaining all-target build passed 148/148 while linking
+  `xi_connect`, `xi_map`, `xi_search`, and `xi_world`.
+- A restart of the Phase-B5-only disposable MariaDB exposed invalid empty
+  trigger definers in that disposable schema. Reloading the current
+  repository trigger and recipe SQL repaired only the disposable test
+  database; fixture rows were removed, the owner's working database and
+  services were untouched, and no project SQL changed.
+- Final B5 passed 31/31; the seven-selector item aggregate passed 284/284 in
+  193.550 seconds; the complete 0x028 suite passed 65/65 in 55.941 seconds.
+  Catch2 passed 19/19 with 9,007,079 assertions on each invocation.
+- Deterministic inventory output contains 420 rows, 21 maintained
+  Vanilla/Zilart profiles, three exact Dispel profiles, and 341 unchanged
+  repository-wide diagnostics. Two consecutive writes matched:
+  CSV `FA157E41618D74F41F4F70493842AA9AE2E50A85A5122720E93E229B0160BE2D`
+  and Markdown
+  `8F647BB1A90644785B30AC7B288180C45ECBE4A627D44876102DB6B7702E5BEF`.
+- Inventory generation twice, `--check`, profile sanity, the repository Lua
+  style/binding/purity check, Black, pylint errors-only, and
+  `git diff --check` passed. The verified Phase B5 disposable database,
+  build directories, and generated root executables/PDBs were removed; the
+  owner's database remained untouched.
+- The source/test implementation was committed as
+  `c450ce872011c10e7f2f6dc9881f6762f5d3ca2c`
+  (`feat(retail-parity): profile VZ Dispel weapons`).
+- Phase B5 is `COMPLETE_PHASE_B5` as a bounded evidence/profile/framework
+  pass, not a retail-formula claim. `VZ-COMBAT-001` remains partial. Phase B6
+  should separately evidence-gate Balmung, Claustrum, and every other
+  remaining Dispel configuration rather than generalizing this registry.

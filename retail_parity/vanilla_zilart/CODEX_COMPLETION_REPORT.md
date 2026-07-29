@@ -6,21 +6,23 @@ Status: BOUNDED_PASS_COMPLETE_PROJECT_IN_PROGRESS
 
 - Repository: `djjohnson13p/server`
 - Work branch: `retail-parity/codex-vanilla-zilart`
-- Current bounded-pass starting commit: `ceea3840fd780e95dabf41cc0d44df3a83037959`
+- Current bounded-pass starting commit: `f9ef4966f9487c2c719ca6d7158919ce6c741d1d`
 - Pinned upstream baseline: `242ab0d055dfb80396e7398b0dd7361b750c74e2`
 - Upstream pull requests: none; prohibited
 - Upstream push: disabled/prohibited
 
-The bounded `VZ-COMBAT-001` Phase B4 pass is complete as a shared-core
-profile/framework pass. Hofud, Vampirism, and Crepuscular Knife now use one
-exact-scope combined-resource registry, one branch-selection owner, and one
-resource-transfer owner with direct and real-melee packet coverage.
+The bounded `VZ-COMBAT-001` Phase B5 pass is complete as an evidence/profile/
+framework pass. Lockheart, Mythril Heart, and Mythril Heart +1 now use one
+exact-scope Dispel registry. Successful removal has deterministic
+presentation ownership and reports the actual removed effect ID with direct
+and real-melee packet coverage.
 
-The overall finding remains partial. All three scoped items are later-
-expansion items, and no controlled retail formula was found. Their configured
-proc/amount values, uniform selection, no-retry policy, Dark calculation,
-eligibility, and presentation remain explicit compatibility/`VERIFY_LIVE`,
-not retail conclusions.
+The overall finding remains partial. The three scoped items are gated to
+Vanilla/Zilart, but no controlled retail formula was found. Their configured
+proc values, uniform eligible-status selection, no-retry policy, protected
+categories, lack of accuracy/resistance/element/stat layers, and exact client
+presentation remain explicit compatibility/`VERIFY_LIVE`, not retail
+conclusions.
 
 ## Commits created
 
@@ -52,6 +54,8 @@ not retail conclusions.
   `test: restore stacked Lua doubles safely`
 - `4969a50bae343cf21745976ee486d38b053f5372` —
   `feat: profile combined resource drain effects`
+- `c450ce872011c10e7f2f6dc9881f6762f5d3ca2c` —
+  `feat(retail-parity): profile VZ Dispel weapons`
 
 The documentation/state commit follows these source/test commits.
 
@@ -1386,9 +1390,132 @@ repository-wide diagnostics. Its SHA-256 values are:
 
 Phase B4 is `COMPLETE_PHASE_B4` as a bounded profile/framework pass. The
 three items are not claimed retail-formula-correct, and `VZ-COMBAT-001`
-remains partial. Phase B5 should take one new bounded family or configuration
-group; it must not combine Dispel, absorb-status, Death, self-buffs, spikes,
-Elemental Spirits, Ballista, or another audit area.
+remains partial. The next bounded pass selected Dispel only and did not
+combine absorb-status, Death, self-buffs, spikes, Elemental Spirits,
+Ballista, or another audit area.
+
+## VZ-COMBAT-001 Phase B5 Lockheart/Mythril Heart Dispel pass
+
+### Scope, era, and evidence boundary
+
+Phase B5 covers exactly Lockheart 16944, Mythril Heart 16950, and Mythril
+Heart +1 16951. A dated 2004 report directly establishes Lockheart and
+Mythril Heart in circulation, so both are `VANILLA_OR_ZILART` with high
+confidence. Mythril Heart +1 is moderate-confidence through a documented
+narrow shared-recipe inference: the directly established NQ item and
+consistent recipe references identify the +1 as the HQ result of the same
+synthesis. No direct dated pre-CoP sighting of the +1 was found.
+
+Current community references support each item's Dispel identity but do not
+provide a controlled packet capture, counted proc denominator, official
+formula, or repeatable test of selection, accuracy, resistance, status
+protection, or packet presentation. Repository configuration is recorded
+separately and is not treated as retail-formula evidence.
+
+The active SQL configuration is unchanged:
+
+- Lockheart: Dispel family 10, 5-percent configured proc, zero level
+  correction;
+- Mythril Heart: Dispel family 10, 10-percent configured proc, zero level
+  correction;
+- Mythril Heart +1: Dispel family 10, 10-percent configured proc, zero level
+  correction.
+
+### Exact profile and deterministic correction
+
+The exact three-item `VZ_DISPEL_WEAPON` registry owns item/effect/era identity,
+configured proc and level policy, successful-melee equip policy, status-
+selection/removal ownership, retry policy, presentation, field
+classifications, and unresolved evidence. Validation rejects unsupported IDs,
+duplicates, malformed fields, handler-family drift, and SQL chance/level
+drift. Balmung 16942, Claustrum 18330, Zanmato +1 21966, and every other
+Dispel configuration remain outside the registry.
+
+Before correction, a real eligible main-hand swing could remove Protect via
+`dispelStatusEffect()` and emit no normal 0x028 additional-effect result. The
+three SQL entries lacked `ITEM_SUBEFFECT`, so the handler returned subeffect
+zero only after the status container had already mutated the target.
+
+The bounded correction preserves exactly one configured proc roll and one
+uniform status-container selection among positive-duration effects carrying
+the `Dispelable` flag. The container removes exactly one selected effect and
+the executor never retries. False, nil, `xi.effect.NONE`, negative, empty,
+protected, permanent, dead, and invalid outcomes produce no additional
+result. Actual removal supplies `xi.subEffect.DARKNESS_DAMAGE`,
+`ADD_EFFECT_DISPEL`, and the actual removed effect ID.
+
+No SQL, proc, level, selection, eligibility, retry, accuracy, skill, stat,
+dSTAT, element, resistance, or partial-resist behavior changed. The retained
+mechanics and exact client presentation remain compatibility/`VERIFY_LIVE`.
+
+### Behavioral coverage and validation
+
+The 31 focused Phase B5 cases cover:
+
+- exact three-item scope, complete policy, era/evidence ownership, SQL
+  consistency, duplicate/malformed/unsupported/drift rejection, and explicit
+  exclusion of Balmung, Claustrum, Zanmato +1, and unrelated items;
+- 5%/10% pass/fail boundaries, one status-container call, one selection and
+  removal, actual effect-ID transport, and no retry;
+- positive-duration `Dispelable` eligibility, protected/permanent exclusion,
+  empty/no-effect, false, nil, sentinel, negative, dead, and invalid outcomes;
+- real main-hand success for all three items, physical miss, level gate,
+  target despawn, Enspell priority, multi-attack cardinality, ordinary melee,
+  and one normal 0x028 result.
+
+Phase A initially passed 39/40 because its explicit compatibility assertion
+still expected legacy `SINGLE` policy. Its test-only expectation was updated
+for the three Dispel profiles and the repeat passed 40/40. Before production
+edits, the mandatory aggregate had one intermittent B2 target-despawn failure
+at 197/198; the focused retry and full aggregate repeat passed. Neither
+observation caused a production behavior change.
+
+The final validation matrix passed:
+
+```text
+xi_test.exe --keep-going --file item_additional_effects_dispel_weapon
+# exit 0, 31/31 Phase B5
+
+xi_test.exe --keep-going --file "item_additional_effects\.lua" --file "item_additional_effects_ranged\.lua" --file "item_additional_effects_nm\.lua" --file item_additional_effects_elemental_arrow --file item_additional_effects_status_ammunition --file item_additional_effects_single_resource_drain --file item_additional_effects_combined_resource_drain --file item_additional_effects_dispel_weapon
+# exit 0, 284/284 aggregate; 193.550 seconds
+
+xi_test.exe --keep-going --file 0x028_battle2
+# exit 0, 65/65 packet regression; 55.941 seconds
+
+cmake --build build-codex-phase-b5-final
+# exit 0, 148/148 remaining all-target steps
+```
+
+Catch2 passed 19/19 with 9,007,079 assertions on every `xi_test` invocation.
+The build linked `xi_connect`, `xi_map`, `xi_search`, and `xi_world`; `xi_test`
+had already completed its 906/906 build.
+
+A restart of the Phase-B5-only disposable MariaDB exposed empty trigger
+definers in that disposable schema. Reloading the current repository trigger
+and recipe SQL repaired only the disposable test database and removed test
+fixture rows. The owner's working database and services were not touched, and
+no project SQL changed.
+
+Deterministic inventory output has 420 rows, 21 maintained Vanilla/Zilart
+profiles, three exact Dispel profiles, and 341 unchanged repository-wide
+diagnostics. Two consecutive writes matched:
+
+- CSV: `FA157E41618D74F41F4F70493842AA9AE2E50A85A5122720E93E229B0160BE2D`;
+- Markdown: `8F647BB1A90644785B30AC7B288180C45ECBE4A627D44876102DB6B7702E5BEF`.
+
+Inventory generation twice, `--check`, profile sanity, the repository Lua
+style/binding/purity check, Black, pylint errors-only, and
+`git diff --check` passed. No C++/header or SQL changed, so clang-format and
+SQL/dbtool mutation were not applicable. The disposable MariaDB was stopped
+only after verifying its executable and port. The four named Phase B5
+database/build directories and ten generated root executables/PDBs were
+removed; the owner's database remained running and untouched.
+
+Phase B5 is `COMPLETE_PHASE_B5` as a bounded evidence/profile/framework pass.
+The three items are not claimed retail-formula-correct, and
+`VZ-COMBAT-001` remains partial. Phase B6 should separately evidence-gate
+Balmung, Claustrum, and every other remaining Dispel configuration rather
+than generalizing the exact Phase B5 policy.
 
 ## Client/live-retail-only candidates
 
@@ -1412,11 +1539,17 @@ Elemental Spirits, Ballista, or another audit area.
   from resist and varying amount/scaling, skill/stat/dSTAT, Dark resistance,
   multipliers/defenses/null/absorb/undead, empty/full resource caps,
   main/off-hand priority, lethal HP-drain ordering, and 0x028 presentation.
+- Controlled Lockheart/Mythril Heart/Mythril Heart +1 datasets separating
+  proc from no eligible effect and varying multi-buff selection, protected
+  categories, retry, level/accuracy/skill/resistance hypotheses, Enspell and
+  multi-attack eligibility, and raw 0x028 presentation. Obtain direct dated
+  Vanilla/Zilart evidence naming Mythril Heart +1.
 
 ## Recommended next pass
 
-Begin one bounded `VZ-COMBAT-001` Phase B4 family/configuration group,
-preferably maintained combined HP/MP and HP/MP/TP drains, using the generated
-inventory and its evidence classifications. Then continue
-`VZ-JOB-001`, `VZ-SYS-001`, and the exhaustive Vanilla/Zilart audit in
-bounded passes.
+Begin a bounded `VZ-COMBAT-001` Phase B6 pass by separately evidence-gating
+Balmung, Claustrum, and the other remaining Dispel configurations in the
+generated inventory. Do not migrate them automatically from the exact Phase
+B5 registry. Then continue `VZ-JOB-001`, `VZ-SYS-001`, and the exhaustive
+Vanilla/Zilart audit in bounded passes, followed by the remaining expansions
+through Treasures of Aht Urhgan.

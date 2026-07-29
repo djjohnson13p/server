@@ -77,6 +77,12 @@ COMBINED_RESOURCE_DRAIN_CONSTANTS = {
     ),
 }
 
+DISPEL_WEAPON_CONSTANTS = {
+    16944: ("LOCKHEART", "lockheart", 5, 64),
+    16950: ("MYTHRIL_HEART", "mythril_heart", 10, 66),
+    16951: ("MYTHRIL_HEART_PLUS_1", "mythril_heart_plus_1", 10, 66),
+}
+
 
 def load_generator(root: Path) -> ModuleType:
     generator_path = (
@@ -420,6 +426,111 @@ def main() -> int:
                 errors.append(
                     f"item {item_id}: missing behavioral test reference {test_name}"
                 )
+
+    if profile_text.count("dispelWeaponProfile(") != 4:
+        errors.append(
+            "Dispel-weapon registry must contain one constructor and exactly "
+            "three profile definitions"
+        )
+
+    for item_id, (
+        item_constant,
+        item_name,
+        chance,
+        level,
+    ) in DISPEL_WEAPON_CONSTANTS.items():
+        row = by_id[item_id]
+        if item_constant not in enum_text:
+            errors.append(f"item {item_id}: missing item enum constant {item_constant}")
+
+        expected_fragment = (
+            f"xi.item.{item_constant},\n"
+            f"        '{item_name}',\n"
+            f"        {chance},"
+        )
+        if expected_fragment not in profile_text:
+            errors.append(f"item {item_id}: Dispel profile identity/chance drift")
+
+        config = generator.parse_configs(root)[item_id]
+        expected_mods = {
+            278: 0,
+            431: 10,
+            499: 0,
+            501: chance,
+            950: 0,
+            1181: 0,
+        }
+        for mod_id, expected in expected_mods.items():
+            actual = config.value(mod_id) or 0
+            if actual != expected:
+                errors.append(
+                    f"item {item_id}: modifier {mod_id} was {actual}, "
+                    f"expected {expected}"
+                )
+        if config.script_paths:
+            errors.append(f"item {item_id}: Dispel profile has a per-item script")
+
+        expected_row_values = {
+            "item_level": str(level),
+            "item_slot": "MAIN",
+            "weapon_or_ammo_type": "GREAT_SWORD",
+            "era": "VANILLA_OR_ZILART",
+            "profile_family": "VZ_DISPEL_WEAPON",
+            "profile_source": generator.DISPEL_WEAPON_PROFILE_SOURCE,
+            "current_handler": "GLOBAL_DISPEL_WEAPON_PROFILE",
+            "proc_type": "DISPEL",
+            "proc_policy": "FIXED_PERCENT_SQL_COMPATIBILITY; VERIFY_LIVE",
+            "proc_chance": str(chance),
+            "level_correction": "0_SQL_COMPATIBILITY; VERIFY_LIVE",
+            "accuracy_or_skill_basis": (
+                "NO_MAGIC_ACCURACY_OR_SKILL_COMPATIBILITY; VERIFY_LIVE"
+            ),
+            "governing_stat_or_dstat": "NOT_APPLICABLE",
+            "resistance_mode": "NO_RESISTANCE_LAYER_COMPATIBILITY; VERIFY_LIVE",
+            "element": "NOT_APPLICABLE",
+            "status_effect": "ONE_DISPELABLE_POSITIVE_DURATION_EFFECT",
+            "subeffect": "DARKNESS_DAMAGE",
+            "message_id": "ADD_EFFECT_DISPEL; ACTUAL_REMOVED_EFFECT_ID",
+            "current_classification": "VERIFY_LIVE",
+            "evidence_sources": generator.DISPEL_WEAPON_EVIDENCE_SOURCE,
+        }
+        for field, expected in expected_row_values.items():
+            if row[field] != expected:
+                errors.append(
+                    f"item {item_id}: {field} was {row[field]!r}, "
+                    f"expected {expected!r}"
+                )
+
+        for expected_text in (
+            "selection",
+            "protected status",
+            "retry",
+            "accuracy",
+            "resistance",
+            "client presentation",
+        ):
+            if expected_text.lower() not in row["unresolved_questions"].lower():
+                errors.append(
+                    f"item {item_id}: unresolved boundary omits {expected_text}"
+                )
+
+        for test_name in (
+            "item_additional_effects_dispel_weapons.lua",
+            "item_additional_effects_dispel_weapon_profiles.lua",
+        ):
+            if test_name not in row["automated_test_reference"]:
+                errors.append(
+                    f"item {item_id}: missing behavioral test reference {test_name}"
+                )
+
+    for excluded_item in (16942, 18330, 21966):
+        row = by_id[excluded_item]
+        if row["profile_family"] == "VZ_DISPEL_WEAPON":
+            errors.append(f"out-of-scope Dispel item migrated: {excluded_item}")
+        if row["current_handler"] == "GLOBAL_DISPEL_WEAPON_PROFILE":
+            errors.append(
+                f"out-of-scope Dispel item uses scoped handler: {excluded_item}"
+            )
 
     if errors:
         for error in errors:

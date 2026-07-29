@@ -6,12 +6,12 @@
 - **Expansion scope:** Shared core, inventoried for Vanilla/Rise of the Zilart
 - **Area:** Combat / equipment / ammunition / additional effects
 - **Baseline status:** `INACCURATE`
-- **Current status:** `PARTIALLY_CORRECTED_PHASE_B4`
+- **Current status:** `PARTIALLY_CORRECTED_PHASE_B5`
 - **Severity:** `MAJOR`
 - **Confidence:** `HIGH` for the Phase A inventory, call paths, and corrected deterministic defects; item-specific retail numerics remain mixed
-- **Disposition:** `PHASE_B5_AND_CONTROLLED_RETAIL_EVIDENCE_REQUIRED`
+- **Disposition:** `PHASE_B6_AND_CONTROLLED_RETAIL_EVIDENCE_REQUIRED`
 
-Phase A and the bounded Phase B1 through B4 implementations are complete
+Phase A and the bounded Phase B1 through B5 implementations are complete
 engineering passes. The item families are hardened and explicitly profiled,
 not declared retail-formula-correct. The full finding remains partial.
 
@@ -28,20 +28,21 @@ and equipment-spikes sources. It also retains the two issue-#7899 ammunition
 entries that have no active selector, rather than silently omitting them.
 Stable regeneration currently produces:
 
-- 420 total rows: 18 maintained `VANILLA_OR_ZILART`, one `VANILLA`, one
-  `ZILART`, three `LATER_EXPANSION`, and 397 `ERA_UNRESOLVED`;
+- 420 total rows: 21 maintained `VANILLA_OR_ZILART`, one `VANILLA`, one
+  `ZILART`, three `LATER_EXPANSION`, and 394 `ERA_UNRESOLVED`;
 - 183 damage, 124 debuff, 46 equipment-spikes, 27 scripted, 13 HP-drain,
   five Dispel, six NM-specific, four TP-drain, two MP-drain, two Death, two
-  HP/MP/TP-drain, and the smaller remaining families recorded in the artifact;
-- 373 SQL-only, 22 SQL-plus-item-script, eight SQL-plus-status-profile, three
-  SQL-plus-single-drain-profile, three SQL-plus-combined-drain-profile, five
-  SQL-plus-latent, three SQL-plus-scripted-profile, one script-only, and two
-  issue-evidence-only rows;
+  HP/MP/TP-drain, one HP/MP-drain, and the smaller remaining families recorded
+  in the artifact;
+- 370 SQL-only, 22 SQL-plus-item-script, eight SQL-plus-status-profile, three
+  SQL-plus-single-drain-profile, three SQL-plus-combined-drain-profile, three
+  SQL-plus-Dispel-profile, five SQL-plus-latent, three SQL-plus-scripted-
+  profile, one script-only, and two issue-evidence-only rows;
 - 122 configuration-error, 185 era-unresolved, 106 `VERIFY_LIVE`, two
   framework-correct/legacy-numerics, and five special-case-test-backed rows.
 
 The 341 repository-wide configuration findings are individual diagnostics,
-not 341 maintained-era failures. All 18 maintained Vanilla/Zilart entries
+not 341 maintained-era failures. All 21 maintained Vanilla/Zilart entries
 have reachable handlers and non-error classifications. The unresolved rows
 are intentionally retained because active repository tables have no reliable
 item-introduction expansion field; numeric item-ID ranges were not used as
@@ -146,11 +147,14 @@ configured proc/power/duration remain compatibility numerics.
 Fire Arrow, Ice Arrow, and Lightning Arrow use the Phase B1 scripted profile
 path described below. Kabura Arrow, Patriarch Protector's Arrow, Blind Bolt,
 Venom Bolt, Poison Arrow, Sleep Arrow, Demon Arrow, and Spartan Bullet use the
-Phase B2 status-ammunition profile described below. Their exact proc, level,
-stat, accuracy, element, power/duration, resistance, and presentation formulas
-remain compatibility behavior or `VERIFY_LIVE`.
+Phase B2 status-ammunition profile described below. Aspir Knife, Bloody
+Rapier, and Shinsoku use the Phase B3 single-resource-drain profile.
+Lockheart, Mythril Heart, and Mythril Heart +1 use the Phase B5 Dispel profile.
+Their unsupported proc, level, stat, accuracy, element, amount/duration,
+selection, resistance, and presentation formulas remain compatibility
+behavior or `VERIFY_LIVE`.
 
-HP/MP/TP drains, combined drains, Dispel, absorb-status, self-buff, Death,
+Remaining drains and Dispel configurations, absorb-status, self-buff, Death,
 equipment spikes, and other unsupported families are isolated by explicit
 policy/inventory classification. Phase A corrected shared double mutation
 where independently justified but did not invent their retail ordering,
@@ -224,13 +228,13 @@ as a misleading zero-filled profile.
 
 ## Remaining Phase B work
 
-- Establish item-specific introduction-era evidence for the 402 unresolved
+- Establish item-specific introduction-era evidence for the 394 unresolved
   rows where useful; do not infer it from numeric ranges.
 - Resolve the 122 configured-but-invalid/unreachable rows, prioritizing
   actual runtime relevance and avoiding speculative activation.
 - Collect evidence and migrate damage type, damage resistance, MAB/dSTAT,
-  drain accuracy/scaling/resource order, Dispel, self-buff tier/duration,
-  Death, and spikes formulas.
+  drain accuracy/scaling/resource order, remaining Dispel configurations,
+  self-buff tier/duration, Death, and spikes formulas.
 - Determine per-item/family accuracy and partial-resist rules beyond the
   supported Acid/Sleep A-rank boundary.
 - Expand real-path coverage as supported formulas are adopted.
@@ -796,6 +800,125 @@ resist, nonuniform branch hypotheses, retry/order, per-resource amounts,
 magic accuracy/stat/element, multi-attack eligibility, empty/full resources,
 undead/null/absorb behavior, and exact 0x028 presentation.
 
-Phase B5 should select one new bounded inventory family or configuration
-group. It must not combine Dispel, absorb-status, Death, self-buffs, equipment
-spikes, Elemental Spirits, Ballista, or another audit area in one pass.
+The next bounded pass selected Dispel only; it did not combine absorb-status,
+Death, self-buffs, equipment spikes, Elemental Spirits, Ballista, or another
+audit area.
+
+## Phase B5 — Lockheart/Mythril Heart Dispel weapons
+
+### Scope, era, and evidence boundary
+
+Phase B5 covers exactly Lockheart 16944, Mythril Heart 16950, and Mythril
+Heart +1 16951. The ranked field-by-field ledger is:
+
+- `retail_parity/vanilla_zilart/artifacts/VZ-COMBAT-001-lockheart-mythril-heart-dispel-evidence.md`
+
+A dated 2004 player report directly establishes Lockheart and Mythril Heart
+in circulation, independently of repository data or item-ID ranges. Both are
+`VANILLA_OR_ZILART` with high confidence. No direct dated sighting of Mythril
+Heart +1 was found. Its moderate-confidence gate is a narrow shared-recipe
+inference: the directly established NQ item and multiple references identify
+the +1 as the HQ result of that exact Lockheart-plus-Mythril-Ingot synthesis.
+This does not establish the exact date of the accessible recipe record, so
+direct pre-CoP evidence remains desirable.
+
+Community references establish the three Dispel identities but provide no
+controlled packet capture, counted proc dataset, official formula, or
+repeatable test of selection, accuracy, resistance, protected categories, or
+presentation. Repository configuration is therefore not promoted to retail
+formula evidence.
+
+### Active configuration and exact profile
+
+| Item | SQL proc | Level correction | Era | Profile |
+|---|---:|---:|---|---|
+| Lockheart 16944 | 5% | 0 | `VANILLA_OR_ZILART` | `VZ_DISPEL_WEAPON` |
+| Mythril Heart 16950 | 10% | 0 | `VANILLA_OR_ZILART` | `VZ_DISPEL_WEAPON` |
+| Mythril Heart +1 16951 | 10% | 0 | `VANILLA_OR_ZILART` | `VZ_DISPEL_WEAPON` |
+
+SQL remains the sole numeric source and is unchanged. Each exact-scope
+profile records item/effect/era identity, proc and level policy, successful-
+melee equip policy, status selection/removal ownership, retry behavior,
+accuracy/stat/element/resistance non-ownership, presentation, evidence
+classification, and unresolved fields. Construction and runtime validation
+reject unsupported IDs, duplicates, malformed fields, handler-family drift,
+and SQL chance/level drift.
+
+Balmung 16942, Claustrum 18330, Zanmato +1 21966, and every other Dispel
+configuration remain outside the registry. Sharing the selector is not an
+era gate or permission to migrate them.
+
+### Deterministic defect and bounded correction
+
+Before the correction, an eligible real main-hand swing could reach
+`dispelStatusEffect()`, remove Protect, and then return no normal 0x028
+additional-effect result. The three SQL rows had no `ITEM_SUBEFFECT`, so the
+handler returned subeffect zero after already mutating the target. This was a
+deterministic presentation/ownership defect, not a speculative formula gap.
+
+After normal hit, item, level, target, and profile validation:
+
+1. the ordinary item layer performs exactly one configured proc roll;
+2. proc success asks the status container once to select uniformly among
+   positive-duration effects carrying the `Dispelable` flag;
+3. the status container removes exactly that one selected effect;
+4. false, nil, `xi.effect.NONE`, negative, empty, protected, or permanent
+   outcomes produce no additional-effect result and are not retried; and
+5. actual removal returns `xi.subEffect.DARKNESS_DAMAGE`,
+   `xi.msg.basic.ADD_EFFECT_DISPEL`, and the actual removed effect ID.
+
+The correction does not change SQL, proc rates, level correction, selection
+distribution, eligible/protected categories, retry policy, accuracy, skill,
+stat, dSTAT, element, resistance, or partial-resist behavior. Those retained
+policies and exact client presentation remain compatibility/`VERIFY_LIVE`.
+
+### Behavioral coverage and validation
+
+The focused B5 suite contains 31 cases across direct policy/executor and real
+melee paths:
+
+- exact three-profile scope, complete required fields, era/evidence ownership,
+  SQL consistency, duplicate/malformed/unsupported/drift rejection, and
+  exclusion of Balmung, Claustrum, Zanmato +1, and unrelated items;
+- 5%/10% pass/fail boundaries, one status-container call, actual removed
+  effect-ID reporting, uniform selectable-set transport, one removal, and no
+  retry;
+- positive-duration `Dispelable` eligibility, protected and zero-duration
+  exclusion, empty/no-effect, false, nil, `xi.effect.NONE`, negative, dead,
+  and invalid target outcomes;
+- real main-hand successful packets for all three weapons, physical miss,
+  below-level, target-despawn, Enspell-priority, multi-attack cardinality,
+  and ordinary melee paths.
+
+The first Phase A run after profile expansion passed 39/40 because its
+explicit compatibility assertion still expected legacy `SINGLE` policy. The
+test-only expectation was updated for the three Dispel profiles and repeated
+at 40/40. A mandatory pre-edit aggregate had one intermittent B2 target-
+despawn failure at 197/198; the focused B2 retry and full aggregate repeat
+passed before production edits. No production change was made for either
+observation.
+
+Final validation passed B5 31/31, the seven-selector item aggregate 284/284,
+the complete 0x028 packet suite 65/65, and Catch2 19/19 with 9,007,079
+assertions. The all-target MSVC/Ninja Debug build completed its remaining
+148/148 steps and linked every server target.
+
+### Phase B5 assessment
+
+Phase B5 is `COMPLETE_PHASE_B5` as a bounded evidence/profile/framework pass.
+The exact three items have authoritative validated policy, deterministic
+removal and presentation ownership, generated inventory/evidence ownership,
+and real packet-path coverage. The maintained Vanilla/Zilart profile count
+increases from 18 to 21.
+
+The three items are not classified retail-formula-correct. Controlled
+captures must still resolve every `VERIFY_LIVE` field in the ledger,
+especially proc versus no eligible effect, multiple-status selection,
+protected categories, retry behavior, accuracy/resistance, multi-attack/
+Enspell eligibility, and exact 0x028 presentation. Direct dated evidence for
+Mythril Heart +1 remains a separate moderate-confidence era question.
+
+`VZ-COMBAT-001` remains partially corrected. Phase B6 should separately
+evidence-gate Balmung, Claustrum, and every other remaining Dispel
+configuration before any migration; Phase B5's exact registry must not be
+generalized automatically.

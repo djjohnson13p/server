@@ -11,10 +11,10 @@ The inventory intentionally includes every item found in active additional-effec
 
 ### Era
 
-- ERA_UNRESOLVED: 397
+- ERA_UNRESOLVED: 394
 - LATER_EXPANSION: 3
 - VANILLA: 1
-- VANILLA_OR_ZILART: 18
+- VANILLA_OR_ZILART: 21
 - ZILART: 1
 
 ### Effect family
@@ -39,8 +39,9 @@ The inventory intentionally includes every item found in active additional-effec
 
 - ISSUE_EVIDENCE_ONLY: 2
 - ITEM_SCRIPT: 1
-- SQL_MODIFIERS: 373
+- SQL_MODIFIERS: 370
 - SQL_MODIFIERS+COMBINED_RESOURCE_DRAIN_PROFILE: 3
+- SQL_MODIFIERS+DISPEL_WEAPON_PROFILE: 3
 - SQL_MODIFIERS+ITEM_SCRIPT: 22
 - SQL_MODIFIERS+ITEM_SCRIPT+SCRIPTED_PROFILE: 3
 - SQL_MODIFIERS+SINGLE_RESOURCE_DRAIN_PROFILE: 3
@@ -548,9 +549,9 @@ The inventory intentionally includes every item found in active additional-effec
 | 16936 | demonic_sword | 31 | MAIN | DAMAGE | GLOBAL_ADDITIONAL_EFFECT | ERA_UNRESOLVED | ERA_UNRESOLVED | YES | item-specific retail numerics |
 | 16937 | icicle_sword | 39 | MAIN | DAMAGE | GLOBAL_ADDITIONAL_EFFECT | ERA_UNRESOLVED | ERA_UNRESOLVED | YES | item-specific retail numerics |
 | 16942 | balmung | 70 | MAIN | SCRIPTED | PER_ITEM_LUA | ERA_UNRESOLVED | VERIFY_LIVE | YES | item-specific retail numerics |
-| 16944 | lockheart | 64 | MAIN | DISPEL | GLOBAL_ADDITIONAL_EFFECT | ERA_UNRESOLVED | VERIFY_LIVE | YES | item-specific retail numerics |
-| 16950 | mythril_heart | 66 | MAIN | DISPEL | GLOBAL_ADDITIONAL_EFFECT | ERA_UNRESOLVED | VERIFY_LIVE | YES | item-specific retail numerics |
-| 16951 | mythril_heart_+1 | 66 | MAIN | DISPEL | GLOBAL_ADDITIONAL_EFFECT | ERA_UNRESOLVED | VERIFY_LIVE | YES | item-specific retail numerics |
+| 16944 | lockheart | 64 | MAIN | DISPEL | GLOBAL_DISPEL_WEAPON_PROFILE | VANILLA_OR_ZILART | VERIFY_LIVE | YES | item-specific proc chance and level correction; multiple-buff selection distribution; protected status categories; retry and fallback; accuracy, skill, resistance, and immunity; multi-attack and Enspell priority; exact subeffect, message parameter, client presentation, and direct dated +1 evidence |
+| 16950 | mythril_heart | 66 | MAIN | DISPEL | GLOBAL_DISPEL_WEAPON_PROFILE | VANILLA_OR_ZILART | VERIFY_LIVE | YES | item-specific proc chance and level correction; multiple-buff selection distribution; protected status categories; retry and fallback; accuracy, skill, resistance, and immunity; multi-attack and Enspell priority; exact subeffect, message parameter, client presentation, and direct dated +1 evidence |
+| 16951 | mythril_heart_+1 | 66 | MAIN | DISPEL | GLOBAL_DISPEL_WEAPON_PROFILE | VANILLA_OR_ZILART | VERIFY_LIVE | YES | item-specific proc chance and level correction; multiple-buff selection distribution; protected status categories; retry and fallback; accuracy, skill, resistance, and immunity; multi-attack and Enspell priority; exact subeffect, message parameter, client presentation, and direct dated +1 evidence |
 | 16973 | homura | 34 | MAIN | DAMAGE | GLOBAL_ADDITIONAL_EFFECT | ERA_UNRESOLVED | ERA_UNRESOLVED | YES | item-specific retail numerics |
 | 16974 | dotanuki | 55 | MAIN | DEBUFF | GLOBAL_ADDITIONAL_EFFECT | ERA_UNRESOLVED | ERA_UNRESOLVED | YES | item-specific retail numerics |
 | 16986 | homura_+1 | 34 | MAIN | DAMAGE | GLOBAL_ADDITIONAL_EFFECT | ERA_UNRESOLVED | ERA_UNRESOLVED | YES | item-specific retail numerics |

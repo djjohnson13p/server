@@ -188,12 +188,35 @@ Status: `COMPLETE_PHASE_B4` as a bounded shared-core framework/profile pass;
   Lua-double restoration order; its regression and the corrected 198/198
   aggregate protect all completed item suites.
 
+### `VZ-COMBAT-001` Phase B5 — Lockheart/Mythril Heart Dispel weapons
+
+Status: `COMPLETE_PHASE_B5` as a bounded evidence/profile/framework pass;
+`VZ-COMBAT-001` remains partial.
+
+- Dated evidence gates Lockheart and Mythril Heart to Vanilla/Zilart with high
+  confidence. Mythril Heart +1 is moderate-confidence through the explicitly
+  documented shared-recipe inference, not item-ID or automatic HQ inheritance.
+- Exactly those three items use a validated SQL-backed Dispel registry;
+  Balmung, Claustrum, Zanmato +1, and all other configurations remain outside.
+- A successful removal now supplies Darkness Damage /
+  `ADD_EFFECT_DISPEL` presentation and the actual removed effect ID, correcting
+  the deterministic silent-removal defect without changing SQL or formulas.
+- Thirty-one focused cases and the final 284-case aggregate cover exact scope,
+  policy validation, proc boundaries, one eligible-status selection/removal,
+  no retry, protected/permanent/no-effect outcomes, and real melee packets.
+- SQL 5%/10%/10% proc rates, zero level correction, uniform eligible-status
+  selection, no retry, lack of accuracy/resistance/element/stat layers, and
+  exact client presentation remain compatibility/`VERIFY_LIVE`.
+
 ## Priority 1 — Remaining known implementation findings
 
-### `VZ-COMBAT-001` Phase B5 — Evidence-backed family migrations
+### `VZ-COMBAT-001` Phase B6 — Remaining evidence-backed family migrations
 
-- Use the generated inventory to select one bounded effect family or
-  configuration-error group at a time.
+- Begin with a separate evidence gate for Balmung, Claustrum, and every other
+  remaining Dispel configuration in the generated inventory. Do not migrate
+  any item automatically from the exact three-item Phase B5 registry.
+- Continue to select only one bounded effect family or configuration-error
+  group at a time.
 - Establish item/era evidence before changing classifications or numerics.
 - Resolve remaining damage type/MAB/dSTAT, other-drain accuracy/scaling,
   Dispel, self-buff, Death, and equipment-spikes behavior only where evidence
@@ -208,6 +231,9 @@ Status: `COMPLETE_PHASE_B4` as a bounded shared-core framework/profile pass;
   combined or scripted drains without separate evidence.
 - Do not generalize the Phase B4 combined-drain compatibility policy to
   other combined or scripted drains without separate evidence.
+- Do not generalize the Phase B5 Dispel compatibility policy to Balmung,
+  Claustrum, Zanmato +1, or any other Dispel configuration without separate
+  item/era evidence.
 - Add real melee/ranged/reaction packet tests for each migrated group.
 
 ### `VZ-JOB-001` — Summoner Elemental Spirits

@@ -11,7 +11,7 @@
 - **Assistant source-accessible stage:** Complete
 - **Codex handoff:** Ready
 - **Local Codex environment:** Validated
-- **Current project state:** `VZ_COMBAT_001_PHASE_B4_COMBINED_RESOURCE_DRAINS_PROFILED`
+- **Current project state:** `VZ_COMBAT_001_PHASE_B5_DISPEL_WEAPONS_PROFILED`
 - **Upstream pull requests:** None; prohibited
 
 ## Baseline finding counts
@@ -44,7 +44,7 @@ coefficients and formulas were deliberately not invented.
 | ID | Area | Baseline status | Current fork state |
 |---|---|---|---|
 | `VZ-SYS-001` | Ballista | `MISSING` | Not implemented; largest remaining system |
-| `VZ-COMBAT-001` | Item additional effects | `INACCURATE` | Phase B4 partial: Phase A framework, B1 arrows, B2 status ammunition, B3 single drains, and exact later-expansion Hofud/Vampirism/Crepuscular combined-drain profiles are test-backed; unsupported numerics remain `VERIFY_LIVE` |
+| `VZ-COMBAT-001` | Item additional effects | `INACCURATE` | Phase B5 partial: Phase A framework, B1 arrows, B2 status ammunition, B3 single drains, B4 combined drains, and exact Lockheart/Mythril Heart Dispel profiles are test-backed; unsupported numerics remain `VERIFY_LIVE` |
 | `VZ-ZONE-001` | Temple of Uggalepih door keys | `INACCURATE` | Implemented and interaction-test-backed |
 | `VZ-JOB-001` | Summoner Elemental Spirits | `INACCURATE` | Not implemented; data/formula work remains |
 | `VZ-CORE-001` | Call for Help scope | `INACCURATE` | Hardened claim/CE/VE/boundary rules; Lua and C++ tests pass |
@@ -92,8 +92,8 @@ Completed:
   policy now emits at most one proper `SkillStart` after state entry, including
   zero-time Ark Angel skills. Eleven focused Lua cases, 19 Catch2 cases
   (9,007,079 assertions), and all 65 `0x028` packet cases pass.
-- Item additional-effect Phase A inventories 420 active/issue-scoped items,
-  including 18 maintained Vanilla/Zilart profiles. Tests reproduce and
+- Item additional-effect inventory covers 420 active/issue-scoped items,
+  including 21 maintained Vanilla/Zilart profiles after Phase B5. Tests reproduce and
   correct double HP mutation, duplicate absorption/nullification, the breath
   flag mismatch, and false status success presentation. Real melee/ranged
   packets, Acid/Sleep ammunition, level eligibility, status guards, physical
@@ -133,11 +133,24 @@ Completed:
   hand 0x028 actions. Current uniform selection, SQL numerics, Dark stack,
   multi-attack eligibility, and presentation remain compatibility/
   `VERIFY_LIVE`.
+- Dispel-weapon Phase B5 moves exactly Lockheart, Mythril Heart, and Mythril
+  Heart +1 into a validated profile registry after independent evidence gates
+  them to Vanilla/Zilart. It corrects the deterministic silent-removal defect:
+  a successful removal now supplies the existing Darkness Damage /
+  `ADD_EFFECT_DISPEL` presentation and actual removed effect ID. Thirty-one
+  focused cases cover exact scope, one uniform eligible-status selection, one
+  removal, no retry, protected/zero-duration effects, no-effect paths, and
+  real melee 0x028 behavior. SQL 5%/10%/10% proc values, zero level
+  correction, selection, eligibility, and the absence of accuracy/resistance/
+  element/stat layers remain compatibility/`VERIFY_LIVE`.
 - The previously unexplained 198-case item aggregate exposed a stacked-Lua-
   double lifetime defect. Reverse installation-order restoration and two
   framework regressions corrected it; the mandatory pre-B4 aggregate then
   passed 198/198. The post-edit and final post-build repeats also passed
   198/198.
+- The Phase B5 aggregate passed 284/284 after one pre-edit intermittent B2
+  despawn failure passed its focused retry and the aggregate repeat. The
+  65-case 0x028 suite and 19 Catch2 cases (9,007,079 assertions) also passed.
 - Lua style checks and `git diff --check` passed.
 - Fresh-directory MSVC/Ninja Debug configuration and all-target build passed.
 - Disposable build outputs and isolated test database were removed without
@@ -168,6 +181,7 @@ Still required:
 - [x] Complete `VZ-COMBAT-001` Phase B2 status-ammunition profile pass
 - [x] Complete `VZ-COMBAT-001` Phase B3 single-resource-drain profile pass
 - [x] Complete `VZ-COMBAT-001` Phase B4 combined-resource-drain profile pass
+- [x] Complete `VZ-COMBAT-001` Phase B5 Dispel-weapon profile pass
 - [ ] Complete `VZ-COMBAT-001` Phase B evidence/formula passes
 - [ ] Complete the remaining two unimplemented known findings
 - [ ] Continue the exhaustive local-repository Vanilla/Zilart audit
@@ -178,11 +192,13 @@ Still required:
 Use the latest head of `retail-parity/codex-vanilla-zilart`. Fetch `origin`,
 read `CODEX_STATE.md`, `CODEX_BACKLOG.md`, `LOCAL_CODEX_ENVIRONMENT.md`, the
 worklog, completion report, generated VZ-COMBAT-001 inventory, all Phase B
-evidence ledgers, and finding files. Begin one bounded Phase B5 family or
-configuration group. Do not extend elemental-arrow, status-ammunition,
-single-resource-drain, or combined-resource-drain compatibility policy
-without separate evidence. Then continue the remaining known findings and
-exhaustive audit.
+evidence ledgers, and finding files. Begin a separate bounded Phase B6
+evidence gate for the remaining Dispel configurations, starting with Balmung,
+Claustrum, and other inventory candidates. Do not migrate them from the Phase
+B5 three-item registry automatically, and do not extend elemental-arrow,
+status-ammunition, single-resource-drain, combined-resource-drain, or Dispel
+compatibility policy without separate evidence. Then continue the remaining
+known findings and exhaustive audit.
 
 ## Guardrails
 

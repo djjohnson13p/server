@@ -1,7 +1,7 @@
 # Codex State — Vanilla + Rise of the Zilart
 
-Status: VZ_COMBAT_001_PHASE_B4_COMBINED_RESOURCE_DRAINS_PROFILED
-Pass: 11
+Status: VZ_COMBAT_001_PHASE_B5_DISPEL_WEAPONS_PROFILED
+Pass: 12
 Last updated: 2026-07-29
 
 ## Local Codex environment
@@ -60,6 +60,12 @@ The earlier `FAILED_INFRASTRUCTURE` state applied only to the assistant's networ
     drain registry, one branch-selection owner, and the shared one-resource
     transfer primitive. Uniform/no-retry selection and unsupported retail
     formulas remain explicit compatibility/`VERIFY_LIVE`.
+14. `VZ-COMBAT-001` Phase B5 — Lockheart, Mythril Heart, and Mythril Heart +1
+    now resolve through one exact-scope Dispel registry. Successful removal
+    supplies the existing Dispel presentation and actual removed effect ID,
+    correcting a deterministic status-removal-without-0x028-result defect.
+    Unsupported proc, selection, eligibility, and presentation behavior
+    remains explicit compatibility/`VERIFY_LIVE`.
 
 ## Validation completed
 
@@ -92,8 +98,9 @@ The earlier `FAILED_INFRASTRUCTURE` state applied only to the assistant's networ
 - Catch2 result: all 19 cases and 9,007,079 assertions passed.
 - The complete 65-case `0x028` battle-action packet suite passed, including
   pets, Blood Pacts, player weapon skills, and ordinary mob skills.
-- `VZ-COMBAT-001` Phase A: generated inventory covers 420 items and all 18
-  maintained Vanilla/Zilart profiles pass reachability/classification sanity.
+- `VZ-COMBAT-001` inventory: generated output covers 420 items and all 21
+  currently maintained Vanilla/Zilart profiles pass reachability/
+  classification sanity.
   Focused Lua covers real melee/ranged packets, Acid/Sleep status ammo,
   proc/resistance separation, exactly-once damage, absorb/nullification,
   physical/ranged/breath flags, level eligibility, status families, and all
@@ -127,11 +134,26 @@ The earlier `FAILED_INFRASTRUCTURE` state applied only to the assistant's networ
   after empty/resisted/nullified/absorbed/undead branches, resource
   isolation, and real main/off-hand/miss/level/despawn/priority/multi-
   attack/ordinary melee paths.
+- `VZ-COMBAT-001` Phase B5: 31 focused Lua cases cover exactly Lockheart,
+  Mythril Heart, and Mythril Heart +1; complete/malformed/duplicate/SQL-drift
+  policy; chance boundaries; one uniform eligible-status selection and one
+  removal; no retry; protected, permanent, empty, false, sentinel, and invalid
+  outcomes; and real main-hand/miss/level/despawn/Enspell/multi-attack/
+  ordinary-melee 0x028 paths.
 - The mandatory six-selector aggregate reproduced the prior unexplained
   failure as a stacked Lua-double lifetime defect. Reverse installation-
   order restoration is regression-backed; the corrected pre-edit aggregate
   passed 198/198 in one process. Post-edit and final post-build repeats also
   passed 198/198.
+- The final seven-selector Phase B5 aggregate passed 284/284. Its initial
+  pre-edit run had one intermittent B2 target-despawn failure (197/198);
+  the focused retry and full aggregate repeat passed before production edits.
+  Phase A's initial 39/40 was assertion drift from its legacy `SINGLE` policy
+  expectation; the test-only expectation was updated for the three Dispel
+  profiles and repeated at 40/40.
+- Final Phase B5 validation passed the focused suite 31/31 and the complete
+  0x028 packet suite 65/65. Catch2 passed 19/19 with 9,007,079 assertions on
+  each invocation.
 - Lua style/purity, SQL sanity, C++ formatting, and `git diff --check` passed.
 - A fresh-directory MSVC/Ninja Debug configuration passed.
 - The complete all-target MSVC/Ninja Debug build passed and linked
@@ -142,28 +164,30 @@ The earlier `FAILED_INFRASTRUCTURE` state applied only to the assistant's networ
 
 ## Current work
 
-The bounded `VZ-COMBAT-001` Phase B4 pass is complete as a shared-core
-profile/framework hardening pass. Independent evidence classifies Hofud,
-Vampirism, and Crepuscular Knife as 2007, 2015, and 2021
-`LATER_EXPANSION`; the maintained Vanilla/Zilart count remains 18. Their SQL
-numbers, uniform branch choice, no-retry policy, legacy Dark calculation,
-and presentation remain explicit compatibility because no controlled retail
-dataset was found. Deterministic ownership, every branch, real melee packets,
-resource isolation, and B3 regression behavior are automated.
+The bounded `VZ-COMBAT-001` Phase B5 pass is complete. Independent evidence
+gates Lockheart and Mythril Heart to Vanilla/Zilart with high confidence and
+Mythril Heart +1 with moderate confidence through the documented shared-
+recipe inference. The maintained Vanilla/Zilart count is now 21. Exact
+three-item policy, successful-removal presentation, actual effect-ID
+reporting, one selection/removal, no retry, and real melee packets are
+automated. SQL numerics and all unsupported Dispel mechanics remain explicit
+compatibility because no controlled retail dataset was found.
 
 Seven findings are implemented and test-backed. `VZ-JOB-002` and
 `VZ-COMBAT-001` remain partial where evidence is insufficient. Fire/Ice/
 Lightning Arrow, the eight Phase B2 status items, and the three Phase B3
 single-resource drains plus the three later Phase B4 combined drains are
-hardened/profiled, not retail-formula-corrected. The item framework's
-remaining drains, Dispel, absorb-status, self-buff, Death, spikes, and
-item-specific damage/status numerics are explicit `VERIFY_LIVE` or
-compatibility work, not claimed retail-correct.
+hardened/profiled, as are the three Phase B5 Dispel weapons; they are not
+retail-formula-corrected. The item framework's remaining drains and Dispel
+configurations, absorb-status, self-buff, Death, spikes, and item-specific
+damage/status numerics are explicit `VERIFY_LIVE` or compatibility work, not
+claimed retail-correct.
 
 ## Remaining AI-capable work
 
-- Continue `VZ-COMBAT-001` Phase B5 in bounded, evidence-backed family or
-  configuration groups.
+- Continue `VZ-COMBAT-001` Phase B6 with a separate evidence gate for
+  Balmung, Claustrum, and other remaining Dispel configurations; do not
+  generalize the Phase B5 registry automatically.
 - Complete `VZ-JOB-001` Elemental Spirit data, spell-selection, and scaling work.
 - Implement `VZ-SYS-001` Ballista.
 - Continue the exhaustive local-repository audit beyond the eleven assistant findings.
@@ -201,6 +225,10 @@ candidates remain:
   branch selection, resistance, nonuniform-distribution hypotheses,
   retry/fallback, per-resource amount/scaling, empty/full caps, multi-attack,
   Dark/null/absorb/undead/defense behavior, and exact 0x028 presentation.
+- controlled Lockheart/Mythril Heart/Mythril Heart +1 datasets separating
+  proc, status selection, protected categories, retry, accuracy/resistance,
+  main-hand/Enspell/multi-attack eligibility, and raw 0x028 presentation;
+  plus direct dated Vanilla/Zilart evidence naming Mythril Heart +1.
 
 ## Exact next-pass instructions
 
@@ -208,9 +236,10 @@ candidates remain:
    inherited-validation pass.
 2. Read `AGENTS.md`, `CODEX_MASTER_TASK.md`, `CODEX_BACKLOG.md`, `LOCAL_CODEX_ENVIRONMENT.md`, the status/worklog, completion report, and all finding files.
 3. Confirm the worktree is clean and remain on `retail-parity/codex-vanilla-zilart`.
-4. Begin one bounded `VZ-COMBAT-001` Phase B5 family/configuration pass using
-   the generated inventory and evidence ledgers. Do not silently extend the
-   Phase B1/B2/B3/B4 compatibility policies.
+4. Begin a bounded `VZ-COMBAT-001` Phase B6 pass by separately evidence-gating
+   Balmung, Claustrum, and the other remaining Dispel configurations. Do not
+   silently extend the Phase B1/B2/B3/B4/B5 compatibility policies or migrate
+   any item merely because it shares the Dispel selector.
 5. Initialize MSVC through `VsDevCmd.bat` for all Windows configure/build commands.
 6. Run narrow tests first, then the full MSVC/Ninja Debug build.
 7. Fix failures caused by the fork changes; do not hide failures or weaken unrelated assertions.
