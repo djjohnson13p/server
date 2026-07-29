@@ -7601,6 +7601,7 @@ xi.item =
     FLAME_DEGEN                         = 16522,
     HOLY_DEGEN                          = 16523,
     FLEURET                             = 16524,
+    BLOODY_RAPIER                       = 16528,
     MUSKETEERS_SWORD                    = 16529,
     XIPHOS                              = 16530,
     BRASS_XIPHOS                        = 16531,

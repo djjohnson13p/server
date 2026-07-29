@@ -11,8 +11,10 @@ The inventory intentionally includes every item found in active additional-effec
 
 ### Era
 
-- ERA_UNRESOLVED: 402
+- ERA_UNRESOLVED: 400
+- VANILLA: 1
 - VANILLA_OR_ZILART: 18
+- ZILART: 1
 
 ### Effect family
 
@@ -36,9 +38,10 @@ The inventory intentionally includes every item found in active additional-effec
 
 - ISSUE_EVIDENCE_ONLY: 2
 - ITEM_SCRIPT: 1
-- SQL_MODIFIERS: 379
+- SQL_MODIFIERS: 376
 - SQL_MODIFIERS+ITEM_SCRIPT: 22
 - SQL_MODIFIERS+ITEM_SCRIPT+SCRIPTED_PROFILE: 3
+- SQL_MODIFIERS+SINGLE_RESOURCE_DRAIN_PROFILE: 3
 - SQL_MODIFIERS+SQL_LATENTS: 5
 - SQL_MODIFIERS+STATUS_AMMUNITION_PROFILE: 8
 
@@ -477,13 +480,13 @@ The inventory intentionally includes every item found in active additional-effec
 | 16506 | stun_kukri | 69 | MAIN\|SUB | DEBUFF | GLOBAL_ADDITIONAL_EFFECT | ERA_UNRESOLVED | ERA_UNRESOLVED | YES | item-specific retail numerics |
 | 16507 | venom_baselard | 63 | MAIN\|SUB | DEBUFF | GLOBAL_ADDITIONAL_EFFECT | ERA_UNRESOLVED | ERA_UNRESOLVED | YES | item-specific retail numerics |
 | 16508 | silence_dagger_+1 | 12 | MAIN\|SUB | DEBUFF | GLOBAL_ADDITIONAL_EFFECT | ERA_UNRESOLVED | ERA_UNRESOLVED | YES | item-specific retail numerics |
-| 16509 | aspir_knife | 12 | MAIN\|SUB | MP_DRAIN | GLOBAL_ADDITIONAL_EFFECT | ERA_UNRESOLVED | VERIFY_LIVE | YES | drain accuracy, scaling, and element |
+| 16509 | aspir_knife | 12 | MAIN\|SUB | MP_DRAIN | GLOBAL_SINGLE_RESOURCE_DRAIN_PROFILE | ERA_UNRESOLVED | VERIFY_LIVE | YES | proc chance and level correction; fixed versus random amount and scaling; skill, accuracy, governing stat, and dSTAT; Dark element and resistance tiers; nullification, absorption, and undead behavior; attacker-full, target-empty, main/off-hand, Enspell priority, HP-oriented defenses, and exact presentation |
 | 16510 | venom_baselard_+1 | 63 | MAIN\|SUB | DEBUFF | GLOBAL_ADDITIONAL_EFFECT | ERA_UNRESOLVED | ERA_UNRESOLVED | YES | item-specific retail numerics |
 | 16515 | colichemarde | 65 | MAIN\|SUB | DAMAGE | GLOBAL_ADDITIONAL_EFFECT | ERA_UNRESOLVED | ERA_UNRESOLVED | YES | item-specific retail numerics |
 | 16522 | flame_degen | 40 | MAIN\|SUB | DAMAGE | GLOBAL_ADDITIONAL_EFFECT | ERA_UNRESOLVED | ERA_UNRESOLVED | YES | item-specific retail numerics |
 | 16523 | holy_degen | 45 | MAIN\|SUB | DAMAGE | GLOBAL_ADDITIONAL_EFFECT | ERA_UNRESOLVED | ERA_UNRESOLVED | YES | item-specific retail numerics |
 | 16525 | hornet_fleuret | 61 | MAIN\|SUB | DEBUFF | GLOBAL_ADDITIONAL_EFFECT | ERA_UNRESOLVED | ERA_UNRESOLVED | YES | item-specific retail numerics |
-| 16528 | bloody_rapier | 55 | MAIN\|SUB | HP_DRAIN | GLOBAL_ADDITIONAL_EFFECT | ERA_UNRESOLVED | VERIFY_LIVE | YES | drain accuracy, scaling, and element |
+| 16528 | bloody_rapier | 55 | MAIN\|SUB | HP_DRAIN | GLOBAL_SINGLE_RESOURCE_DRAIN_PROFILE | VANILLA | VERIFY_LIVE | YES | proc chance and level correction; fixed versus random amount and scaling; skill, accuracy, governing stat, and dSTAT; Dark element and resistance tiers; nullification, absorption, and undead behavior; attacker-full, target-empty, main/off-hand, Enspell priority, HP-oriented defenses, and exact presentation |
 | 16533 | ancient_sword | 45 | MAIN\|SUB | DEBUFF | GLOBAL_ADDITIONAL_EFFECT | ERA_UNRESOLVED | ERA_UNRESOLVED | YES | item-specific retail numerics |
 | 16543 | fire_sword | 18 | MAIN\|SUB | DAMAGE | GLOBAL_ADDITIONAL_EFFECT | ERA_UNRESOLVED | ERA_UNRESOLVED | YES | item-specific retail numerics |
 | 16549 | divine_sword | 38 | MAIN\|SUB | DAMAGE | GLOBAL_ADDITIONAL_EFFECT | ERA_UNRESOLVED | ERA_UNRESOLVED | YES | item-specific retail numerics |
@@ -603,7 +606,7 @@ The inventory intentionally includes every item found in active additional-effec
 | 17768 | yoto_+1 | 46 | MAIN\|SUB | DEBUFF | GLOBAL_ADDITIONAL_EFFECT | ERA_UNRESOLVED | ERA_UNRESOLVED | YES | item-specific retail numerics |
 | 17770 | mamushito_+1 | 72 | MAIN\|SUB | DEBUFF | GLOBAL_ADDITIONAL_EFFECT | ERA_UNRESOLVED | ERA_UNRESOLVED | YES | item-specific retail numerics |
 | 17797 | seito | 16 | MAIN\|SUB | DEBUFF | GLOBAL_ADDITIONAL_EFFECT | ERA_UNRESOLVED | ERA_UNRESOLVED | YES | item-specific retail numerics |
-| 17823 | shinsoku | 72 | MAIN | TP_DRAIN | GLOBAL_ADDITIONAL_EFFECT | ERA_UNRESOLVED | VERIFY_LIVE | YES | drain accuracy, scaling, and element |
+| 17823 | shinsoku | 72 | MAIN | TP_DRAIN | GLOBAL_SINGLE_RESOURCE_DRAIN_PROFILE | ZILART | VERIFY_LIVE | YES | proc chance and level correction; fixed versus random amount and scaling; skill, accuracy, governing stat, and dSTAT; Dark element and resistance tiers; nullification, absorption, and undead behavior; attacker-full, target-empty, main/off-hand, Enspell priority, HP-oriented defenses, and exact presentation |
 | 17828 | koen | 34 | MAIN | DAMAGE | GLOBAL_ADDITIONAL_EFFECT | ERA_UNRESOLVED | ERA_UNRESOLVED | YES | item-specific retail numerics |
 | 18008 | hushed_dagger | 12 | MAIN\|SUB | DEBUFF | GLOBAL_ADDITIONAL_EFFECT | ERA_UNRESOLVED | ERA_UNRESOLVED | YES | item-specific retail numerics |
 | 18010 | melt_dagger | 23 | MAIN\|SUB | DEBUFF | GLOBAL_ADDITIONAL_EFFECT | ERA_UNRESOLVED | ERA_UNRESOLVED | YES | item-specific retail numerics |

@@ -413,6 +413,72 @@ xi.additionalEffect.procFunctions[xi.additionalEffect.procType.TP_DRAIN] =  func
     return subEffect, msgID, msgParam
 end
 
+-- Exact-scope transfer owner for the three VZ single-resource drain
+-- profiles. Combined and scripted drains intentionally remain on their
+-- existing compatibility handlers.
+xi.additionalEffect.executeSingleResourceDrain = function(attacker, defender, params)
+    if
+        not attacker or
+        not defender or
+        type(params) ~= 'table' or
+        type(params.profile) ~= 'table' or
+        type(params.profile.singleResourceDrain) ~= 'table'
+    then
+        return 0, 0, 0
+    end
+
+    local policy = params.profile.singleResourceDrain
+    if defender:isDead() or defender:isUndead() then
+        return 0, 0, 0
+    end
+
+    local amount = xi.additionalEffect.calcDamage(
+        attacker,
+        policy.effectiveElement,
+        defender,
+        params.damage)
+    amount = math.max(amount, 0)
+
+    local availableResource
+    if policy.resource == 'HP' then
+        availableResource = defender:getHP()
+    elseif policy.resource == 'MP' then
+        availableResource = defender:getMP()
+    elseif policy.resource == 'TP' then
+        availableResource = defender:getTP()
+    else
+        return 0, 0, 0
+    end
+
+    amount = math.min(amount, availableResource)
+    if amount <= 0 then
+        return policy.presentationSubEffect, policy.presentationMessage, 0
+    end
+
+    local removed
+    if policy.resource == 'HP' then
+        removed = xi.additionalEffect.applyDamage(
+            attacker,
+            defender,
+            amount,
+            xi.attackType.MAGICAL,
+            xi.damageType.DARK)
+        attacker:addHP(removed)
+    elseif policy.resource == 'MP' then
+        local startingMP = defender:getMP()
+        defender:addMP(-amount)
+        removed = startingMP - defender:getMP()
+        attacker:addMP(removed)
+    else
+        local startingTP = defender:getTP()
+        defender:addTP(-amount)
+        removed = startingTP - defender:getTP()
+        attacker:addTP(removed)
+    end
+
+    return policy.presentationSubEffect, policy.presentationMessage, removed
+end
+
 -- TODO: add resistance check for params.element
 xi.additionalEffect.procFunctions[xi.additionalEffect.procType.DISPEL] =  function(attacker, defender, item, params)
     local subEffect = params.subEffect
@@ -651,6 +717,10 @@ end
 
 -- paralyze on hit, fire damage on hit, etc.
 xi.additionalEffect.attack = function(attacker, defender, baseAttackDamage, item)
+    if not attacker or not defender or not item then
+        return 0, 0, 0
+    end
+
     -- If player is level synced below the level of the item, do no proc
     if item:getReqLvl() > attacker:getMainLvl() then
         return 0, 0, 0
@@ -667,6 +737,10 @@ xi.additionalEffect.attack = function(attacker, defender, baseAttackDamage, item
             xi.additionalEffect.profile.reportedInvalidItems[item:getID()] = true
         end
 
+        return 0, 0, 0
+    end
+
+    if profile.singleResourceDrain and defender:isDead() then
         return 0, 0, 0
     end
 
@@ -704,7 +778,9 @@ xi.additionalEffect.attack = function(attacker, defender, baseAttackDamage, item
         params.damage = xi.additionalEffect.dStatBonus(attacker, defender, params.dStat, params.damage)
     end
 
-    if xi.additionalEffect.procFunctions[params.addType] then
+    if profile.singleResourceDrain then
+        return xi.additionalEffect.executeSingleResourceDrain(attacker, defender, params)
+    elseif xi.additionalEffect.procFunctions[params.addType] then
         return xi.additionalEffect.procFunctions[params.addType](attacker, defender, item, params)
     else
         print('ERR: xi.additionalEffect.attack passed invalid/unimplemented addType of ' .. tostring(params.addType))

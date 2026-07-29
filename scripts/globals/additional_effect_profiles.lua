@@ -110,9 +110,10 @@ local familyPolicy =
 }
 
 local statusAmmunitionRegistry = {}
+local singleResourceDrainRegistry = {}
 
 local function resolveClassification(itemId, procType)
-    if statusAmmunitionRegistry[itemId] then
+    if singleResourceDrainRegistry[itemId] or statusAmmunitionRegistry[itemId] then
         return xi.additionalEffect.profile.classification.VERIFY_LIVE
     elseif procType == 14 then
         return xi.additionalEffect.profile.classification.SPECIAL_CASE_TEST_BACKED
@@ -125,63 +126,97 @@ local function resolveClassification(itemId, procType)
     return xi.additionalEffect.profile.classification.FRAMEWORK_CORRECT_LEGACY_NUMERICS
 end
 
+local function resolveExecutionPolicy(policy, procType, statusAmmunition, singleResourceDrain)
+    local execution =
+    {
+        profileFamily = 'SQL_MODIFIER_GENERIC',
+        triggeringAttack = 'MELEE_OR_RANGED',
+        chancePolicy = 'SQL_MODIFIER',
+        levelPolicy = 'SQL_MODIFIER',
+        accuracyMode = policy.accuracyMode or
+            (procType == 2 and
+                xi.additionalEffect.profile.accuracyMode.LEGACY_UNVERIFIED_RANK or
+                xi.additionalEffect.profile.accuracyMode.LEGACY_DAMAGE_RESISTANCE),
+        skillRank = policy.skillRank or xi.skillRank.A,
+        governingStat = policy.governingStat or xi.mod.INT,
+        governingStatEvidence = policy.governingStatEvidence or 'LEGACY_UNVERIFIED',
+        resistancePolicy = procType == 2 and 'STATUS_MAGIC_TIER' or 'FAMILY_HANDLER',
+        immunityPolicy = procType == 2 and 'STATUS_HELPERS' or 'FAMILY_HANDLER',
+        damageType = 'ELEMENTAL_LEGACY',
+        successMessage = 'FAMILY_DEFAULT',
+    }
+
+    if singleResourceDrain then
+        execution.profileFamily = 'VZ_SINGLE_RESOURCE_DRAIN'
+        execution.evidenceSource = singleResourceDrain.evidenceSource
+        execution.fieldClassifications = singleResourceDrain.fieldClassifications
+        execution.triggeringAttack = 'SUCCESSFUL_MELEE_HIT'
+        execution.chancePolicy = 'SQL_MODIFIER_COMPATIBILITY'
+        execution.levelPolicy = 'SQL_MODIFIER_COMPATIBILITY'
+        execution.effectiveElement = singleResourceDrain.effectiveElement
+        execution.accuracyMode = xi.additionalEffect.profile.accuracyMode.LEGACY_DAMAGE_RESISTANCE
+        execution.skillRank = 0
+        execution.governingStat = 0
+        execution.governingStatEvidence = 'NOT_APPLICABLE_COMPATIBILITY'
+        execution.resistancePolicy = 'MAGICAL_DAMAGE_TIERS_COMPATIBILITY'
+        execution.immunityPolicy = 'UNDEAD_GUARD_COMPATIBILITY'
+        execution.damageType = 'DARK_MAGICAL_COMPATIBILITY'
+        execution.successMessage = singleResourceDrain.presentationMessage
+    elseif statusAmmunition then
+        execution.profileFamily = 'VZ_STATUS_AMMUNITION'
+        execution.evidenceSource = statusAmmunition.evidenceSource
+        execution.fieldClassifications = statusAmmunition.fieldClassifications
+        execution.triggeringAttack = 'SUCCESSFUL_RANGED_HIT'
+        execution.chancePolicy = 'SQL_MODIFIER_COMPATIBILITY'
+        execution.levelPolicy = 'SQL_MODIFIER_COMPATIBILITY'
+        execution.effectiveElement = statusAmmunition.effectiveElement
+    end
+
+    return execution
+end
+
 xi.additionalEffect.profile.resolve = function(item, baseAttackDamage)
     local itemId   = item:getID()
     local procType = item:getMod(xi.mod.ITEM_ADDEFFECT_TYPE)
     local policy   = itemPolicy[itemId] or {}
     local family   = familyPolicy[procType] or {}
     local statusAmmunition = statusAmmunitionRegistry[itemId]
-    local profileFamily = 'SQL_MODIFIER_GENERIC'
-    local evidenceSource
-    local fieldClassifications
-    local triggeringAttack = 'MELEE_OR_RANGED'
-    local chancePolicy = 'SQL_MODIFIER'
-    local levelPolicy = 'SQL_MODIFIER'
-    local effectiveElement
-    if statusAmmunition then
-        profileFamily = 'VZ_STATUS_AMMUNITION'
-        evidenceSource = statusAmmunition.evidenceSource
-        fieldClassifications = statusAmmunition.fieldClassifications
-        triggeringAttack = 'SUCCESSFUL_RANGED_HIT'
-        chancePolicy = 'SQL_MODIFIER_COMPATIBILITY'
-        levelPolicy = 'SQL_MODIFIER_COMPATIBILITY'
-        effectiveElement = statusAmmunition.effectiveElement
-    end
+    local singleResourceDrain = singleResourceDrainRegistry[itemId]
+    local execution =
+        resolveExecutionPolicy(policy, procType, statusAmmunition, singleResourceDrain)
 
     local profile =
     {
         itemId            = itemId,
-        profileFamily     = profileFamily,
+        profileFamily     = execution.profileFamily,
         classification    = resolveClassification(itemId, procType),
         evidence          = policy.evidence or 'LEGACY_UNVERIFIED',
-        evidenceSource    = evidenceSource,
+        evidenceSource    = execution.evidenceSource,
         statusAmmunition  = statusAmmunition,
-        fieldClassifications = fieldClassifications,
+        singleResourceDrain = singleResourceDrain,
+        fieldClassifications = execution.fieldClassifications,
 
         proc =
         {
             chance              = item:getMod(xi.mod.ITEM_ADDEFFECT_CHANCE),
             levelCorrection     = item:getMod(xi.mod.ITEM_ADDEFFECT_LVADJUST),
-            chancePolicy        = chancePolicy,
-            levelPolicy         = levelPolicy,
-            triggeringAttack    = triggeringAttack,
+            chancePolicy        = execution.chancePolicy,
+            levelPolicy         = execution.levelPolicy,
+            triggeringAttack    = execution.triggeringAttack,
             distanceBandPolicy  = 'INHERIT_TRIGGERING_ATTACK_HIT',
             targetRestriction   = procType == 14 and 'NAMED_NM_CONFIG' or 'ATTACK_TARGET',
         },
 
         accuracy =
         {
-            mode        = policy.accuracyMode or
-                (procType == 2 and
-                    xi.additionalEffect.profile.accuracyMode.LEGACY_UNVERIFIED_RANK or
-                    xi.additionalEffect.profile.accuracyMode.LEGACY_DAMAGE_RESISTANCE),
-            skillRank             = policy.skillRank or xi.skillRank.A,
-            governingStat         = policy.governingStat or xi.mod.INT,
-            governingStatEvidence = policy.governingStatEvidence or 'LEGACY_UNVERIFIED',
+            mode                    = execution.accuracyMode,
+            skillRank               = execution.skillRank,
+            governingStat           = execution.governingStat,
+            governingStatEvidence   = execution.governingStatEvidence,
             element               = item:getMod(xi.mod.ITEM_ADDEFFECT_ELEMENT),
-            effectiveElement      = effectiveElement,
-            resistancePolicy      = procType == 2 and 'STATUS_MAGIC_TIER' or 'FAMILY_HANDLER',
-            immunityPolicy        = procType == 2 and 'STATUS_HELPERS' or 'FAMILY_HANDLER',
+            effectiveElement      = execution.effectiveElement,
+            resistancePolicy      = execution.resistancePolicy,
+            immunityPolicy        = execution.immunityPolicy,
             nullificationPolicy   = procType == 1 and 'MAGICAL_ONCE' or 'FAMILY_HANDLER',
             absorptionPolicy      = procType == 1 and 'MAGICAL_ONCE' or 'FAMILY_HANDLER',
             partialResistPolicy   = procType == 2 and 'DURATION_SCALED_MIN_HALF' or 'FAMILY_HANDLER',
@@ -192,7 +227,7 @@ xi.additionalEffect.profile.resolve = function(item, baseAttackDamage)
             family            = procType,
             baseAttackDamage  = baseAttackDamage,
             damage            = item:getMod(xi.mod.ITEM_ADDEFFECT_DMG),
-            damageType        = 'ELEMENTAL_LEGACY',
+            damageType        = execution.damageType,
             statusEffect      = item:getMod(xi.mod.ITEM_ADDEFFECT_STATUS),
             power             = item:getMod(xi.mod.ITEM_ADDEFFECT_POWER),
             duration          = item:getMod(xi.mod.ITEM_ADDEFFECT_DURATION),
@@ -206,7 +241,7 @@ xi.additionalEffect.profile.resolve = function(item, baseAttackDamage)
         presentation =
         {
             subEffect         = item:getMod(xi.mod.ITEM_SUBEFFECT),
-            successMessage    = 'FAMILY_DEFAULT',
+            successMessage    = execution.successMessage,
             noEffectMessage   = 'NONE',
             messageParameter  = 'APPLIED_AMOUNT_OR_EFFECT_ID',
             absorptionMessage = 'ADD_EFFECT_HEAL',
@@ -257,6 +292,16 @@ xi.additionalEffect.profile.validate = function(profile)
             xi.additionalEffect.profile.validateStatusAmmunition(profile)
         if not validStatusAmmunition then
             for _, validationError in ipairs(statusAmmunitionErrors) do
+                table.insert(errors, validationError)
+            end
+        end
+    end
+
+    if profile.singleResourceDrain then
+        local validSingleResourceDrain, singleResourceDrainErrors =
+            xi.additionalEffect.profile.validateSingleResourceDrain(profile)
+        if not validSingleResourceDrain then
+            for _, validationError in ipairs(singleResourceDrainErrors) do
                 table.insert(errors, validationError)
             end
         end
@@ -1123,6 +1168,387 @@ xi.additionalEffect.profile.validateStatusAmmunition = function(profile)
         profile.accuracy.partialResistPolicy ~= 'DURATION_SCALED_MIN_HALF'
     then
         table.insert(errors, 'status-ammunition execution policy drifted')
+    end
+
+    return #errors == 0, errors
+end
+
+local function singleResourceDrainProfile(
+    itemId,
+    itemName,
+    introductionEra,
+    introductionEraClassification,
+    resource,
+    procFamily,
+    chance,
+    baseAmount,
+    equipPolicy,
+    subEffect,
+    message)
+    local evidence = xi.additionalEffect.profile.classification
+
+    return
+    {
+        itemId         = itemId,
+        itemName       = itemName,
+        profileFamily  = 'VZ_SINGLE_RESOURCE_DRAIN',
+        profileSource  = 'scripts/globals/additional_effect_profiles.lua',
+        evidenceSource =
+            'retail_parity/vanilla_zilart/artifacts/' ..
+            'VZ-COMBAT-001-single-resource-drains-evidence.md',
+        classification = evidence.VERIFY_LIVE,
+        introductionEra = introductionEra,
+        resource        = resource,
+        procFamily      = procFamily,
+
+        procPolicy          = 'FIXED_PERCENT_SQL_COMPATIBILITY',
+        procChance          = chance,
+        levelPolicy         = 'ITEM_REQUIRED_LEVEL_GATE',
+        levelCorrection     = 0,
+        triggeringAttack    = 'SUCCESSFUL_MELEE_HIT',
+        equipPolicy         = equipPolicy,
+        skillPolicy         = 'NO_EXPLICIT_SKILL_COMPATIBILITY',
+        governingStatPolicy = 'NO_GOVERNING_STAT_COMPATIBILITY',
+        dStatPolicy         = 'NO_DSTAT_COMPATIBILITY',
+
+        configuredElement  = xi.element.DARK,
+        effectiveElement   = xi.element.DARK,
+        elementPolicy      = 'DARK_SQL_COMPATIBILITY',
+        resistancePolicy   = 'LEGACY_MAGICAL_DAMAGE_TIERS',
+        nullificationPolicy = 'LEGACY_MAGICAL_ONCE',
+        absorptionPolicy   = 'NEGATIVE_RESULT_CLAMPED_TO_ZERO',
+        undeadPolicy       = 'BLOCK_BEFORE_AMOUNT_CALCULATION',
+
+        targetResourceCapPolicy = 'CLAMP_TO_TARGET_RESOURCE',
+        attackerResourceCapPolicy =
+            'RESOURCE_CONTAINER_CAP_PACKET_REPORTS_TARGET_REMOVAL',
+        overDrainPolicy       = 'REMOVE_AT_MOST_TARGET_RESOURCE',
+        baseAmount            = baseAmount,
+        scalingPolicy         = 'LEGACY_MAGICAL_DAMAGE_STACK',
+        defensivePolicy       =
+            'LEGACY_RESIST_SDT_DAY_WEATHER_PHALANX_ONE_FOR_ALL_STONESKIN',
+        applicationOwnership  = 'SCOPED_EXECUTOR_APPLIES_TARGET_AND_ATTACKER_ONCE',
+
+        presentationSubEffect = subEffect,
+        presentationMessage   = message,
+        messageAmountPolicy   = 'ACTUAL_TARGET_RESOURCE_REMOVED',
+        noEffectPolicy        = 'EARLY_EXIT_NONE_ZERO_AMOUNT_COMPATIBILITY_PACKET',
+
+        fieldClassifications =
+        {
+            identity         = evidence.EVIDENCE_BACKED,
+            introductionEra = introductionEraClassification,
+            resource        = evidence.EVIDENCE_BACKED,
+            procChance      = evidence.VERIFY_LIVE,
+            levelCorrection = evidence.VERIFY_LIVE,
+            triggeringAttack = evidence.FRAMEWORK_CORRECT_LEGACY_NUMERICS,
+            equipPolicy      = evidence.VERIFY_LIVE,
+            skill            = evidence.VERIFY_LIVE,
+            governingStat    = evidence.VERIFY_LIVE,
+            dStat            = evidence.VERIFY_LIVE,
+            element          = evidence.VERIFY_LIVE,
+            resistance       = evidence.VERIFY_LIVE,
+            nullification    = evidence.VERIFY_LIVE,
+            absorption       = evidence.VERIFY_LIVE,
+            undead           = evidence.VERIFY_LIVE,
+            targetResourceCap = evidence.FRAMEWORK_CORRECT_LEGACY_NUMERICS,
+            attackerResourceCap = evidence.VERIFY_LIVE,
+            overDrain        = evidence.FRAMEWORK_CORRECT_LEGACY_NUMERICS,
+            baseAmount       = evidence.VERIFY_LIVE,
+            scaling          = evidence.VERIFY_LIVE,
+            defenses         = evidence.VERIFY_LIVE,
+            application      = evidence.FRAMEWORK_CORRECT_LEGACY_NUMERICS,
+            presentation     = evidence.FRAMEWORK_CORRECT_LEGACY_NUMERICS,
+            noEffect         = evidence.VERIFY_LIVE,
+        },
+
+        unresolvedEvidence =
+        {
+            'proc chance and level correction',
+            'fixed versus random base amount and scaling',
+            'skill, magic accuracy, governing stat, and dSTAT',
+            'Dark element, resistance tiers, nullification, and absorption',
+            'undead, main/off-hand, and Enspell priority behavior',
+            'HP-oriented defenses applied to MP and TP drains',
+            'attacker-full, target-empty, and exact client presentation behavior',
+        },
+    }
+end
+
+local singleResourceDrainDefinitions =
+{
+    singleResourceDrainProfile(
+        xi.item.ASPIR_KNIFE,
+        'aspir_knife',
+        'ERA_UNRESOLVED',
+        xi.additionalEffect.profile.classification.ERA_UNRESOLVED,
+        'MP',
+        6,
+        10,
+        3,
+        'MAIN_OR_OFF_HAND',
+        xi.subEffect.MP_DRAIN,
+        xi.msg.basic.ADD_EFFECT_MP_DRAIN),
+    singleResourceDrainProfile(
+        xi.item.BLOODY_RAPIER,
+        'bloody_rapier',
+        'VANILLA',
+        xi.additionalEffect.profile.classification.EVIDENCE_BACKED,
+        'HP',
+        5,
+        5,
+        10,
+        'MAIN_OR_OFF_HAND',
+        xi.subEffect.HP_DRAIN,
+        xi.msg.basic.ADD_EFFECT_HP_DRAIN),
+    singleResourceDrainProfile(
+        xi.item.SHINSOKU,
+        'shinsoku',
+        'ZILART',
+        xi.additionalEffect.profile.classification.EVIDENCE_BACKED,
+        'TP',
+        7,
+        8,
+        10,
+        'MAIN_HAND_ONLY',
+        xi.subEffect.TP_DRAIN,
+        xi.msg.basic.ADD_EFFECT_TP_DRAIN),
+}
+
+local expectedSingleResourceDrains = {}
+for _, definition in ipairs(singleResourceDrainDefinitions) do
+    expectedSingleResourceDrains[definition.itemId] = definition
+end
+
+local requiredSingleResourceDrainFields =
+{
+    'itemName',
+    'profileFamily',
+    'profileSource',
+    'evidenceSource',
+    'classification',
+    'introductionEra',
+    'resource',
+    'procFamily',
+    'procPolicy',
+    'procChance',
+    'levelPolicy',
+    'levelCorrection',
+    'triggeringAttack',
+    'equipPolicy',
+    'skillPolicy',
+    'governingStatPolicy',
+    'dStatPolicy',
+    'configuredElement',
+    'effectiveElement',
+    'elementPolicy',
+    'resistancePolicy',
+    'nullificationPolicy',
+    'absorptionPolicy',
+    'undeadPolicy',
+    'targetResourceCapPolicy',
+    'attackerResourceCapPolicy',
+    'overDrainPolicy',
+    'baseAmount',
+    'scalingPolicy',
+    'defensivePolicy',
+    'applicationOwnership',
+    'presentationSubEffect',
+    'presentationMessage',
+    'messageAmountPolicy',
+    'noEffectPolicy',
+}
+
+local function validateSingleResourceDrainDefinition(definition)
+    local errors = {}
+    if type(definition) ~= 'table' then
+        return false, { 'single-resource drain profile must be a table' }
+    end
+
+    local expected = expectedSingleResourceDrains[definition.itemId]
+    if not expected then
+        table.insert(errors, string.format(
+            'unsupported single-resource drain item ID %s',
+            tostring(definition.itemId)))
+
+        return false, errors
+    end
+
+    for _, field in ipairs(requiredSingleResourceDrainFields) do
+        if definition[field] ~= expected[field] then
+            table.insert(errors, string.format(
+                'single-resource drain %s drifted: expected %s, got %s',
+                field,
+                tostring(expected[field]),
+                tostring(definition[field])))
+        end
+    end
+
+    if
+        type(definition.fieldClassifications) ~= 'table' or
+        type(definition.unresolvedEvidence) ~= 'table' or
+        #definition.unresolvedEvidence == 0
+    then
+        table.insert(errors, 'single-resource drain evidence ownership is incomplete')
+    else
+        for field in pairs(expected.fieldClassifications) do
+            if definition.fieldClassifications[field] ~= expected.fieldClassifications[field] then
+                table.insert(errors, string.format(
+                    'single-resource drain field classification %s drifted',
+                    field))
+            end
+        end
+    end
+
+    local resourcePolicy =
+    {
+        HP =
+        {
+            family    = 5,
+            subEffect = xi.subEffect.HP_DRAIN,
+            message   = xi.msg.basic.ADD_EFFECT_HP_DRAIN,
+        },
+        MP =
+        {
+            family    = 6,
+            subEffect = xi.subEffect.MP_DRAIN,
+            message   = xi.msg.basic.ADD_EFFECT_MP_DRAIN,
+        },
+        TP =
+        {
+            family    = 7,
+            subEffect = xi.subEffect.TP_DRAIN,
+            message   = xi.msg.basic.ADD_EFFECT_TP_DRAIN,
+        },
+    }
+    local resource = resourcePolicy[definition.resource]
+    if
+        not resource or
+        definition.procFamily ~= resource.family or
+        definition.presentationSubEffect ~= resource.subEffect or
+        definition.presentationMessage ~= resource.message
+    then
+        table.insert(errors, 'single-resource drain resource/handler/presentation mismatch')
+    end
+
+    if
+        definition.configuredElement ~= xi.element.DARK or
+        definition.effectiveElement ~= xi.element.DARK
+    then
+        table.insert(errors, 'single-resource drain compatibility element must be Dark')
+    end
+
+    return #errors == 0, errors
+end
+
+xi.additionalEffect.profile.buildSingleResourceDrainRegistry = function(definitions)
+    local registry = {}
+    local errors = {}
+
+    for index, definition in ipairs(definitions) do
+        local valid, validationErrors =
+            validateSingleResourceDrainDefinition(definition)
+        for _, validationError in ipairs(validationErrors) do
+            table.insert(errors, string.format(
+                'definition %u: %s',
+                index,
+                validationError))
+        end
+
+        if valid then
+            if registry[definition.itemId] then
+                table.insert(errors, string.format(
+                    'duplicate single-resource drain item profile %u',
+                    definition.itemId))
+            else
+                registry[definition.itemId] = definition
+            end
+        end
+    end
+
+    if #errors > 0 then
+        return nil, errors
+    end
+
+    return registry, errors
+end
+
+local singleResourceDrainRegistryErrors
+singleResourceDrainRegistry, singleResourceDrainRegistryErrors =
+    xi.additionalEffect.profile.buildSingleResourceDrainRegistry(
+        singleResourceDrainDefinitions)
+if not singleResourceDrainRegistry then
+    error(table.concat(singleResourceDrainRegistryErrors, '; '))
+end
+
+xi.additionalEffect.profile.resolveSingleResourceDrain = function(item)
+    if item == nil then
+        return nil
+    end
+
+    local itemId = type(item) == 'number' and item or item:getID()
+
+    return singleResourceDrainRegistry[itemId]
+end
+
+xi.additionalEffect.profile.singleResourceDrainProfileCount = function()
+    local count = 0
+    for _ in pairs(singleResourceDrainRegistry) do
+        count = count + 1
+    end
+
+    return count
+end
+
+xi.additionalEffect.profile.validateSingleResourceDrain = function(profile)
+    local errors = {}
+    local policy = profile and profile.singleResourceDrain
+    local validPolicy, policyErrors = validateSingleResourceDrainDefinition(policy)
+    if not validPolicy then
+        return false, policyErrors
+    end
+
+    if
+        profile.profileFamily ~= 'VZ_SINGLE_RESOURCE_DRAIN' or
+        profile.classification ~= xi.additionalEffect.profile.classification.VERIFY_LIVE
+    then
+        table.insert(errors, 'single-resource drain profile must retain explicit VERIFY_LIVE scope')
+    end
+
+    local actualFields =
+    {
+        { 'proc family', profile.outcome.family, policy.procFamily },
+        { 'proc chance', profile.proc.chance, policy.procChance },
+        { 'level correction', profile.proc.levelCorrection, policy.levelCorrection },
+        { 'configured element', profile.accuracy.element, policy.configuredElement },
+        { 'effective element', profile.accuracy.effectiveElement, policy.effectiveElement },
+        { 'base amount', profile.outcome.damage, policy.baseAmount },
+        { 'drain resource', profile.outcome.drainResource, policy.resource },
+        { 'subeffect', profile.presentation.subEffect, policy.presentationSubEffect },
+        { 'message', profile.presentation.successMessage, policy.presentationMessage },
+    }
+
+    for _, field in ipairs(actualFields) do
+        if field[2] ~= field[3] then
+            table.insert(errors, string.format(
+                'single-resource drain %s drifted: expected %s, got %s',
+                field[1],
+                tostring(field[3]),
+                tostring(field[2])))
+        end
+    end
+
+    if
+        profile.proc.triggeringAttack ~= policy.triggeringAttack or
+        profile.proc.chancePolicy ~= 'SQL_MODIFIER_COMPATIBILITY' or
+        profile.proc.levelPolicy ~= 'SQL_MODIFIER_COMPATIBILITY' or
+        profile.accuracy.mode ~= xi.additionalEffect.profile.accuracyMode.LEGACY_DAMAGE_RESISTANCE or
+        profile.accuracy.skillRank ~= 0 or
+        profile.accuracy.governingStat ~= 0 or
+        profile.outcome.selectionPolicy ~= 'SINGLE' or
+        profile.outcome.undeadPolicy ~= 'BLOCK'
+    then
+        table.insert(errors, 'single-resource drain execution policy drifted')
     end
 
     return #errors == 0, errors
