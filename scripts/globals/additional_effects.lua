@@ -556,22 +556,39 @@ xi.additionalEffect.executeCombinedResourceDrain = function(attacker, defender, 
         resource)
 end
 
--- TODO: add resistance check for params.element
-xi.additionalEffect.procFunctions[xi.additionalEffect.procType.DISPEL] =  function(attacker, defender, item, params)
-    local subEffect = params.subEffect
-    local msgID     = 0
-    local msgParam  = 0
+xi.additionalEffect.removeOneDispelStatus = function(defender)
+    return defender:dispelStatusEffect(xi.effectFlag.DISPELABLE)
+end
 
-    local dispel = defender:dispelStatusEffect()
-
-    if dispel == xi.effect.NONE then
+xi.additionalEffect.executeDispel = function(attacker, defender, params)
+    if not attacker or not defender or not params then
         return 0, 0, 0
-    else
-        msgID = xi.msg.basic.ADD_EFFECT_DISPEL
-        msgParam = dispel
     end
 
-    return subEffect, msgID, msgParam
+    local policy = params.profile and params.profile.dispelWeapon
+    if policy then
+        local valid = xi.additionalEffect.profile.validateDispelWeapon(params.profile)
+        if not valid then
+            return 0, 0, 0
+        end
+    end
+
+    local dispel = xi.additionalEffect.removeOneDispelStatus(defender)
+    if
+        not dispel or
+        dispel == xi.effect.NONE or
+        (type(dispel) == 'number' and dispel < 0)
+    then
+        return 0, 0, 0
+    end
+
+    return policy and policy.presentationSubEffect or params.subEffect,
+        policy and policy.presentationMessage or xi.msg.basic.ADD_EFFECT_DISPEL,
+        dispel
+end
+
+xi.additionalEffect.procFunctions[xi.additionalEffect.procType.DISPEL] =  function(attacker, defender, item, params)
+    return xi.additionalEffect.executeDispel(attacker, defender, params)
 end
 
 xi.additionalEffect.procFunctions[xi.additionalEffect.procType.ABSORB_STATUS] =  function(attacker, defender, item, params)
@@ -818,7 +835,11 @@ xi.additionalEffect.attack = function(attacker, defender, baseAttackDamage, item
     end
 
     if
-        (profile.singleResourceDrain or profile.combinedResourceDrain) and
+        (
+            profile.singleResourceDrain or
+            profile.combinedResourceDrain or
+            profile.dispelWeapon
+        ) and
         defender:isDead()
     then
         return 0, 0, 0

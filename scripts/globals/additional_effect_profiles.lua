@@ -19,6 +19,7 @@ xi.additionalEffect.profile.classification =
     SPECIAL_CASE_TEST_BACKED          = 'SPECIAL_CASE_TEST_BACKED',
     CONFIGURATION_ERROR               = 'CONFIGURATION_ERROR',
     NOT_ACTIVE                        = 'NOT_ACTIVE',
+    VANILLA_OR_ZILART                 = 'VANILLA_OR_ZILART',
     ERA_UNRESOLVED                    = 'ERA_UNRESOLVED',
     LATER_EXPANSION                   = 'LATER_EXPANSION',
 }
@@ -113,12 +114,14 @@ local familyPolicy =
 local statusAmmunitionRegistry = {}
 local singleResourceDrainRegistry = {}
 local combinedResourceDrainRegistry = {}
+local dispelWeaponRegistry = {}
 
 local function resolveClassification(itemId, procType)
     if
         combinedResourceDrainRegistry[itemId] or
         singleResourceDrainRegistry[itemId] or
-        statusAmmunitionRegistry[itemId]
+        statusAmmunitionRegistry[itemId] or
+        dispelWeaponRegistry[itemId]
     then
         return xi.additionalEffect.profile.classification.VERIFY_LIVE
     elseif procType == 14 then
@@ -137,7 +140,8 @@ local function resolveExecutionPolicy(
     procType,
     statusAmmunition,
     singleResourceDrain,
-    combinedResourceDrain)
+    combinedResourceDrain,
+    dispelWeapon)
     local execution =
     {
         profileFamily = 'SQL_MODIFIER_GENERIC',
@@ -189,6 +193,22 @@ local function resolveExecutionPolicy(
         execution.immunityPolicy = 'UNDEAD_GUARD_COMPATIBILITY'
         execution.damageType = 'DARK_MAGICAL_COMPATIBILITY'
         execution.successMessage = combinedResourceDrain.resourceMessagePolicy
+    elseif dispelWeapon then
+        execution.profileFamily = 'VZ_DISPEL_WEAPON'
+        execution.evidenceSource = dispelWeapon.evidenceSource
+        execution.fieldClassifications = dispelWeapon.fieldClassifications
+        execution.triggeringAttack = dispelWeapon.triggeringAttack
+        execution.chancePolicy = 'SQL_MODIFIER_COMPATIBILITY'
+        execution.levelPolicy = 'SQL_MODIFIER_COMPATIBILITY'
+        execution.effectiveElement = dispelWeapon.effectiveElement
+        execution.accuracyMode = xi.additionalEffect.profile.accuracyMode.NONE
+        execution.skillRank = 0
+        execution.governingStat = 0
+        execution.governingStatEvidence = 'NOT_APPLICABLE'
+        execution.resistancePolicy = dispelWeapon.resistancePolicy
+        execution.immunityPolicy = dispelWeapon.protectedStatusPolicy
+        execution.damageType = 'NOT_APPLICABLE'
+        execution.successMessage = dispelWeapon.presentationMessage
     elseif statusAmmunition then
         execution.profileFamily = 'VZ_STATUS_AMMUNITION'
         execution.evidenceSource = statusAmmunition.evidenceSource
@@ -210,13 +230,15 @@ xi.additionalEffect.profile.resolve = function(item, baseAttackDamage)
     local statusAmmunition = statusAmmunitionRegistry[itemId]
     local singleResourceDrain = singleResourceDrainRegistry[itemId]
     local combinedResourceDrain = combinedResourceDrainRegistry[itemId]
+    local dispelWeapon = dispelWeaponRegistry[itemId]
     local execution =
         resolveExecutionPolicy(
             policy,
             procType,
             statusAmmunition,
             singleResourceDrain,
-            combinedResourceDrain)
+            combinedResourceDrain,
+            dispelWeapon)
 
     local profile =
     {
@@ -228,6 +250,7 @@ xi.additionalEffect.profile.resolve = function(item, baseAttackDamage)
         statusAmmunition  = statusAmmunition,
         singleResourceDrain = singleResourceDrain,
         combinedResourceDrain = combinedResourceDrain,
+        dispelWeapon      = dispelWeapon,
         fieldClassifications = execution.fieldClassifications,
 
         proc =
@@ -269,6 +292,7 @@ xi.additionalEffect.profile.resolve = function(item, baseAttackDamage)
             drainResource     = combinedResourceDrain and combinedResourceDrain.resourceSet or
                 family.drainResource or 'NONE',
             selectionPolicy   = combinedResourceDrain and combinedResourceDrain.branchSelectionPolicy or
+                dispelWeapon and dispelWeapon.selectionPolicy or
                 family.selectionPolicy or 'SINGLE',
             undeadPolicy      = family.undeadPolicy or 'FAMILY_HANDLER',
             applicationPolicy = 'APPLY_FINAL_OUTCOME_ONCE',
@@ -276,7 +300,8 @@ xi.additionalEffect.profile.resolve = function(item, baseAttackDamage)
 
         presentation =
         {
-            subEffect         = item:getMod(xi.mod.ITEM_SUBEFFECT),
+            subEffect         = dispelWeapon and dispelWeapon.presentationSubEffect or
+                item:getMod(xi.mod.ITEM_SUBEFFECT),
             successMessage    = execution.successMessage,
             noEffectMessage   = 'NONE',
             messageParameter  = 'APPLIED_AMOUNT_OR_EFFECT_ID',
@@ -348,6 +373,16 @@ xi.additionalEffect.profile.validate = function(profile)
             xi.additionalEffect.profile.validateCombinedResourceDrain(profile)
         if not validCombinedResourceDrain then
             for _, validationError in ipairs(combinedResourceDrainErrors) do
+                table.insert(errors, validationError)
+            end
+        end
+    end
+
+    if profile.dispelWeapon then
+        local validDispelWeapon, dispelWeaponErrors =
+            xi.additionalEffect.profile.validateDispelWeapon(profile)
+        if not validDispelWeapon then
+            for _, validationError in ipairs(dispelWeaponErrors) do
                 table.insert(errors, validationError)
             end
         end
@@ -2012,6 +2047,306 @@ xi.additionalEffect.profile.validateCombinedResourceDrain = function(profile)
         profile.outcome.undeadPolicy ~= 'BLOCK'
     then
         table.insert(errors, 'combined-resource drain execution policy drifted')
+    end
+
+    return #errors == 0, errors
+end
+
+local function dispelWeaponProfile(
+    itemId,
+    itemName,
+    chance,
+    introductionEvidence)
+    local evidence = xi.additionalEffect.profile.classification
+
+    return
+    {
+        itemId         = itemId,
+        itemName       = itemName,
+        profileFamily  = 'VZ_DISPEL_WEAPON',
+        profileSource  = 'scripts/globals/additional_effect_profiles.lua',
+        evidenceSource =
+            'retail_parity/vanilla_zilart/artifacts/' ..
+            'VZ-COMBAT-001-lockheart-mythril-heart-dispel-evidence.md',
+        classification       = evidence.VERIFY_LIVE,
+        introductionEra      = evidence.VANILLA_OR_ZILART,
+        introductionEvidence = introductionEvidence,
+
+        procFamily       = 10,
+        procPolicy       = 'FIXED_PERCENT_SQL_COMPATIBILITY',
+        procChance       = chance,
+        levelPolicy      = 'ITEM_REQUIRED_LEVEL_GATE',
+        levelCorrection  = 0,
+        triggeringAttack = 'SUCCESSFUL_MELEE_HIT',
+        equipPolicy      = 'MAIN_HAND_TWO_HANDED_GREAT_SWORD',
+
+        selectionPolicy =
+            'UNIFORM_RANDOM_DISPELABLE_POSITIVE_DURATION_COMPATIBILITY',
+        protectedStatusPolicy =
+            'STATUS_FLAG_DISPELABLE_ONLY_POSITIVE_DURATION_COMPATIBILITY',
+        selectionTimingPolicy =
+            'AFTER_OVERALL_PROC_BEFORE_PACKET_RESULT',
+        removalOwnership =
+            'STATUS_CONTAINER_SELECTS_AND_REMOVES_ONE_EFFECT_ONCE',
+        retryFallbackPolicy =
+            'NO_RETRY_OR_FALLBACK_COMPATIBILITY',
+
+        accuracyPolicy      = 'NO_MAGIC_ACCURACY_LAYER_COMPATIBILITY',
+        skillPolicy         = 'NO_EXPLICIT_SKILL_COMPATIBILITY',
+        governingStatPolicy = 'NOT_APPLICABLE',
+        dStatPolicy         = 'NOT_APPLICABLE',
+        configuredElement   = xi.element.NONE,
+        effectiveElement    = xi.element.NONE,
+        elementPolicy       = 'NOT_APPLICABLE',
+        resistancePolicy    = 'NO_RESISTANCE_LAYER_COMPATIBILITY',
+
+        presentationSubEffect = xi.subEffect.DARKNESS_DAMAGE,
+        presentationMessage   = xi.msg.basic.ADD_EFFECT_DISPEL,
+        messageParameter      = 'ACTUAL_REMOVED_EFFECT_ID',
+        noEffectPolicy        = 'NO_REMOVABLE_EFFECT_RETURNS_NO_RESULT',
+
+        fieldClassifications =
+        {
+            identity          = evidence.EVIDENCE_BACKED,
+            introductionEra   = evidence.EVIDENCE_BACKED,
+            effectFamily      = evidence.EVIDENCE_BACKED,
+            procChance        = evidence.VERIFY_LIVE,
+            levelCorrection   = evidence.VERIFY_LIVE,
+            triggeringAttack  = evidence.FRAMEWORK_CORRECT_LEGACY_NUMERICS,
+            equipPolicy       = evidence.FRAMEWORK_CORRECT_LEGACY_NUMERICS,
+            selection         = evidence.VERIFY_LIVE,
+            protectedStatuses = evidence.VERIFY_LIVE,
+            retryFallback     = evidence.VERIFY_LIVE,
+            accuracy          = evidence.VERIFY_LIVE,
+            skill             = evidence.VERIFY_LIVE,
+            governingStat     = evidence.NOT_APPLICABLE,
+            dStat             = evidence.NOT_APPLICABLE,
+            element           = evidence.NOT_APPLICABLE,
+            resistance        = evidence.VERIFY_LIVE,
+            removalOwnership  = evidence.FRAMEWORK_CORRECT_LEGACY_NUMERICS,
+            presentation      = evidence.FRAMEWORK_CORRECT_LEGACY_NUMERICS,
+            noEffect          = evidence.FRAMEWORK_CORRECT_LEGACY_NUMERICS,
+        },
+
+        unresolvedEvidence =
+        {
+            'item-specific proc rates and any level correction',
+            'selection distribution when multiple removable effects are present',
+            'retail protected-status categories and failed-removal retry behavior',
+            'whether magic accuracy, skill, element, resistance, or immunity applies',
+            'exact client subeffect, message parameter, and packet presentation',
+            'main-hand, multi-attack, and Enspell priority behavior',
+        },
+    }
+end
+
+local dispelWeaponDefinitions =
+{
+    dispelWeaponProfile(
+        xi.item.LOCKHEART,
+        'lockheart',
+        5,
+        'A 2004-05-25 contemporary player report describes repeated Frostmane kills seeking Lockheart'),
+    dispelWeaponProfile(
+        xi.item.MYTHRIL_HEART,
+        'mythril_heart',
+        10,
+        'A 2004-05-25 contemporary player report records three Mythril Heart auction transactions'),
+    dispelWeaponProfile(
+        xi.item.MYTHRIL_HEART_PLUS_1,
+        'mythril_heart_plus_1',
+        10,
+        'Narrow shared-recipe conclusion: the era-established Mythril Heart synthesis has Mythril Heart +1 as its HQ result'),
+}
+
+local expectedDispelWeapons = {}
+for _, definition in ipairs(dispelWeaponDefinitions) do
+    expectedDispelWeapons[definition.itemId] = definition
+end
+
+local requiredDispelWeaponFields =
+{
+    'itemName',
+    'profileFamily',
+    'profileSource',
+    'evidenceSource',
+    'classification',
+    'introductionEra',
+    'introductionEvidence',
+    'procFamily',
+    'procPolicy',
+    'procChance',
+    'levelPolicy',
+    'levelCorrection',
+    'triggeringAttack',
+    'equipPolicy',
+    'selectionPolicy',
+    'protectedStatusPolicy',
+    'selectionTimingPolicy',
+    'removalOwnership',
+    'retryFallbackPolicy',
+    'accuracyPolicy',
+    'skillPolicy',
+    'governingStatPolicy',
+    'dStatPolicy',
+    'configuredElement',
+    'effectiveElement',
+    'elementPolicy',
+    'resistancePolicy',
+    'presentationSubEffect',
+    'presentationMessage',
+    'messageParameter',
+    'noEffectPolicy',
+}
+
+local function validateDispelWeaponDefinition(definition)
+    local errors = {}
+    if type(definition) ~= 'table' then
+        return false, { 'Dispel weapon profile must be a table' }
+    end
+
+    local expected = expectedDispelWeapons[definition.itemId]
+    if not expected then
+        table.insert(errors, string.format(
+            'unsupported Dispel weapon item ID %s',
+            tostring(definition.itemId)))
+
+        return false, errors
+    end
+
+    for _, field in ipairs(requiredDispelWeaponFields) do
+        if definition[field] ~= expected[field] then
+            table.insert(errors, string.format(
+                'Dispel weapon %s drifted: expected %s, got %s',
+                field,
+                tostring(expected[field]),
+                tostring(definition[field])))
+        end
+    end
+
+    if
+        type(definition.fieldClassifications) ~= 'table' or
+        type(definition.unresolvedEvidence) ~= 'table' or
+        #definition.unresolvedEvidence == 0
+    then
+        table.insert(errors, 'Dispel weapon evidence ownership is incomplete')
+    else
+        for field in pairs(expected.fieldClassifications) do
+            if definition.fieldClassifications[field] ~= expected.fieldClassifications[field] then
+                table.insert(errors, string.format(
+                    'Dispel weapon field classification %s drifted',
+                    field))
+            end
+        end
+    end
+
+    return #errors == 0, errors
+end
+
+xi.additionalEffect.profile.buildDispelWeaponRegistry = function(definitions)
+    local registry = {}
+    local errors = {}
+
+    for index, definition in ipairs(definitions) do
+        local valid, validationErrors = validateDispelWeaponDefinition(definition)
+        for _, validationError in ipairs(validationErrors) do
+            table.insert(errors, string.format(
+                'definition %u: %s',
+                index,
+                validationError))
+        end
+
+        if valid then
+            if registry[definition.itemId] then
+                table.insert(errors, string.format(
+                    'duplicate Dispel weapon item profile %u',
+                    definition.itemId))
+            else
+                registry[definition.itemId] = definition
+            end
+        end
+    end
+
+    if #errors > 0 then
+        return nil, errors
+    end
+
+    return registry, errors
+end
+
+local dispelWeaponRegistryErrors
+dispelWeaponRegistry, dispelWeaponRegistryErrors =
+    xi.additionalEffect.profile.buildDispelWeaponRegistry(dispelWeaponDefinitions)
+if not dispelWeaponRegistry then
+    error(table.concat(dispelWeaponRegistryErrors, '; '))
+end
+
+xi.additionalEffect.profile.resolveDispelWeapon = function(item)
+    if item == nil then
+        return nil
+    end
+
+    local itemId = type(item) == 'number' and item or item:getID()
+
+    return dispelWeaponRegistry[itemId]
+end
+
+xi.additionalEffect.profile.dispelWeaponProfileCount = function()
+    local count = 0
+    for _ in pairs(dispelWeaponRegistry) do
+        count = count + 1
+    end
+
+    return count
+end
+
+xi.additionalEffect.profile.validateDispelWeapon = function(profile)
+    local errors = {}
+    local policy = profile and profile.dispelWeapon
+    local validPolicy, policyErrors = validateDispelWeaponDefinition(policy)
+    if not validPolicy then
+        return false, policyErrors
+    end
+
+    if
+        profile.profileFamily ~= policy.profileFamily or
+        profile.classification ~= policy.classification
+    then
+        table.insert(errors, 'Dispel weapon profile must retain explicit VERIFY_LIVE scope')
+    end
+
+    local actualFields =
+    {
+        { 'proc family', profile.outcome.family, policy.procFamily },
+        { 'proc chance', profile.proc.chance, policy.procChance },
+        { 'level correction', profile.proc.levelCorrection, policy.levelCorrection },
+        { 'configured element', profile.accuracy.element, policy.configuredElement },
+        { 'effective element', profile.accuracy.effectiveElement, policy.effectiveElement },
+        { 'selection policy', profile.outcome.selectionPolicy, policy.selectionPolicy },
+        { 'subeffect', profile.presentation.subEffect, policy.presentationSubEffect },
+        { 'message', profile.presentation.successMessage, policy.presentationMessage },
+    }
+
+    for _, field in ipairs(actualFields) do
+        if field[2] ~= field[3] then
+            table.insert(errors, string.format(
+                'Dispel weapon %s drifted: expected %s, got %s',
+                field[1],
+                tostring(field[3]),
+                tostring(field[2])))
+        end
+    end
+
+    if
+        profile.proc.triggeringAttack ~= policy.triggeringAttack or
+        profile.proc.chancePolicy ~= 'SQL_MODIFIER_COMPATIBILITY' or
+        profile.proc.levelPolicy ~= 'SQL_MODIFIER_COMPATIBILITY' or
+        profile.accuracy.mode ~= xi.additionalEffect.profile.accuracyMode.NONE or
+        profile.accuracy.skillRank ~= 0 or
+        profile.accuracy.governingStat ~= 0 or
+        profile.accuracy.resistancePolicy ~= policy.resistancePolicy
+    then
+        table.insert(errors, 'Dispel weapon execution policy drifted')
     end
 
     return #errors == 0, errors

@@ -211,7 +211,21 @@ describe('Item additional effect framework', function()
                 resource = 'HP_OR_MP_OR_TP',
                 selection = 'UNIFORM_SINGLE_BRANCH_NO_RETRY_COMPATIBILITY',
             },
-            { itemId = 16944, resource = 'NONE',           selection = 'SINGLE' }, -- Lockheart: Dispel
+            {
+                itemId   = xi.item.LOCKHEART,
+                resource = 'NONE',
+                selection = 'UNIFORM_RANDOM_DISPELABLE_POSITIVE_DURATION_COMPATIBILITY',
+            },
+            {
+                itemId   = xi.item.MYTHRIL_HEART,
+                resource = 'NONE',
+                selection = 'UNIFORM_RANDOM_DISPELABLE_POSITIVE_DURATION_COMPATIBILITY',
+            },
+            {
+                itemId   = xi.item.MYTHRIL_HEART_PLUS_1,
+                resource = 'NONE',
+                selection = 'UNIFORM_RANDOM_DISPELABLE_POSITIVE_DURATION_COMPATIBILITY',
+            },
             { itemId = 16504, resource = 'NONE',           selection = 'SINGLE' }, -- Oynos Knife: self buff
             { itemId = 18551, resource = 'NONE',           selection = 'SINGLE' }, -- Twilight Scythe: Death
         }) do
