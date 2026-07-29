@@ -7,9 +7,9 @@ No gameplay, retail-capture, server-deployment, or manual test task is being ass
 The local Codex desktop environment, GitHub connectivity, MSVC toolchain,
 CMake/Ninja configuration, full Debug build, focused inherited-correction
 tests, `VZ-CORE-002`, `VZ-BF-001`, and the `VZ-COMBAT-001` Phase A
-inventory/framework correction are validated. The remaining known
-engineering work is still AI-capable, so it does not belong in a final
-human-only queue yet.
+inventory/framework correction plus Phase B1/B2/B3 profile passes are
+validated. The remaining known engineering work is still AI-capable, so it
+does not belong in a final human-only queue yet.
 
 ## Current AI stage
 
@@ -76,6 +76,16 @@ These items may become human-only after all remaining AI-capable engineering and
   skills; and interleave spell Stun plus a different Stun additional-effect
   source. Accessible evidence supports a missing cooldown but conflicts
   between approximately 10-20, 20-30, and 30 seconds.
+- For Aspir Knife 16509, Bloody Rapier 16528, and Shinsoku 17823, record
+  several hundred eligible melee hits per item with raw 0x028 results and
+  separate proc from no-effect/resist. Independently vary actor/target level,
+  level sync, plausible skill/accuracy/stat inputs, Dark resistance/MEVA,
+  MAB, staff/affinity/day/weather, SDT, nullification, absorption, undead,
+  Phalanx, Stoneskin, One for All, target resource below/equal/above the
+  drain and at zero, attacker resource below cap/full, main/off hand,
+  Enspell priority, multi-attack, and lethal HP-drain boundaries. Current
+  10%/3, 5%/10, 8%/10, Dark magical tiers/multipliers, cap behavior, and
+  zero-result presentation are compatibility contracts, not retail proof.
 - Measure Elemental Spirit HP/MP/stat/weapon-damage scaling and Light Spirit decision behavior.
 - Capture Ballista packet fields, current schedules/rules, and client-visible match behavior.
 

@@ -540,3 +540,130 @@ weapon-skill behavior, and the Spartan target/source cooldown contract.
 Phase B3 should select one new bounded family, preferably the maintained
 drain items, without beginning Dispel, Death, self-buffs, spikes, Elemental
 Spirits, or Ballista in the same pass.
+
+## Phase B3 — Single-resource HP, MP, and TP drain weapons
+
+### Scope and evidence
+
+Phase B3 covers exactly Aspir Knife 16509, Bloody Rapier 16528, and Shinsoku
+17823. The ranked evidence ledger is:
+
+- `retail_parity/vanilla_zilart/artifacts/VZ-COMBAT-001-single-resource-drains-evidence.md`
+
+Contemporary evidence establishes Bloody Rapier as Vanilla and identifies
+its HP-drain effect. A dated pre-Chains-of-Promathia update record establishes
+Shinsoku as Zilart-era and community references identify TP absorption.
+Contemporary 2003 mission discussion establishes Aspir Knife's Zilart-era
+presence and MP-drain identity, but does not distinguish original-release
+from Zilart introduction, so its era remains `ERA_UNRESOLVED`.
+
+No controlled retail packet dataset establishes proc rate, level correction,
+fixed/random amount, accuracy/skill, governing stat/dSTAT, Dark element,
+resistance, SDT, staff/affinity/day/weather, nullification/absorption,
+HP-oriented defenses, undead behavior, resource-cap presentation,
+main/off-hand priority, or exact 0x028 bytes. These fields remain
+`VERIFY_LIVE`; current SQL numerics and inherited multiplier behavior are
+explicit compatibility, not retail conclusions.
+
+### Reproduced deterministic defect
+
+The pre-change Shinsoku SQL row had type 7 and amount/chance data but no
+`ITEM_SUBEFFECT` or explicit element. A direct real handler regression
+reproduced TP removal and amount 10 with subeffect 0 instead of `TP_DRAIN`.
+The generic handler happened to force Dark at runtime, concealing the missing
+data ownership. Phase B3 adds `TP_DRAIN`, explicit Dark compatibility, and
+corrects only the stale chance comment from 5% to the existing value 8%. It
+does not change Shinsoku's active 8%/10 numeric behavior.
+
+### Authoritative profile and transfer ownership
+
+`additional_effect_profiles.lua` now owns one validated
+`VZ_SINGLE_RESOURCE_DRAIN` registry with exactly:
+
+| Item | Resource | Proc / level | Base | Equip | Effective element | Classification |
+|---|---|---|---|---|---|---|
+| Aspir Knife | MP | 10%, adjustment 0 | fixed 3 | main or off hand | Dark compatibility | `VERIFY_LIVE`; era unresolved |
+| Bloody Rapier | HP | 5%, adjustment 0 | fixed 10 | main or off hand | Dark compatibility | `VERIFY_LIVE`; Vanilla identity/era supported |
+| Shinsoku | TP | 8%, adjustment 0 | fixed 10 | main only | Dark compatibility | `VERIFY_LIVE`; Zilart identity/era supported |
+
+Every profile exposes item/resource identity, proc and level policy,
+trigger/equip policy, skill/stat/dSTAT/MAB policy, element and resistance
+policy, nullification/absorption/undead policy, target and attacker caps,
+base/scaling/defense policy, application ownership, presentation, per-field
+classification, and unresolved evidence. Validation rejects unsupported,
+malformed, duplicate, cross-resource, presentation, element, and SQL/profile
+drift. Combined drains, Bloody Bolt and other scripted drains, and later
+items remain outside the registry.
+
+`executeSingleResourceDrain` is the exact-scope mutation owner. After ordinary
+item/profile/level/target validation and one proc roll, it:
+
+1. rejects dead and undead targets before calculation;
+2. performs the preserved legacy calculation once;
+3. clamps negative compatibility results to zero;
+4. caps removal to the target's actual HP, MP, or TP;
+5. mutates the target once and credits the attacker once;
+6. returns the resource-specific subeffect/message with actual target
+   resource removed.
+
+HP uses the authoritative magical-Dark damage application once; MP and TP
+mutate only their own resource containers. Attacker resource caps do not
+change the packet amount, which remains actual target removal. This is a
+test-backed compatibility contract, not proof of retail cap presentation.
+
+### Behavioral coverage
+
+The focused Phase B3 suite contains 58 cases:
+
+- exact three-item registration, required fields, SQL consistency,
+  malformed/duplicate/resource/presentation rejection, and explicit
+  combined/scripted/later exclusions;
+- one proc roll and no downstream work on failure for every item;
+- every configured proc boundary and the existing item-level gate;
+- one calculation and one transfer for HP, MP, and TP;
+- below/equal/above target-resource caps, attacker near/full caps, and
+  zero-resource compatibility presentation;
+- full, half, quarter, eighth, and below-floor outcomes with rounding;
+- the inherited resistance/SDT/environment/defense stack once;
+- nullification once and negative absorption clamped to no transfer;
+- actual undead rejection for all three and dead-target rejection before
+  proc/calculation;
+- MP/TP isolation from HP and from the other resources;
+- real main-hand attacks for all three and real off-hand attacks for Aspir
+  Knife and Bloody Rapier;
+- real physical miss, below-level, target-despawn, Enspell-priority,
+  item-priority, multi-attack, and ordinary-melee paths;
+- one normal 0x028 additional-effect result per eligible swing with
+  resource-specific subeffect, message, and actual removed amount.
+
+An executor observer records resource values immediately around the real
+production call so unrelated world regeneration cannot falsify the packet/
+mutation comparison. It preserves all three production return values and
+does not bypass the real melee state, item selection, handler, mutation, or
+0x028 serialization.
+
+The direct HP case proves available-HP capping and already-dead rejection.
+The real-melee fixture does not model a deterministic final lethal physical
+swing without additional unrelated combat setup, so exact lethal packet
+ordering remains unclaimed. Existing Phase A, elemental-arrow, status-
+ammunition, Acid/Sleep, NM, and complete 0x028 suites remain regression
+authorities.
+
+### Phase B3 assessment
+
+Phase B3 is `COMPLETE_PHASE_B3` as a bounded evidence/profile/framework pass:
+the exact family has authoritative validated policy, one deterministic
+transfer owner, Shinsoku's missing presentation data is corrected, real
+melee behavior is covered, and unsupported mechanics are explicitly
+preserved as compatibility.
+
+The three items are not classified retail-formula-correct. Controlled retail
+captures must still resolve every `VERIFY_LIVE` field listed in the ledger,
+including proc versus resist, amount/scaling, Dark-element ownership,
+resource-cap/zero presentation, undead behavior, and HP lethal ordering.
+`VZ-COMBAT-001` therefore remains partially corrected overall.
+
+Phase B4 should be a separate bounded family, preferably the maintained
+combined HP/MP and HP/MP/TP drain configuration group. It must not begin
+Dispel, Death, self-buffs, spikes, Elemental Spirits, Ballista, or another
+audit area in the same pass.

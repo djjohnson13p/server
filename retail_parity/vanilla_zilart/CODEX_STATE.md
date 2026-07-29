@@ -1,7 +1,7 @@
 # Codex State — Vanilla + Rise of the Zilart
 
-Status: VZ_COMBAT_001_PHASE_B2_STATUS_AMMUNITION_PROFILED
-Pass: 9
+Status: VZ_COMBAT_001_PHASE_B3_SINGLE_RESOURCE_DRAINS_PROFILED
+Pass: 10
 Last updated: 2026-07-28
 
 ## Local Codex environment
@@ -51,6 +51,10 @@ The earlier `FAILED_INFRASTRUCTURE` state applied only to the assistant's networ
     application path removes an opposing boost only after authoritative
     success. Exact numerics and the known-missing Spartan cooldown remain
     `VERIFY_LIVE`.
+12. `VZ-COMBAT-001` Phase B3 — Aspir Knife, Bloody Rapier, and Shinsoku now
+    resolve through one validated single-resource-drain registry and one
+    exact-scope transfer owner. Shinsoku's missing TP-drain presentation data
+    is corrected; unsupported retail numerics remain `VERIFY_LIVE`.
 
 ## Validation completed
 
@@ -105,6 +109,12 @@ The earlier `FAILED_INFRASTRUCTURE` state applied only to the assistant's networ
   application rejection, and post-success opposing-boost removal. The Phase
   A regression file adds one caller-path rejection case. Inventory generation
   and exact-scope sanity pass.
+- `VZ-COMBAT-001` Phase B3: 58 focused Lua cases cover exactly three
+  single-resource profiles, malformed/duplicate/SQL drift, one proc/
+  calculation/transfer, HP/MP/TP caps and isolation, all compatibility
+  resistance tiers, defense/null/absorb, dead/undead, real main/off-hand
+  packets, miss/level/despawn/priority/multi-attack, and ordinary melee.
+  Combined, scripted, and later drains are explicitly excluded.
 - Lua style/purity, SQL sanity, C++ formatting, and `git diff --check` passed.
 - A fresh-directory MSVC/Ninja Debug configuration passed.
 - The complete all-target MSVC/Ninja Debug build passed and linked
@@ -115,25 +125,27 @@ The earlier `FAILED_INFRASTRUCTURE` state applied only to the assistant's networ
 
 ## Current work
 
-The bounded `VZ-COMBAT-001` Phase B2 pass is complete as a profile/framework
-hardening pass. Eight maintained status-ammunition items retain SQL numeric
-ownership behind explicit item identities and field classifications.
-Authoritative status rejection can no longer cause premature opposing-boost
-removal. Evidence supports effect identity but not a complete formula; the
-Spartan sources conflict on cooldown duration and ownership. Existing
-numerics and the missing cooldown are therefore explicit compatibility, not
-a parity claim.
+The bounded `VZ-COMBAT-001` Phase B3 pass is complete as a profile/framework
+hardening pass. Aspir Knife, Bloody Rapier, and Shinsoku retain SQL numeric
+ownership behind explicit identities and field classifications. Their
+resource transfer is now exact-scope, single-owner, capped to actual target
+resource, and test-backed through real melee actions. Shinsoku's missing
+subeffect/element data is corrected without changing its active 8%/10
+policy. Evidence supports identity and selected era classifications but not
+a complete formula, so unsupported numerics and multipliers remain explicit
+compatibility rather than a parity claim.
 
 Seven findings are implemented and test-backed. `VZ-JOB-002` and
 `VZ-COMBAT-001` remain partial where evidence is insufficient. Fire/Ice/
-Lightning Arrow and the eight Phase B2 status items are hardened/profiled,
-not retail-formula-corrected. The item framework's combined-drain, other
-drain, self-buff, Death, spikes, and item-specific damage/status numerics are
-explicit `VERIFY_LIVE` or compatibility work, not claimed retail-correct.
+Lightning Arrow, the eight Phase B2 status items, and the three Phase B3
+single-resource drains are hardened/profiled, not retail-formula-corrected.
+The item framework's combined-drain, other drain, self-buff, Death, spikes,
+and item-specific damage/status numerics are explicit `VERIFY_LIVE` or
+compatibility work, not claimed retail-correct.
 
 ## Remaining AI-capable work
 
-- Continue `VZ-COMBAT-001` Phase B3 in bounded, evidence-backed family or
+- Continue `VZ-COMBAT-001` Phase B4 in bounded, evidence-backed family or
   configuration groups.
 - Complete `VZ-JOB-001` Elemental Spirit data, spell-selection, and scaling work.
 - Implement `VZ-SYS-001` Ballista.
@@ -164,6 +176,10 @@ candidates remain:
   two-shooter/two-target Spartan Bullet dataset that brackets cooldown,
   distinguishes target/source ownership, covers ranged weapon skills, and
   interleaves unrelated Stun sources.
+- controlled Aspir Knife/Bloody Rapier/Shinsoku datasets separating proc
+  from resist and varying amount/scaling, skill/stat/dSTAT, Dark resistance,
+  multiplier/defense/null/absorb/undead paths, empty/full resource caps,
+  main/off-hand priority, lethal HP drain, and exact 0x028 presentation.
 
 ## Exact next-pass instructions
 
@@ -171,9 +187,10 @@ candidates remain:
    inherited-validation pass.
 2. Read `AGENTS.md`, `CODEX_MASTER_TASK.md`, `CODEX_BACKLOG.md`, `LOCAL_CODEX_ENVIRONMENT.md`, the status/worklog, completion report, and all finding files.
 3. Confirm the worktree is clean and remain on `retail-parity/codex-vanilla-zilart`.
-4. Begin one bounded `VZ-COMBAT-001` Phase B3 family/configuration pass using
+4. Begin one bounded `VZ-COMBAT-001` Phase B4 family/configuration pass using
    the generated inventory and evidence ledgers, preferably maintained
-   drains. Do not silently extend the Phase B1/B2 compatibility policies.
+   combined HP/MP and HP/MP/TP drains. Do not silently extend the Phase
+   B1/B2/B3 compatibility policies.
 5. Initialize MSVC through `VsDevCmd.bat` for all Windows configure/build commands.
 6. Run narrow tests first, then the full MSVC/Ninja Debug build.
 7. Fix failures caused by the fork changes; do not hide failures or weaken unrelated assertions.

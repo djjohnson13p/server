@@ -11,7 +11,7 @@
 - **Assistant source-accessible stage:** Complete
 - **Codex handoff:** Ready
 - **Local Codex environment:** Validated
-- **Current project state:** `VZ_COMBAT_001_PHASE_B2_STATUS_AMMUNITION_PROFILED`
+- **Current project state:** `VZ_COMBAT_001_PHASE_B3_SINGLE_RESOURCE_DRAINS_PROFILED`
 - **Upstream pull requests:** None; prohibited
 
 ## Baseline finding counts
@@ -44,7 +44,7 @@ coefficients and formulas were deliberately not invented.
 | ID | Area | Baseline status | Current fork state |
 |---|---|---|---|
 | `VZ-SYS-001` | Ballista | `MISSING` | Not implemented; largest remaining system |
-| `VZ-COMBAT-001` | Item additional effects | `INACCURATE` | Phase B2 partial: Phase A framework, Phase B1 elemental arrows, and eight explicit status-ammunition profiles are test-backed; unsupported numerics and the Spartan cooldown remain `VERIFY_LIVE` |
+| `VZ-COMBAT-001` | Item additional effects | `INACCURATE` | Phase B3 partial: Phase A framework, Phase B1 arrows, Phase B2 status ammunition, and exact Aspir Knife/Bloody Rapier/Shinsoku profiles and transfers are test-backed; unsupported numerics remain `VERIFY_LIVE` |
 | `VZ-ZONE-001` | Temple of Uggalepih door keys | `INACCURATE` | Implemented and interaction-test-backed |
 | `VZ-JOB-001` | Summoner Elemental Spirits | `INACCURATE` | Not implemented; data/formula work remains |
 | `VZ-CORE-001` | Call for Help scope | `INACCURATE` | Hardened claim/CE/VE/boundary rules; Lua and C++ tests pass |
@@ -116,6 +116,15 @@ Completed:
   conflicts on Spartan Bullet cooldown duration/ownership, so the active
   no-cooldown behavior is explicitly known-incomplete compatibility rather
   than a guessed correction.
+- Single-resource-drain Phase B3 moves exactly Aspir Knife, Bloody Rapier,
+  and Shinsoku into a validated profile boundary and one exact-scope transfer
+  owner. Fifty-eight focused cases cover real main/off-hand melee results,
+  misses, level/despawn/priority/multi-attack paths, one proc/calculation/
+  transfer, resource caps and isolation, resist/defense compatibility,
+  null/absorb, dead/undead rejection, and strict exclusion of combined,
+  scripted, and later drains. Shinsoku now has the missing TP-drain
+  subeffect and explicit compatibility element; its active 8%/10 values did
+  not change. Retail numerics remain `VERIFY_LIVE`.
 - Lua style checks and `git diff --check` passed.
 - Fresh-directory MSVC/Ninja Debug configuration and all-target build passed.
 - Disposable build outputs and isolated test database were removed without
@@ -144,6 +153,7 @@ Still required:
 - [x] Complete `VZ-COMBAT-001` Phase A inventory/framework pass
 - [x] Complete `VZ-COMBAT-001` Phase B1 elemental-arrow profile pass
 - [x] Complete `VZ-COMBAT-001` Phase B2 status-ammunition profile pass
+- [x] Complete `VZ-COMBAT-001` Phase B3 single-resource-drain profile pass
 - [ ] Complete `VZ-COMBAT-001` Phase B evidence/formula passes
 - [ ] Complete the remaining two unimplemented known findings
 - [ ] Continue the exhaustive local-repository Vanilla/Zilart audit
@@ -153,11 +163,12 @@ Still required:
 
 Use the latest head of `retail-parity/codex-vanilla-zilart`. Fetch `origin`,
 read `CODEX_STATE.md`, `CODEX_BACKLOG.md`, `LOCAL_CODEX_ENVIRONMENT.md`, the
-worklog, completion report, generated VZ-COMBAT-001 inventory, both Phase B
-evidence ledgers, and finding files. Begin Phase B3 around one bounded family,
-preferably maintained drains. Do not extend the elemental-arrow or
-status-ammunition compatibility profiles without separate evidence. Then
-continue the remaining known findings and exhaustive audit.
+worklog, completion report, generated VZ-COMBAT-001 inventory, all Phase B
+evidence ledgers, and finding files. Begin Phase B4 around one separate
+bounded family, preferably maintained combined HP/MP and HP/MP/TP drains.
+Do not extend the elemental-arrow, status-ammunition, or single-resource-
+drain compatibility policies without separate evidence. Then continue the
+remaining known findings and exhaustive audit.
 
 ## Guardrails
 

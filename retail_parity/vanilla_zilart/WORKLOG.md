@@ -745,3 +745,70 @@ and evidence boundary are hardened, but the eight items are not claimed
 retail-formula-correct and Spartan's missing cooldown remains explicit.
 Phase B3 should select a separate bounded family, preferably maintained
 drains.
+
+## 2026-07-28 — VZ-COMBAT-001 Phase B3 single-resource drains
+
+### Evidence and bounded scope
+
+- Scoped exactly Aspir Knife 16509 (MP), Bloody Rapier 16528 (HP), and
+  Shinsoku 17823 (TP). Combined drains, scripted drains, later items,
+  Dispel, Death, self-buffs, spikes, Elemental Spirits, and Ballista were
+  excluded.
+- Added a ranked evidence ledger using contemporary English discussion,
+  dated update records, Japanese references, modern item summaries, and
+  explicit inaccessible-source notes.
+- Effect identities are supported. Bloody Rapier is classified Vanilla and
+  Shinsoku Zilart; Aspir Knife's 2003 evidence does not distinguish original
+  release from Zilart, so its introduction remains `ERA_UNRESOLVED`.
+- No controlled retail dataset resolves proc/level correction, fixed/random
+  amount, skill/accuracy/stat/dSTAT, Dark element, resistance/multipliers,
+  defenses, resource caps, undead, priority, or exact packet presentation.
+  The existing 10%/3, 5%/10, and 8%/10 policies remain compatibility and
+  `VERIFY_LIVE`.
+
+### Reproduction and production correction
+
+- A pre-change direct Shinsoku result removed 10 TP but serialized subeffect
+  0 because SQL lacked `ITEM_SUBEFFECT`. The generic handler's hardcoded Dark
+  element also concealed missing element data.
+- Added Shinsoku `TP_DRAIN` and explicit Dark SQL data. Corrected the stale
+  SQL comment from 5% to the already-active 8%; no numeric changed.
+- Added one validated `VZ_SINGLE_RESOURCE_DRAIN` registry with exact
+  per-item identity, resource, proc/level/equip, formula/multiplier,
+  cap/application, presentation, field-classification, and unresolved-
+  evidence policy.
+- Added one exact-scope executor that rejects dead/undead targets, calculates
+  once, clamps negative compatibility results, caps removal to actual target
+  resource, mutates target once, credits attacker once, and reports actual
+  HP/MP/TP removed.
+- Combined and scripted handlers remain on the inherited generic/script
+  paths. Existing Enspell/item priority and one-result-per-swing ownership
+  remain unchanged.
+
+### Tests, inventory, and validation
+
+- Added 58 focused cases across direct profiles and real melee state/action/
+  0x028 paths. They cover exact scope and validation, proc/level boundaries,
+  one calculation and transfer, every resource/cap boundary, resistance
+  tiers and rounding, defenses/null/absorb, dead/undead, MP/TP isolation,
+  main/off hand, miss, despawn, priority, multi-attack, and ordinary melee.
+- A test observer records values immediately around the real executor to
+  avoid unrelated world regeneration while preserving the real state,
+  handler, mutation, and packet paths.
+- The generated inventory maps all three items to the exact profile and both
+  tests, emits field policies/classifications/evidence, and continues to
+  exclude combined/scripted/later drains.
+- Focused Phase B3 passed 58/58 after correcting the observer to preserve all
+  three Lua return values. Catch2 passed 19/19 and 9,007,079 assertions on
+  each invocation.
+- Full regression, formatting, deterministic-generation, SQL/import,
+  clean MSVC/Ninja configure, `xi_test`, all-target build, cleanup, and final
+  Git results are recorded in `CODEX_COMPLETION_REPORT.md`.
+
+### Phase assessment
+
+Phase B3 is `COMPLETE_PHASE_B3` as a bounded profile/framework pass, not as a
+retail-formula claim. `VZ-COMBAT-001` remains partial. Phase B4 should select
+the maintained combined HP/MP and HP/MP/TP drain group as a separate pass and
+must retain every unresolved field until controlled retail evidence supports
+a correction.

@@ -151,16 +151,33 @@ Completed on 2026-07-28 as a partial engineering/profile pass.
   its exact interval/ownership. The active 10%/five-second/no-cooldown policy
   is retained as known-incomplete compatibility pending controlled captures.
 
+### `VZ-COMBAT-001` Phase B3 — Single-resource drains
+
+Status: `COMPLETE_PHASE_B3` as a bounded framework/profile pass;
+`VZ-COMBAT-001` remains partial.
+
+- Aspir Knife, Bloody Rapier, and Shinsoku have exact validated profiles and
+  one resource-transfer owner.
+- Shinsoku's missing TP-drain subeffect and explicit compatibility element
+  are corrected without changing active 8%/10 numerics.
+- Fifty-eight focused cases cover direct profile/transfer boundaries and
+  real main/off-hand melee packet paths.
+- Combined, scripted, and later drains remain outside the Phase B3 registry.
+- Proc, level correction, amount/scaling, accuracy/stat, element/resistance,
+  multipliers/defenses, caps/undead/priority, and exact presentation remain
+  `VERIFY_LIVE` as listed in the evidence ledger and human-only queue.
+
 ## Priority 1 — Remaining known implementation findings
 
-### `VZ-COMBAT-001` Phase B3 — Evidence-backed family migrations
+### `VZ-COMBAT-001` Phase B4 — Evidence-backed family migrations
 
 - Use the generated inventory to select one bounded effect family or
   configuration-error group at a time.
-- Prefer a maintained drain family for the next bounded pass; do not mix
-  drains with Dispel, Death, self-buffs, or spikes.
+- Prefer the maintained combined HP/MP and HP/MP/TP drain group for the next
+  bounded pass; do not mix it with Dispel, Death, self-buffs, or spikes.
 - Establish item/era evidence before changing classifications or numerics.
-- Resolve damage type/MAB/dSTAT, drain accuracy/scaling/order, Dispel,
+- Resolve combined-branch selection/order, damage type/MAB/dSTAT, drain
+  accuracy/scaling/order, Dispel,
   self-buff, Death, and equipment-spikes behavior only where evidence
   supports it.
 - Preserve compatibility/`VERIFY_LIVE` behavior when evidence is still
@@ -169,6 +186,8 @@ Completed on 2026-07-28 as a partial engineering/profile pass.
   Earth/Water/Wind or other elemental ammunition without separate evidence.
 - Do not generalize the status-ammunition profile or Acid/Sleep accuracy
   evidence to later bolts or another item family without separate evidence.
+- Do not generalize the Phase B3 single-resource compatibility policy to
+  combined or scripted drains without separate evidence.
 - Add real melee/ranged/reaction packet tests for each migrated group.
 
 ### `VZ-JOB-001` — Summoner Elemental Spirits

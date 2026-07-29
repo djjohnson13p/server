@@ -1053,6 +1053,200 @@ retail-formula-correct. Spartan's missing cooldown and every listed
 preferably maintained drains, without mixing Dispel, Death, self-buffs,
 spikes, or another audit area.
 
+## VZ-COMBAT-001 Phase B3 single-resource-drain pass
+
+Starting from `1dd627e84e99d80502d266ff07533e658a410950`, this bounded pass
+profiles exactly Aspir Knife 16509, Bloody Rapier 16528, and Shinsoku 17823.
+It does not change combined drains, scripted drains, later items, Dispel,
+Death, self-buffs, spikes, Elemental Spirits, Ballista, or another audit
+area.
+
+### Evidence and classification
+
+The ranked ledger
+`retail_parity/vanilla_zilart/artifacts/VZ-COMBAT-001-single-resource-drains-evidence.md`
+records contemporary English discussion, dated update records, Japanese
+references, modern item summaries, inaccessible/defaced source limits, and a
+field-by-field capture plan.
+
+Effect/resource identity is supported. Bloody Rapier is classified Vanilla;
+Shinsoku is classified Zilart; Aspir Knife's 2003 evidence proves Zilart-era
+presence but not original-release versus Zilart introduction, so its era is
+`ERA_UNRESOLVED`. No controlled retail dataset establishes the three items'
+proc, level correction, amount/scaling, accuracy/skill, governing stat/dSTAT,
+Dark element, resistance/multiplier/defense rules, undead behavior, resource
+cap/zero presentation, main/off-hand priority, or exact 0x028 behavior.
+Existing numerics and multipliers remain compatibility and `VERIFY_LIVE`.
+
+| Item | Resource | Effective compatibility policy | Evidence-backed fields |
+|---|---|---|---|
+| Aspir Knife 16509 | MP | 10%, adjustment 0, fixed 3, Dark legacy stack, main/off hand | item/resource identity; era unresolved |
+| Bloody Rapier 16528 | HP | 5%, adjustment 0, fixed 10, Dark legacy stack, main/off hand | item/resource identity and Vanilla era |
+| Shinsoku 17823 | TP | 8%, adjustment 0, fixed 10, Dark legacy stack, main only | item/resource identity and Zilart era |
+
+### Reproduced defect and correction
+
+Before the production correction, the direct Shinsoku handler test removed
+10 TP and returned amount 10 but failed because the subeffect was 0 rather
+than `TP_DRAIN`. Its SQL rows lacked both `ITEM_SUBEFFECT` and an explicit
+element; the generic handler's hardcoded Dark assignment concealed the
+second data omission.
+
+Shinsoku now has `TP_DRAIN` and explicit Dark compatibility data. The stale
+SQL chance comment changed from 5% to the already-active value 8%; no active
+numeric changed.
+
+`additional_effect_profiles.lua` owns one validated
+`VZ_SINGLE_RESOURCE_DRAIN` registry with exactly three items and explicit
+identity, resource, proc/level/equip, skill/stat/dSTAT/MAB, element/
+resistance, null/absorb/undead, amount/scaling/defense, target/attacker cap,
+application, presentation, field-classification, and unresolved-evidence
+policies. Validation rejects unsupported, malformed, duplicate, cross-
+resource, presentation, element, and SQL/profile drift. The generated
+inventory maps the exact three profiles to both focused test files and their
+evidence source.
+
+`executeSingleResourceDrain` owns the scoped transfer. After normal item,
+level, profile, target, and one proc check, it rejects dead/undead targets,
+calculates once, clamps negative compatibility results to zero, caps removal
+to actual target resource, mutates the target once, credits the attacker
+once, and returns the resource-specific subeffect/message with actual target
+resource removed. HP uses authoritative magical-Dark damage once; MP and TP
+mutate only their respective resource containers. Attacker caps remain
+container-owned and do not falsify the packet's target-removal amount.
+
+Combined and scripted drains still resolve through their inherited generic
+or script paths. Existing Enspell/item priority and one-result-per-swing
+ownership are unchanged.
+
+### Behavioral coverage
+
+The 58 Phase B3 cases cover:
+
+- exact three-profile scope, every required field, SQL consistency,
+  malformed/duplicate/resource/presentation rejection, and explicit
+  combined/scripted/later exclusions;
+- one proc and no downstream work on failure, every proc boundary, and item
+  required-level eligibility;
+- one calculation and one HP/MP/TP transfer;
+- below/equal/above target-resource caps, attacker near/full caps, zero
+  target resource, actual applied packet amounts, and MP/TP isolation;
+- full, half, quarter, eighth, and below-floor resistance with rounding;
+- inherited SDT/environment/defense handling once, nullification once, and
+  negative absorption clamped to no transfer;
+- actual undead rejection for all three and already-dead rejection before
+  proc/calculation;
+- real main-hand actions for all three, real off-hand Aspir/Bloody actions,
+  physical miss, below-level, despawn, Enspell/item priority, multi-attack,
+  and ordinary melee;
+- one normal 0x028 resource-specific result per eligible swing.
+
+The real-melee observer records resources immediately around the production
+executor, preventing unrelated world regeneration from corrupting the
+packet/mutation comparison while preserving the real state, item selection,
+handler, mutation, and serialization paths.
+
+Available-HP capping and already-dead rejection are direct production-path
+tests. The real-melee fixture did not safely model the final lethal physical
+swing without unrelated combat setup, so exact lethal packet order and
+client rendering remain unclaimed.
+
+### Exact validation
+
+All `xi_test` commands used the isolated Phase B3 database on a disposable
+local MariaDB 12.3 server. Database environment-variable values are omitted
+from this report; the owner's working `xidb` was not modified.
+
+```text
+# Every relevant Windows configure/build shell first ran:
+call "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\Common7\Tools\VsDevCmd.bat" -no_logo -arch=x64 -host_arch=x64
+
+cmake -G Ninja -S . -B build-codex-phase-b3-final -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_COMPILER=cl -DCMAKE_CXX_COMPILER=cl -DENABLE_CLANG_TIDY=OFF -DTRACY_ENABLE=OFF -DPCH_ENABLE=OFF -DCACHE_OPTION=sccache
+# exit 0
+
+cmake --build build-codex-phase-b3-final --target xi_test
+# exit 0 (906/906)
+
+cmake --build build-codex-phase-b3-final
+# exit 0 (148/148 remaining all-target steps)
+
+xi_test.exe --keep-going --file item_additional_effects_single_resource_drain_profiles --file item_additional_effects_single_resource_drains
+# focused and final post-build repeats: exit 0 (58/58 each)
+
+xi_test.exe --keep-going --file "item_additional_effects\.lua" --file "item_additional_effects_ranged\.lua" --file "item_additional_effects_nm\.lua"
+# regression and final post-build repeats: exit 0 (40/40 each)
+
+xi_test.exe --keep-going --file item_additional_effects_elemental_arrow
+# exit 0 (51/51)
+
+xi_test.exe --keep-going --file item_additional_effects_status_ammunition
+# exit 0 (49/49)
+
+xi_test.exe --keep-going --file 0x028_battle2
+# exit 0 (65/65)
+
+python tools/retail_parity/generate_item_additional_effect_inventory.py
+python tools/retail_parity/generate_item_additional_effect_inventory.py
+python tools/retail_parity/generate_item_additional_effect_inventory.py --check
+python tools/retail_parity/check_item_additional_effect_profiles.py
+# all exit 0; 420 rows, 18 maintained profiles, 341 pre-existing diagnostics
+
+python -m black --check tools/retail_parity/generate_item_additional_effect_inventory.py tools/retail_parity/check_item_additional_effect_profiles.py
+python -m pylint --errors-only tools/retail_parity/generate_item_additional_effect_inventory.py tools/retail_parity/check_item_additional_effect_profiles.py
+tools/ci/sanity_checks/lua.sh <all five changed Lua files>
+tools/ci/sanity_checks/sql.sh sql/item_mods.sql
+python tools/dbtool.py update
+git diff --check
+# all exit 0
+```
+
+Catch2 passed 19/19 with 9,007,079 assertions on every `xi_test`
+invocation. No C++ or header changed, so clang-format was not applicable.
+Fresh isolated database setup/import passed before testing; `dbtool update`
+then reported the database up to date. The imported item rows contained the
+expected type, subeffect, amount, chance, and explicit Dark policy for all
+three items.
+
+Two inventory writes were identical:
+
+- CSV SHA-256:
+  `7D0A25CE25FF3A7D9827600BAA8707BF0106A47A70D986D171E05A02CEEF0601`;
+- Markdown SHA-256:
+  `6A81C5BD2CC26F2E77AFAD29B1649A5E68C8A11B331AB0C01BFFA62A0CD07EE5`.
+
+During development, Lua sanity initially exposed a cyclomatic-complexity
+violation in the first profile implementation; the profile was factored into
+validation helpers and the final five-file sanity run passed. Initial
+real-melee fixtures exposed world-regeneration timing in packet/resource
+comparisons; the final observer measures immediately around the unchanged
+production executor. One observer iteration accidentally returned only the
+first of Lua's three values, producing packet message 0 in the test; restoring
+all three returns corrected the fixture and the final 58-case runs pass.
+
+A broad exploratory 198-test single-process aggregation exited 1 during the
+Phase B1 portion without an emitted failure summary. The authoritative
+bounded groups were rerun in fresh processes and all passed: 40, 51, 49, and
+58 cases respectively, plus 65 packet cases and the two final post-build
+repeats. No production correction was made in response to the unexplained
+aggregate-runner exit.
+
+The disposable build directories, five generated root executables/PDBs,
+test-result JSON files, isolated databases/server process/data directory, and
+temporary logs were removed before commit. The owner's `xidb` and ForgeRaid
+paths/services were untouched. Changed-file scanning found no PAT, JWT,
+signed query, assigned secret, embedded remote credential, or persisted
+database connection value.
+
+Phase B3 result is `COMPLETE_PHASE_B3` as a bounded profile/framework pass.
+The three items are not claimed retail-formula-correct and
+`VZ-COMBAT-001` remains partial. The exact capture plan is preserved in the
+evidence ledger and `HUMAN_ONLY_QUEUE.md`.
+
+Phase B4 should address the maintained combined HP/MP and HP/MP/TP drain
+configuration group as a separate bounded pass. It must not infer branch
+selection/order or generalize Phase B3's compatibility formula without
+separate evidence.
+
 ## Client/live-retail-only candidates
 
 - Temple door rendered timing and complete mission-route traversal.
@@ -1071,10 +1265,15 @@ spikes, or another audit area.
 - Item additional-effect governing-stat/dSTAT and item-family proc/resist
   datasets, damage type/scaling, drain ordering/accuracy, self-buff/Death/
   spikes formulas, and exact client presentation beyond Phase A.
+- Controlled Aspir Knife/Bloody Rapier/Shinsoku datasets separating proc
+  from resist and varying amount/scaling, skill/stat/dSTAT, Dark resistance,
+  multipliers/defenses/null/absorb/undead, empty/full resource caps,
+  main/off-hand priority, lethal HP-drain ordering, and 0x028 presentation.
 
 ## Recommended next pass
 
-Begin one bounded `VZ-COMBAT-001` Phase B family/configuration group using
-the generated inventory and its evidence classifications. Then continue
+Begin one bounded `VZ-COMBAT-001` Phase B4 family/configuration group,
+preferably maintained combined HP/MP and HP/MP/TP drains, using the generated
+inventory and its evidence classifications. Then continue
 `VZ-JOB-001`, `VZ-SYS-001`, and the exhaustive Vanilla/Zilart audit in
 bounded passes.
