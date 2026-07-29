@@ -43,6 +43,7 @@ auto MockManager::stub(const std::string& path, const sol::object& mockImpl) -> 
 
     auto        original = luautils::detail::findGlobalLuaFunction(path);
     const auto& stub     = stubs_.emplace_back(std::make_unique<CLuaStub>(path, original, mockImpl));
+    installationOrder_.emplace_back(stub.get());
     setAtPath(path, sol::make_object(lua, stub.get()));
 
     return stub.get();
@@ -56,6 +57,7 @@ auto MockManager::spy(const std::string& path) -> CLuaSpy*
 
     auto        original = luautils::detail::findGlobalLuaFunction(path);
     const auto& spy      = spies_.emplace_back(std::make_unique<CLuaSpy>(path, original));
+    installationOrder_.emplace_back(spy.get());
     setAtPath(path, sol::make_object(lua, spy.get()));
 
     return spy.get();
@@ -64,16 +66,15 @@ auto MockManager::spy(const std::string& path) -> CLuaSpy*
 // Restores all stubs and spies to their original functions.
 void MockManager::restoreAll()
 {
-    for (const auto& stub : stubs_)
+    // A path can be replaced more than once in one test. Restore in reverse
+    // installation order so every layer remains alive until the layer that
+    // captured it has been removed.
+    for (auto mock = installationOrder_.rbegin(); mock != installationOrder_.rend(); ++mock)
     {
-        setAtPath(stub->path(), stub->original());
+        setAtPath((*mock)->path(), (*mock)->original());
     }
 
-    for (const auto& spy : spies_)
-    {
-        setAtPath(spy->path(), spy->original());
-    }
-
+    installationOrder_.clear();
     stubs_.clear();
     spies_.clear();
 }

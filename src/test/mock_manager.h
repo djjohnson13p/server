@@ -45,4 +45,5 @@ private:
 
     std::vector<std::unique_ptr<CLuaSpy>>  spies_;
     std::vector<std::unique_ptr<CLuaStub>> stubs_;
+    std::vector<CLuaSpy*>                  installationOrder_;
 };

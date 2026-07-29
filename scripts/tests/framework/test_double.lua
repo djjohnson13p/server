@@ -52,6 +52,20 @@ describe('Test Doubles', function()
             assert(level == 30, string.format('Expected original level of 30 but got %s', tostring(level)))
             assert(player:getMainJob() == xi.job.DRK, 'Expected job to be DRK')
         end)
+
+        it('can stack replacements on the same function', function()
+            player:setSkillLevel(xi.skill.BONECRAFT, 300)
+            stub('xi.crafting.getRealSkill', 100)
+            stub('xi.crafting.getRealSkill', 200)
+
+            assert(xi.crafting.getRealSkill(player, xi.skill.BONECRAFT) == 200)
+        end)
+
+        it('restores the original after stacked replacements', function()
+            player:setSkillLevel(xi.skill.BONECRAFT, 300)
+
+            assert(xi.crafting.getRealSkill(player, xi.skill.BONECRAFT) == 30)
+        end)
     end)
 
     describe('spy()', function()
@@ -72,6 +86,21 @@ describe('Test Doubles', function()
             -- Can inspect results
             assert(s.calls[1].returned == 0, 'Expected level 0')
             assert(s.calls[2].returned == 30, 'Expected level 30 for 300 skill')
+        end)
+
+        it('can wrap a replacement on the same function', function()
+            player:setSkillLevel(xi.skill.BONECRAFT, 300)
+            stub('xi.crafting.getRealSkill', 100)
+            local s = spy('xi.crafting.getRealSkill')
+
+            assert(xi.crafting.getRealSkill(player, xi.skill.BONECRAFT) == 100)
+            s:called(1)
+        end)
+
+        it('restores the original after a wrapped replacement', function()
+            player:setSkillLevel(xi.skill.BONECRAFT, 300)
+
+            assert(xi.crafting.getRealSkill(player, xi.skill.BONECRAFT) == 30)
         end)
     end)
 end)
