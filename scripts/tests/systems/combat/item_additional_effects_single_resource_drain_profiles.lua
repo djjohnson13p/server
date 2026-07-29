@@ -211,19 +211,32 @@ describe('Vanilla and Zilart single-resource drain profiles', function()
         assert(string.find(duplicateErrors[1], 'duplicate single-resource drain', 1, true))
     end)
 
-    it('leaves combined, scripted, and later drain items outside the registry', function()
+    it('keeps combined drains separate from single, scripted, and later drains', function()
         for _, itemId in ipairs({
             xi.item.HOFUD,
-            20706, -- Vampirism
+            xi.item.VAMPIRISM,
+            xi.item.CREPUSCULAR_KNIFE,
             xi.item.BLOODY_BOLT,
             18856, -- Zareehkl Scythe
         }) do
             assert(not xi.additionalEffect.profile.resolveSingleResourceDrain(itemId))
         end
 
-        for _, itemId in ipairs({ xi.item.HOFUD, 20706 }) do
+        for _, itemId in ipairs({
+            xi.item.HOFUD,
+            xi.item.VAMPIRISM,
+            xi.item.CREPUSCULAR_KNIFE,
+        }) do
             local profile = xi.additionalEffect.profile.resolve(findItem(itemId), 0)
             assert(not profile.singleResourceDrain)
+            assert(profile.combinedResourceDrain)
+            assert(profile.profileFamily == 'VZ_COMBINED_RESOURCE_DRAIN')
+        end
+
+        for _, itemId in ipairs({ xi.item.BLOODY_BOLT, 18856 }) do
+            local profile = xi.additionalEffect.profile.resolve(findItem(itemId), 0)
+            assert(not profile.singleResourceDrain)
+            assert(not profile.combinedResourceDrain)
             assert(profile.profileFamily == 'SQL_MODIFIER_GENERIC')
         end
     end)

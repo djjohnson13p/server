@@ -196,8 +196,21 @@ describe('Item additional effect framework', function()
             { itemId = 16528, resource = 'HP',             selection = 'SINGLE' }, -- Bloody Rapier
             { itemId = 16509, resource = 'MP',             selection = 'SINGLE' }, -- Aspir Knife
             { itemId = 17823, resource = 'TP',             selection = 'SINGLE' }, -- Shinsoku
-            { itemId = 17745, resource = 'HP_OR_MP',       selection = 'LEGACY_RANDOM_VERIFY_LIVE' }, -- Hofud
-            { itemId = 20706, resource = 'HP_OR_MP_OR_TP', selection = 'LEGACY_RANDOM_VERIFY_LIVE' }, -- Vampirism
+            {
+                itemId   = xi.item.HOFUD,
+                resource = 'HP_OR_MP',
+                selection = 'UNIFORM_SINGLE_BRANCH_NO_RETRY_COMPATIBILITY',
+            },
+            {
+                itemId   = xi.item.VAMPIRISM,
+                resource = 'HP_OR_MP_OR_TP',
+                selection = 'UNIFORM_SINGLE_BRANCH_NO_RETRY_COMPATIBILITY',
+            },
+            {
+                itemId   = xi.item.CREPUSCULAR_KNIFE,
+                resource = 'HP_OR_MP_OR_TP',
+                selection = 'UNIFORM_SINGLE_BRANCH_NO_RETRY_COMPATIBILITY',
+            },
             { itemId = 16944, resource = 'NONE',           selection = 'SINGLE' }, -- Lockheart: Dispel
             { itemId = 16504, resource = 'NONE',           selection = 'SINGLE' }, -- Oynos Knife: self buff
             { itemId = 18551, resource = 'NONE',           selection = 'SINGLE' }, -- Twilight Scythe: Death

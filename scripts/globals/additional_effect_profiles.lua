@@ -20,6 +20,7 @@ xi.additionalEffect.profile.classification =
     CONFIGURATION_ERROR               = 'CONFIGURATION_ERROR',
     NOT_ACTIVE                        = 'NOT_ACTIVE',
     ERA_UNRESOLVED                    = 'ERA_UNRESOLVED',
+    LATER_EXPANSION                   = 'LATER_EXPANSION',
 }
 
 xi.additionalEffect.profile.accuracyMode =
@@ -111,9 +112,14 @@ local familyPolicy =
 
 local statusAmmunitionRegistry = {}
 local singleResourceDrainRegistry = {}
+local combinedResourceDrainRegistry = {}
 
 local function resolveClassification(itemId, procType)
-    if singleResourceDrainRegistry[itemId] or statusAmmunitionRegistry[itemId] then
+    if
+        combinedResourceDrainRegistry[itemId] or
+        singleResourceDrainRegistry[itemId] or
+        statusAmmunitionRegistry[itemId]
+    then
         return xi.additionalEffect.profile.classification.VERIFY_LIVE
     elseif procType == 14 then
         return xi.additionalEffect.profile.classification.SPECIAL_CASE_TEST_BACKED
@@ -126,7 +132,12 @@ local function resolveClassification(itemId, procType)
     return xi.additionalEffect.profile.classification.FRAMEWORK_CORRECT_LEGACY_NUMERICS
 end
 
-local function resolveExecutionPolicy(policy, procType, statusAmmunition, singleResourceDrain)
+local function resolveExecutionPolicy(
+    policy,
+    procType,
+    statusAmmunition,
+    singleResourceDrain,
+    combinedResourceDrain)
     local execution =
     {
         profileFamily = 'SQL_MODIFIER_GENERIC',
@@ -162,6 +173,22 @@ local function resolveExecutionPolicy(policy, procType, statusAmmunition, single
         execution.immunityPolicy = 'UNDEAD_GUARD_COMPATIBILITY'
         execution.damageType = 'DARK_MAGICAL_COMPATIBILITY'
         execution.successMessage = singleResourceDrain.presentationMessage
+    elseif combinedResourceDrain then
+        execution.profileFamily = 'VZ_COMBINED_RESOURCE_DRAIN'
+        execution.evidenceSource = combinedResourceDrain.evidenceSource
+        execution.fieldClassifications = combinedResourceDrain.fieldClassifications
+        execution.triggeringAttack = 'SUCCESSFUL_MELEE_HIT'
+        execution.chancePolicy = 'SQL_MODIFIER_COMPATIBILITY'
+        execution.levelPolicy = 'SQL_MODIFIER_COMPATIBILITY'
+        execution.effectiveElement = combinedResourceDrain.effectiveElement
+        execution.accuracyMode = xi.additionalEffect.profile.accuracyMode.LEGACY_DAMAGE_RESISTANCE
+        execution.skillRank = 0
+        execution.governingStat = 0
+        execution.governingStatEvidence = 'NOT_APPLICABLE_COMPATIBILITY'
+        execution.resistancePolicy = 'MAGICAL_DAMAGE_TIERS_COMPATIBILITY'
+        execution.immunityPolicy = 'UNDEAD_GUARD_COMPATIBILITY'
+        execution.damageType = 'DARK_MAGICAL_COMPATIBILITY'
+        execution.successMessage = combinedResourceDrain.resourceMessagePolicy
     elseif statusAmmunition then
         execution.profileFamily = 'VZ_STATUS_AMMUNITION'
         execution.evidenceSource = statusAmmunition.evidenceSource
@@ -182,8 +209,14 @@ xi.additionalEffect.profile.resolve = function(item, baseAttackDamage)
     local family   = familyPolicy[procType] or {}
     local statusAmmunition = statusAmmunitionRegistry[itemId]
     local singleResourceDrain = singleResourceDrainRegistry[itemId]
+    local combinedResourceDrain = combinedResourceDrainRegistry[itemId]
     local execution =
-        resolveExecutionPolicy(policy, procType, statusAmmunition, singleResourceDrain)
+        resolveExecutionPolicy(
+            policy,
+            procType,
+            statusAmmunition,
+            singleResourceDrain,
+            combinedResourceDrain)
 
     local profile =
     {
@@ -194,6 +227,7 @@ xi.additionalEffect.profile.resolve = function(item, baseAttackDamage)
         evidenceSource    = execution.evidenceSource,
         statusAmmunition  = statusAmmunition,
         singleResourceDrain = singleResourceDrain,
+        combinedResourceDrain = combinedResourceDrain,
         fieldClassifications = execution.fieldClassifications,
 
         proc =
@@ -232,8 +266,10 @@ xi.additionalEffect.profile.resolve = function(item, baseAttackDamage)
             power             = item:getMod(xi.mod.ITEM_ADDEFFECT_POWER),
             duration          = item:getMod(xi.mod.ITEM_ADDEFFECT_DURATION),
             tickInterval      = 'STATUS_DEFAULT',
-            drainResource     = family.drainResource or 'NONE',
-            selectionPolicy   = family.selectionPolicy or 'SINGLE',
+            drainResource     = combinedResourceDrain and combinedResourceDrain.resourceSet or
+                family.drainResource or 'NONE',
+            selectionPolicy   = combinedResourceDrain and combinedResourceDrain.branchSelectionPolicy or
+                family.selectionPolicy or 'SINGLE',
             undeadPolicy      = family.undeadPolicy or 'FAMILY_HANDLER',
             applicationPolicy = 'APPLY_FINAL_OUTCOME_ONCE',
         },
@@ -302,6 +338,16 @@ xi.additionalEffect.profile.validate = function(profile)
             xi.additionalEffect.profile.validateSingleResourceDrain(profile)
         if not validSingleResourceDrain then
             for _, validationError in ipairs(singleResourceDrainErrors) do
+                table.insert(errors, validationError)
+            end
+        end
+    end
+
+    if profile.combinedResourceDrain then
+        local validCombinedResourceDrain, combinedResourceDrainErrors =
+            xi.additionalEffect.profile.validateCombinedResourceDrain(profile)
+        if not validCombinedResourceDrain then
+            for _, validationError in ipairs(combinedResourceDrainErrors) do
                 table.insert(errors, validationError)
             end
         end
@@ -1549,6 +1595,423 @@ xi.additionalEffect.profile.validateSingleResourceDrain = function(profile)
         profile.outcome.undeadPolicy ~= 'BLOCK'
     then
         table.insert(errors, 'single-resource drain execution policy drifted')
+    end
+
+    return #errors == 0, errors
+end
+
+local combinedResourceMessages =
+{
+    HP = xi.msg.basic.ADD_EFFECT_HP_DRAIN,
+    MP = xi.msg.basic.ADD_EFFECT_MP_DRAIN,
+    TP = xi.msg.basic.ADD_EFFECT_TP_DRAIN,
+}
+
+local combinedResourceSets =
+{
+    HP_OR_MP =
+    {
+        procFamily = 8,
+        resources  = { 'HP', 'MP' },
+    },
+    HP_OR_MP_OR_TP =
+    {
+        procFamily = 9,
+        resources  = { 'HP', 'MP', 'TP' },
+    },
+}
+
+local function combinedResourceDrainProfile(
+    itemId,
+    itemName,
+    introductionDate,
+    introductionEvidence,
+    resourceSet,
+    chance,
+    baseAmount,
+    subEffect)
+    local evidence = xi.additionalEffect.profile.classification
+    local resourcePolicy = combinedResourceSets[resourceSet]
+
+    return
+    {
+        itemId         = itemId,
+        itemName       = itemName,
+        profileFamily  = 'VZ_COMBINED_RESOURCE_DRAIN',
+        profileSource  = 'scripts/globals/additional_effect_profiles.lua',
+        evidenceSource =
+            'retail_parity/vanilla_zilart/artifacts/' ..
+            'VZ-COMBAT-001-combined-resource-drains-evidence.md',
+        classification     = evidence.VERIFY_LIVE,
+        introductionEra    = evidence.LATER_EXPANSION,
+        introductionDate   = introductionDate,
+        introductionEvidence = introductionEvidence,
+        resourceSet        = resourceSet,
+        procFamily         = resourcePolicy.procFamily,
+        branchResources    = resourcePolicy.resources,
+
+        procPolicy          = 'FIXED_PERCENT_SQL_COMPATIBILITY',
+        procChance          = chance,
+        levelPolicy         = 'ITEM_REQUIRED_LEVEL_GATE',
+        levelCorrection     = 0,
+        triggeringAttack    = 'SUCCESSFUL_MELEE_HIT',
+        equipPolicy         = 'MAIN_OR_OFF_HAND',
+
+        branchSelectionPolicy =
+            'UNIFORM_SINGLE_BRANCH_NO_RETRY_COMPATIBILITY',
+        selectionDistributionPolicy =
+            'UNIFORM_INTEGER_1_TO_RESOURCE_COUNT_COMPATIBILITY',
+        selectionTimingPolicy =
+            'AFTER_OVERALL_PROC_BEFORE_SELECTED_RESOURCE_RESOLUTION',
+        retryFallbackPolicy =
+            'NO_RETRY_OR_FALLBACK_COMPATIBILITY',
+        emptyResourcePolicy =
+            'SELECTED_BRANCH_ZERO_NO_FALLBACK_COMPATIBILITY',
+        resistedBranchPolicy =
+            'SELECTED_BRANCH_ZERO_NO_FALLBACK_COMPATIBILITY',
+        nullifiedBranchPolicy =
+            'SELECTED_BRANCH_ZERO_NO_FALLBACK_COMPATIBILITY',
+
+        skillPolicy         = 'NO_EXPLICIT_SKILL_COMPATIBILITY',
+        governingStatPolicy = 'NO_GOVERNING_STAT_COMPATIBILITY',
+        dStatPolicy         = 'NO_DSTAT_COMPATIBILITY',
+        configuredElement   = xi.element.NONE,
+        effectiveElement    = xi.element.DARK,
+        elementPolicy       = 'HARDCODED_DARK_HANDLER_COMPATIBILITY',
+        resistancePolicy    = 'LEGACY_MAGICAL_DAMAGE_TIERS',
+        nullificationPolicy = 'LEGACY_MAGICAL_ONCE',
+        absorptionPolicy    = 'NEGATIVE_RESULT_CLAMPED_TO_ZERO',
+        undeadPolicy        = 'BLOCK_SELECTED_BRANCH_WITHOUT_FALLBACK',
+
+        targetResourceCapPolicy = 'CLAMP_TO_SELECTED_TARGET_RESOURCE',
+        attackerResourceCapPolicy =
+            'RESOURCE_CONTAINER_CAP_PACKET_REPORTS_TARGET_REMOVAL',
+        overDrainPolicy      = 'REMOVE_AT_MOST_SELECTED_TARGET_RESOURCE',
+        baseAmount           = baseAmount,
+        amountScalingPolicy  = 'LEGACY_MAGICAL_DAMAGE_STACK',
+        defensivePolicy      =
+            'LEGACY_RESIST_SDT_DAY_WEATHER_PHALANX_ONE_FOR_ALL_STONESKIN',
+        outcomeOwnership     =
+            'SCOPED_EXECUTOR_SELECTS_AND_TRANSFERS_ONE_RESOURCE_ONCE',
+
+        presentationSubEffect = subEffect,
+        resourceMessagePolicy = 'SELECTED_RESOURCE_MESSAGE_COMPATIBILITY',
+        resourceMessages      = combinedResourceMessages,
+        packetAmountPolicy    = 'ACTUAL_SELECTED_TARGET_RESOURCE_REMOVED',
+        noEffectPolicy        =
+            'SELECTED_BRANCH_MESSAGE_WITH_ZERO_OR_GUARD_EARLY_EXIT_COMPATIBILITY',
+
+        fieldClassifications =
+        {
+            identity             = evidence.EVIDENCE_BACKED,
+            introductionEra      = evidence.EVIDENCE_BACKED,
+            resourceSet          = evidence.EVIDENCE_BACKED,
+            procChance           = evidence.VERIFY_LIVE,
+            levelCorrection      = evidence.VERIFY_LIVE,
+            triggeringAttack     = evidence.FRAMEWORK_CORRECT_LEGACY_NUMERICS,
+            equipPolicy          = evidence.VERIFY_LIVE,
+            branchSelection      = evidence.VERIFY_LIVE,
+            selectionDistribution = evidence.VERIFY_LIVE,
+            retryFallback        = evidence.VERIFY_LIVE,
+            emptyResource        = evidence.VERIFY_LIVE,
+            resistedBranch       = evidence.VERIFY_LIVE,
+            nullifiedBranch      = evidence.VERIFY_LIVE,
+            skill                = evidence.VERIFY_LIVE,
+            governingStat        = evidence.VERIFY_LIVE,
+            dStat                = evidence.VERIFY_LIVE,
+            element              = evidence.VERIFY_LIVE,
+            resistance           = evidence.VERIFY_LIVE,
+            nullification        = evidence.VERIFY_LIVE,
+            absorption           = evidence.VERIFY_LIVE,
+            undead               = evidence.VERIFY_LIVE,
+            targetResourceCap    = evidence.FRAMEWORK_CORRECT_LEGACY_NUMERICS,
+            attackerResourceCap  = evidence.VERIFY_LIVE,
+            baseAmount           = evidence.VERIFY_LIVE,
+            amountScaling        = evidence.VERIFY_LIVE,
+            defenses             = evidence.VERIFY_LIVE,
+            outcomeOwnership     = evidence.FRAMEWORK_CORRECT_LEGACY_NUMERICS,
+            presentation         = evidence.FRAMEWORK_CORRECT_LEGACY_NUMERICS,
+            noEffect             = evidence.VERIFY_LIVE,
+        },
+
+        unresolvedEvidence =
+        {
+            'overall proc versus magic-accuracy resistance and level correction',
+            'branch distribution, ordering, retry, and fallback behavior',
+            'empty, resisted, nullified, absorbed, dead, and undead branch behavior',
+            'fixed versus random amount and HP/MP/TP-specific scaling',
+            'skill, magic accuracy, governing stat, dSTAT, and Dark element',
+            'resistance tiers, nullification, absorption, and defensive multipliers',
+            'main/off-hand, multi-attack, Enspell, target-cap, and attacker-cap behavior',
+            'resource-specific message, shared subeffect, packet amount, and ordering',
+        },
+    }
+end
+
+local combinedResourceDrainDefinitions =
+{
+    combinedResourceDrainProfile(
+        xi.item.HOFUD,
+        'hofud',
+        '2007-06-06',
+        'Japanese community item history links the item to the 2007-06-06 update',
+        'HP_OR_MP',
+        15,
+        15,
+        xi.subEffect.DARKNESS_DAMAGE),
+    combinedResourceDrainProfile(
+        xi.item.VAMPIRISM,
+        'vampirism',
+        '2015-08-05',
+        'Official 2015-08-05 update introduced Sinister Reign; item history dates the sword to that update',
+        'HP_OR_MP_OR_TP',
+        100,
+        20,
+        xi.subEffect.MP_DRAIN),
+    combinedResourceDrainProfile(
+        xi.item.CREPUSCULAR_KNIFE,
+        'crepuscular_knife',
+        '2021-07-12',
+        'Official 2021-07-12 update introduced the Wyrm God battlefield and names Crepuscular Knife',
+        'HP_OR_MP_OR_TP',
+        15,
+        15,
+        xi.subEffect.DARKNESS_DAMAGE),
+}
+
+local expectedCombinedResourceDrains = {}
+for _, definition in ipairs(combinedResourceDrainDefinitions) do
+    expectedCombinedResourceDrains[definition.itemId] = definition
+end
+
+local requiredCombinedResourceDrainFields =
+{
+    'itemName',
+    'profileFamily',
+    'profileSource',
+    'evidenceSource',
+    'classification',
+    'introductionEra',
+    'introductionDate',
+    'introductionEvidence',
+    'resourceSet',
+    'procFamily',
+    'procPolicy',
+    'procChance',
+    'levelPolicy',
+    'levelCorrection',
+    'triggeringAttack',
+    'equipPolicy',
+    'branchSelectionPolicy',
+    'selectionDistributionPolicy',
+    'selectionTimingPolicy',
+    'retryFallbackPolicy',
+    'emptyResourcePolicy',
+    'resistedBranchPolicy',
+    'nullifiedBranchPolicy',
+    'skillPolicy',
+    'governingStatPolicy',
+    'dStatPolicy',
+    'configuredElement',
+    'effectiveElement',
+    'elementPolicy',
+    'resistancePolicy',
+    'nullificationPolicy',
+    'absorptionPolicy',
+    'undeadPolicy',
+    'targetResourceCapPolicy',
+    'attackerResourceCapPolicy',
+    'overDrainPolicy',
+    'baseAmount',
+    'amountScalingPolicy',
+    'defensivePolicy',
+    'outcomeOwnership',
+    'presentationSubEffect',
+    'resourceMessagePolicy',
+    'packetAmountPolicy',
+    'noEffectPolicy',
+}
+
+local function validateCombinedResourceDrainDefinition(definition)
+    local errors = {}
+    if type(definition) ~= 'table' then
+        return false, { 'combined-resource drain profile must be a table' }
+    end
+
+    local expected = expectedCombinedResourceDrains[definition.itemId]
+    if not expected then
+        table.insert(errors, string.format(
+            'unsupported combined-resource drain item ID %s',
+            tostring(definition.itemId)))
+
+        return false, errors
+    end
+
+    for _, field in ipairs(requiredCombinedResourceDrainFields) do
+        if definition[field] ~= expected[field] then
+            table.insert(errors, string.format(
+                'combined-resource drain %s drifted: expected %s, got %s',
+                field,
+                tostring(expected[field]),
+                tostring(definition[field])))
+        end
+    end
+
+    if
+        type(definition.fieldClassifications) ~= 'table' or
+        type(definition.unresolvedEvidence) ~= 'table' or
+        #definition.unresolvedEvidence == 0
+    then
+        table.insert(errors, 'combined-resource drain evidence ownership is incomplete')
+    else
+        for field in pairs(expected.fieldClassifications) do
+            if definition.fieldClassifications[field] ~= expected.fieldClassifications[field] then
+                table.insert(errors, string.format(
+                    'combined-resource drain field classification %s drifted',
+                    field))
+            end
+        end
+    end
+
+    local resourcePolicy = combinedResourceSets[definition.resourceSet]
+    if
+        not resourcePolicy or
+        definition.procFamily ~= resourcePolicy.procFamily or
+        type(definition.branchResources) ~= 'table' or
+        type(definition.resourceMessages) ~= 'table' or
+        #definition.branchResources ~= #resourcePolicy.resources
+    then
+        table.insert(errors, 'combined-resource drain resource-set/handler mismatch')
+    else
+        for index, resource in ipairs(resourcePolicy.resources) do
+            if
+                definition.branchResources[index] ~= resource or
+                definition.resourceMessages[resource] ~= combinedResourceMessages[resource]
+            then
+                table.insert(errors, 'combined-resource drain branch/message mapping mismatch')
+                break
+            end
+        end
+    end
+
+    if
+        definition.configuredElement ~= xi.element.NONE or
+        definition.effectiveElement ~= xi.element.DARK
+    then
+        table.insert(errors, 'combined-resource drain compatibility element policy drifted')
+    end
+
+    return #errors == 0, errors
+end
+
+xi.additionalEffect.profile.buildCombinedResourceDrainRegistry = function(definitions)
+    local registry = {}
+    local errors = {}
+
+    for index, definition in ipairs(definitions) do
+        local valid, validationErrors =
+            validateCombinedResourceDrainDefinition(definition)
+        for _, validationError in ipairs(validationErrors) do
+            table.insert(errors, string.format(
+                'definition %u: %s',
+                index,
+                validationError))
+        end
+
+        if valid then
+            if registry[definition.itemId] then
+                table.insert(errors, string.format(
+                    'duplicate combined-resource drain item profile %u',
+                    definition.itemId))
+            else
+                registry[definition.itemId] = definition
+            end
+        end
+    end
+
+    if #errors > 0 then
+        return nil, errors
+    end
+
+    return registry, errors
+end
+
+local combinedResourceDrainRegistryErrors
+combinedResourceDrainRegistry, combinedResourceDrainRegistryErrors =
+    xi.additionalEffect.profile.buildCombinedResourceDrainRegistry(
+        combinedResourceDrainDefinitions)
+if not combinedResourceDrainRegistry then
+    error(table.concat(combinedResourceDrainRegistryErrors, '; '))
+end
+
+xi.additionalEffect.profile.resolveCombinedResourceDrain = function(item)
+    if item == nil then
+        return nil
+    end
+
+    local itemId = type(item) == 'number' and item or item:getID()
+
+    return combinedResourceDrainRegistry[itemId]
+end
+
+xi.additionalEffect.profile.combinedResourceDrainProfileCount = function()
+    local count = 0
+    for _ in pairs(combinedResourceDrainRegistry) do
+        count = count + 1
+    end
+
+    return count
+end
+
+xi.additionalEffect.profile.validateCombinedResourceDrain = function(profile)
+    local errors = {}
+    local policy = profile and profile.combinedResourceDrain
+    local validPolicy, policyErrors = validateCombinedResourceDrainDefinition(policy)
+    if not validPolicy then
+        return false, policyErrors
+    end
+
+    if
+        profile.profileFamily ~= 'VZ_COMBINED_RESOURCE_DRAIN' or
+        profile.classification ~= xi.additionalEffect.profile.classification.VERIFY_LIVE
+    then
+        table.insert(errors, 'combined-resource drain profile must retain explicit VERIFY_LIVE scope')
+    end
+
+    local actualFields =
+    {
+        { 'proc family', profile.outcome.family, policy.procFamily },
+        { 'proc chance', profile.proc.chance, policy.procChance },
+        { 'level correction', profile.proc.levelCorrection, policy.levelCorrection },
+        { 'configured element', profile.accuracy.element, policy.configuredElement },
+        { 'effective element', profile.accuracy.effectiveElement, policy.effectiveElement },
+        { 'base amount', profile.outcome.damage, policy.baseAmount },
+        { 'resource set', profile.outcome.drainResource, policy.resourceSet },
+        { 'selection policy', profile.outcome.selectionPolicy, policy.branchSelectionPolicy },
+        { 'subeffect', profile.presentation.subEffect, policy.presentationSubEffect },
+        { 'message policy', profile.presentation.successMessage, policy.resourceMessagePolicy },
+    }
+
+    for _, field in ipairs(actualFields) do
+        if field[2] ~= field[3] then
+            table.insert(errors, string.format(
+                'combined-resource drain %s drifted: expected %s, got %s',
+                field[1],
+                tostring(field[3]),
+                tostring(field[2])))
+        end
+    end
+
+    if
+        profile.proc.triggeringAttack ~= policy.triggeringAttack or
+        profile.proc.chancePolicy ~= 'SQL_MODIFIER_COMPATIBILITY' or
+        profile.proc.levelPolicy ~= 'SQL_MODIFIER_COMPATIBILITY' or
+        profile.accuracy.mode ~= xi.additionalEffect.profile.accuracyMode.LEGACY_DAMAGE_RESISTANCE or
+        profile.accuracy.skillRank ~= 0 or
+        profile.accuracy.governingStat ~= 0 or
+        profile.outcome.undeadPolicy ~= 'BLOCK'
+    then
+        table.insert(errors, 'combined-resource drain execution policy drifted')
     end
 
     return #errors == 0, errors

@@ -413,21 +413,24 @@ xi.additionalEffect.procFunctions[xi.additionalEffect.procType.TP_DRAIN] =  func
     return subEffect, msgID, msgParam
 end
 
--- Exact-scope transfer owner for the three VZ single-resource drain
--- profiles. Combined and scripted drains intentionally remain on their
--- existing compatibility handlers.
-xi.additionalEffect.executeSingleResourceDrain = function(attacker, defender, params)
+-- Shared one-resource transfer primitive for the explicitly profiled drain
+-- families. Selection and overall proc ownership remain with their callers.
+xi.additionalEffect.executeResourceDrainTransfer = function(
+    attacker,
+    defender,
+    params,
+    policy,
+    resource)
     if
         not attacker or
         not defender or
         type(params) ~= 'table' or
-        type(params.profile) ~= 'table' or
-        type(params.profile.singleResourceDrain) ~= 'table'
+        type(policy) ~= 'table' or
+        type(resource) ~= 'string'
     then
         return 0, 0, 0
     end
 
-    local policy = params.profile.singleResourceDrain
     if defender:isDead() or defender:isUndead() then
         return 0, 0, 0
     end
@@ -440,23 +443,29 @@ xi.additionalEffect.executeSingleResourceDrain = function(attacker, defender, pa
     amount = math.max(amount, 0)
 
     local availableResource
-    if policy.resource == 'HP' then
+    if resource == 'HP' then
         availableResource = defender:getHP()
-    elseif policy.resource == 'MP' then
+    elseif resource == 'MP' then
         availableResource = defender:getMP()
-    elseif policy.resource == 'TP' then
+    elseif resource == 'TP' then
         availableResource = defender:getTP()
     else
         return 0, 0, 0
     end
 
+    local message = policy.presentationMessage or
+        (type(policy.resourceMessages) == 'table' and policy.resourceMessages[resource])
+    if not message then
+        return 0, 0, 0
+    end
+
     amount = math.min(amount, availableResource)
     if amount <= 0 then
-        return policy.presentationSubEffect, policy.presentationMessage, 0
+        return policy.presentationSubEffect, message, 0
     end
 
     local removed
-    if policy.resource == 'HP' then
+    if resource == 'HP' then
         removed = xi.additionalEffect.applyDamage(
             attacker,
             defender,
@@ -464,7 +473,7 @@ xi.additionalEffect.executeSingleResourceDrain = function(attacker, defender, pa
             xi.attackType.MAGICAL,
             xi.damageType.DARK)
         attacker:addHP(removed)
-    elseif policy.resource == 'MP' then
+    elseif resource == 'MP' then
         local startingMP = defender:getMP()
         defender:addMP(-amount)
         removed = startingMP - defender:getMP()
@@ -476,7 +485,75 @@ xi.additionalEffect.executeSingleResourceDrain = function(attacker, defender, pa
         attacker:addTP(removed)
     end
 
-    return policy.presentationSubEffect, policy.presentationMessage, removed
+    return policy.presentationSubEffect, message, removed
+end
+
+-- Exact-scope entry point for the three Phase B3 single-resource profiles.
+xi.additionalEffect.executeSingleResourceDrain = function(attacker, defender, params)
+    if
+        type(params) ~= 'table' or
+        type(params.profile) ~= 'table' or
+        type(params.profile.singleResourceDrain) ~= 'table'
+    then
+        return 0, 0, 0
+    end
+
+    local policy = params.profile.singleResourceDrain
+
+    return xi.additionalEffect.executeResourceDrainTransfer(
+        attacker,
+        defender,
+        params,
+        policy,
+        policy.resource)
+end
+
+xi.additionalEffect.selectCombinedResourceDrainBranch = function(policy, selector)
+    if
+        type(policy) ~= 'table' or
+        type(policy.branchResources) ~= 'table' or
+        type(selector) ~= 'number' or
+        selector ~= math.floor(selector)
+    then
+        return nil
+    end
+
+    return policy.branchResources[selector]
+end
+
+-- Exact-scope selection and transfer owner for the three Phase B4 combined
+-- profiles. The compatibility policy selects one branch and never retries.
+xi.additionalEffect.executeCombinedResourceDrain = function(attacker, defender, params)
+    if
+        not attacker or
+        not defender or
+        type(params) ~= 'table' or
+        type(params.profile) ~= 'table' or
+        type(params.profile.combinedResourceDrain) ~= 'table' or
+        defender:isDead()
+    then
+        return 0, 0, 0
+    end
+
+    local policy = params.profile.combinedResourceDrain
+    local resourceCount = #policy.branchResources
+    if resourceCount == 0 then
+        return 0, 0, 0
+    end
+
+    local selector = math.randomInt(1, resourceCount)
+    local resource =
+        xi.additionalEffect.selectCombinedResourceDrainBranch(policy, selector)
+    if not resource then
+        return 0, 0, 0
+    end
+
+    return xi.additionalEffect.executeResourceDrainTransfer(
+        attacker,
+        defender,
+        params,
+        policy,
+        resource)
 end
 
 -- TODO: add resistance check for params.element
@@ -740,7 +817,10 @@ xi.additionalEffect.attack = function(attacker, defender, baseAttackDamage, item
         return 0, 0, 0
     end
 
-    if profile.singleResourceDrain and defender:isDead() then
+    if
+        (profile.singleResourceDrain or profile.combinedResourceDrain) and
+        defender:isDead()
+    then
         return 0, 0, 0
     end
 
@@ -780,6 +860,8 @@ xi.additionalEffect.attack = function(attacker, defender, baseAttackDamage, item
 
     if profile.singleResourceDrain then
         return xi.additionalEffect.executeSingleResourceDrain(attacker, defender, params)
+    elseif profile.combinedResourceDrain then
+        return xi.additionalEffect.executeCombinedResourceDrain(attacker, defender, params)
     elseif xi.additionalEffect.procFunctions[params.addType] then
         return xi.additionalEffect.procFunctions[params.addType](attacker, defender, item, params)
     else
